@@ -1,0 +1,13 @@
+# ============================================================
+# The Billing Coach — Narrative Generator
+# Environment variables
+# ============================================================
+#
+# Copy this file to `.env.local` for local testing with `vercel dev`.
+# For production, set these in your Vercel dashboard under:
+#    Project → Settings → Environment Variables
+# ============================================================
+
+# Your Anthropic API key — get one at https://console.anthropic.com
+# NEVER commit the real key to Git. This file is just an example.
+ANTHROPIC_API_KEY=sk-ant-api03-your-key-here

@@ -1,0 +1,1507 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --navy: #002147;
+    --navy-deep: #001530;
+    --navy-light: #0a3d7a;
+    --gold: #CBA135;
+    --gold-light: #e5c568;
+    --gold-soft: #f7efd4;
+    --ivory: #faf8f3;
+    --cream: #f4eee1;
+    --paper: #fefcf7;
+    --charcoal: #1a1a1a;
+    --muted: #6b7280;
+    --border: rgba(0, 33, 71, 0.12);
+    --shadow-sm: 0 1px 3px rgba(0, 33, 71, 0.08);
+    --shadow-md: 0 4px 20px rgba(0, 33, 71, 0.08);
+    --shadow-lg: 0 20px 60px rgba(0, 33, 71, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .bnc-app {
+    font-family: 'Outfit', sans-serif;
+    color: var(--charcoal);
+    line-height: 1.6;
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--paper);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* ===== Header ===== */
+  .bnc-header {
+    background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 60%, var(--navy-light) 100%);
+    color: var(--paper);
+    padding: 3rem 2.5rem 3.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bnc-header::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -15%;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(203,161,53,0.22) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .bnc-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+  }
+
+  .bnc-brand-line {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .bnc-brand-mark {
+    width: 2.5rem;
+    height: 1.5px;
+    background: var(--gold);
+  }
+
+  .bnc-brand-tag {
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    font-size: 0.72rem;
+    color: var(--gold);
+    font-weight: 500;
+  }
+
+  .bnc-header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2.1rem, 4vw, 3.2rem);
+    font-weight: 500;
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    margin-bottom: 0.85rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .bnc-header h1 em {
+    color: var(--gold);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .bnc-header p {
+    font-size: 1.02rem;
+    max-width: 620px;
+    opacity: 0.85;
+    position: relative;
+    z-index: 1;
+    font-weight: 300;
+  }
+
+  .bnc-header .bnc-signature {
+    margin-top: 1.5rem;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--gold-light);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== Main tabs ===== */
+  .bnc-main-tabs {
+    display: flex;
+    background: var(--navy-deep);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .bnc-main-tab {
+    flex: 1;
+    padding: 1.1rem 1rem;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.55);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .bnc-main-tab:last-child { border-right: none; }
+
+  .bnc-main-tab:hover { color: rgba(255,255,255,0.9); }
+
+  .bnc-main-tab.active {
+    color: var(--gold);
+    background: linear-gradient(180deg, rgba(203,161,53,0.05) 0%, transparent 100%);
+  }
+
+  .bnc-main-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 40%; height: 2px;
+    background: var(--gold);
+  }
+
+  .bnc-main-tab .bnc-tab-num {
+    display: block;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.7rem;
+    opacity: 0.5;
+    margin-bottom: 0.25rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: none;
+  }
+
+  /* ===== Body ===== */
+  .bnc-body {
+    padding: 2.5rem 2.5rem 3rem;
+    background: var(--paper);
+  }
+
+  .bnc-panel { display: none; }
+  .bnc-panel.active { display: block; animation: fadeIn 0.35s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .bnc-panel-intro {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bnc-panel-intro h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.6rem;
+    font-weight: 500;
+    color: var(--navy);
+    margin-bottom: 0.4rem;
+    letter-spacing: -0.01em;
+  }
+
+  .bnc-panel-intro p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    max-width: 640px;
+  }
+
+  /* ===== Role selector ===== */
+  .bnc-section-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--gold-dark, #a38527);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .bnc-section-label::before {
+    content: '';
+    width: 1.25rem;
+    height: 1.5px;
+    background: var(--gold);
+  }
+
+  .bnc-role-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .bnc-role-btn {
+    padding: 0.9rem 0.75rem;
+    background: var(--ivory);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--navy);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    line-height: 1.3;
+  }
+
+  .bnc-role-btn:hover {
+    border-color: var(--gold);
+    background: var(--paper);
+  }
+
+  .bnc-role-btn.active {
+    background: var(--navy);
+    color: var(--paper);
+    border-color: var(--navy);
+    box-shadow: 0 4px 12px rgba(0,33,71,0.25);
+  }
+
+  .bnc-role-btn .bnc-role-sub {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.65;
+    margin-top: 0.2rem;
+    font-weight: 400;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+  }
+
+  /* ===== Form ===== */
+  .bnc-form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .bnc-form-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+  }
+
+  .bnc-field { display: flex; flex-direction: column; }
+
+  .bnc-field label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 0.45rem;
+    letter-spacing: 0.02em;
+  }
+
+  .bnc-field label .bnc-hint {
+    font-weight: 400;
+    color: var(--muted);
+    font-size: 0.78rem;
+    margin-left: 0.35rem;
+    font-style: italic;
+  }
+
+  .bnc-input, .bnc-textarea {
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    background: var(--ivory);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    color: var(--charcoal);
+    transition: border-color 0.2s ease, background 0.2s ease;
+    resize: vertical;
+  }
+
+  .bnc-textarea { min-height: 96px; font-family: Georgia, serif; line-height: 1.55; }
+
+  .bnc-input:focus, .bnc-textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    background: var(--paper);
+    box-shadow: 0 0 0 3px rgba(203,161,53,0.12);
+  }
+
+  /* ===== Time breakdown (bookends) ===== */
+  .bnc-time-breakdown {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  /* ===== Guidelines drop section ===== */
+  .bnc-guidelines {
+    margin-top: 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    background: var(--ivory);
+    overflow: hidden;
+    transition: all 0.25s ease;
+  }
+
+  .bnc-guidelines.active { border-color: var(--gold); background: var(--gold-soft); }
+
+  .bnc-guidelines-toggle {
+    width: 100%;
+    padding: 0.95rem 1.1rem;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--navy);
+    text-align: left;
+  }
+
+  .bnc-guidelines-toggle-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .bnc-guidelines-icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy-deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .bnc-chev {
+    width: 12px; height: 12px;
+    border-right: 2px solid var(--navy);
+    border-bottom: 2px solid var(--navy);
+    transform: rotate(45deg);
+    transition: transform 0.25s ease;
+  }
+
+  .bnc-guidelines.open .bnc-chev { transform: rotate(-135deg); }
+
+  .bnc-guidelines-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+    padding: 0 1.1rem;
+  }
+
+  .bnc-guidelines.open .bnc-guidelines-body {
+    max-height: 600px;
+    padding: 0 1.1rem 1.1rem;
+  }
+
+  .bnc-guidelines-body p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 0.85rem;
+  }
+
+  .bnc-file-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--border);
+  }
+
+  .bnc-file-btn {
+    padding: 0.55rem 0.95rem;
+    background: var(--navy);
+    color: var(--paper);
+    border: none;
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .bnc-file-btn:hover { background: var(--navy-light); }
+
+  .bnc-file-name {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .bnc-file-clear {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.82rem;
+    text-decoration: underline;
+  }
+
+  /* ===== Generate button ===== */
+  .bnc-generate-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+    margin-top: 1rem;
+  }
+
+  .bnc-generate-note {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .bnc-generate-btn {
+    padding: 0.85rem 2rem;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    color: var(--navy-deep);
+    border: none;
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(203,161,53,0.35);
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .bnc-generate-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(203,161,53,0.45);
+  }
+
+  .bnc-generate-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  .bnc-generate-btn::after {
+    content: '→';
+    font-family: Georgia, serif;
+    font-size: 1.15rem;
+    transition: transform 0.2s ease;
+  }
+
+  .bnc-generate-btn:hover:not(:disabled)::after { transform: translateX(3px); }
+
+  .bnc-secondary-btn {
+    padding: 0.85rem 1.25rem;
+    background: transparent;
+    color: var(--navy);
+    border: 1.5px solid var(--navy);
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .bnc-secondary-btn:hover {
+    background: var(--navy);
+    color: var(--paper);
+  }
+
+  .bnc-secondary-btn.copied {
+    background: var(--gold);
+    color: var(--navy-deep);
+    border-color: var(--gold);
+  }
+
+  .bnc-fallback-banner {
+    padding: 1rem 1.1rem;
+    background: var(--gold-soft);
+    border: 1px solid rgba(203,161,53,0.4);
+    border-left: 3px solid var(--gold);
+    border-radius: 6px;
+    font-size: 0.88rem;
+    color: var(--navy);
+    margin-top: 1rem;
+    line-height: 1.5;
+  }
+
+  .bnc-fallback-banner strong { color: var(--navy-deep); }
+
+  .bnc-fallback-banner .bnc-inline-btn {
+    display: inline-block;
+    margin-top: 0.6rem;
+    padding: 0.45rem 0.9rem;
+    background: var(--navy);
+    color: var(--paper);
+    border: none;
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .bnc-fallback-banner .bnc-inline-btn:hover { background: var(--navy-light); }
+  .bnc-fallback-banner .bnc-inline-btn.copied { background: var(--gold); color: var(--navy-deep); }
+
+  /* ===== Output ===== */
+  .bnc-output {
+    margin-top: 2rem;
+    padding: 1.75rem;
+    background: linear-gradient(180deg, var(--ivory) 0%, var(--paper) 100%);
+    border-radius: 10px;
+    border-left: 3px solid var(--gold);
+    box-shadow: var(--shadow-sm);
+    display: none;
+  }
+
+  .bnc-output.visible { display: block; animation: fadeIn 0.3s ease; }
+
+  .bnc-output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bnc-output-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.15rem;
+    color: var(--navy);
+    font-weight: 500;
+  }
+
+  .bnc-narrative-entry {
+    margin-bottom: 1.1rem;
+    padding: 1rem 1.15rem;
+    background: var(--paper);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .bnc-narrative-entry:last-child { margin-bottom: 0; }
+
+  .bnc-narrative-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .bnc-narrative-time {
+    color: var(--muted);
+    font-weight: 400;
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+
+  .bnc-narrative-text {
+    font-family: Georgia, serif;
+    font-size: 1.02rem;
+    color: var(--charcoal);
+    line-height: 1.55;
+  }
+
+  .bnc-copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: var(--navy);
+    transition: all 0.15s ease;
+  }
+
+  .bnc-copy-btn:hover { background: var(--navy); color: var(--paper); border-color: var(--navy); }
+
+  /* ===== Loading state ===== */
+  .bnc-loading {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--muted);
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .bnc-loading-dots {
+    display: inline-block;
+    margin-left: 0.25rem;
+  }
+
+  .bnc-loading-dots span {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: bounce 1.4s infinite ease-in-out;
+  }
+
+  .bnc-loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .bnc-loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+    40% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* ===== Error ===== */
+  .bnc-error {
+    padding: 1rem;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  /* ===== Footer ===== */
+  .bnc-footer {
+    padding: 1.5rem 2.5rem;
+    background: var(--navy-deep);
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+    font-size: 0.78rem;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    letter-spacing: 0.05em;
+  }
+
+  .bnc-footer span { color: var(--gold); font-style: normal; }
+
+  /* ===== Framework reference chip ===== */
+  .bnc-framework-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    background: var(--gold-soft);
+    color: var(--navy);
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(203,161,53,0.25);
+  }
+
+  .bnc-framework-badge .bnc-dot {
+    width: 6px; height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 720px) {
+    .bnc-header { padding: 2.25rem 1.5rem 2.5rem; }
+    .bnc-body { padding: 1.75rem 1.5rem 2rem; }
+    .bnc-main-tab { font-size: 0.72rem; padding: 0.85rem 0.5rem; }
+    .bnc-role-grid { grid-template-columns: 1fr 1fr; }
+    .bnc-form-row { grid-template-columns: 1fr; }
+    .bnc-generate-row { flex-direction: column; align-items: stretch; }
+    .bnc-footer { padding: 1.25rem 1.5rem; }
+  }
+</style>
+
+<div class="bnc-app">
+  <!-- HEADER -->
+  <header class="bnc-header">
+    <div class="bnc-brand-line">
+      <span class="bnc-brand-mark"></span>
+      <span class="bnc-brand-tag">The Billing Coach</span>
+    </div>
+    <h1>The Billing <em>Narrative</em> Generator</h1>
+    <p>Turn your completed work into partner-level billing narratives that capture the full value of your time — powered by the ATVR Framework.</p>
+    <div class="bnc-signature">— Molly Kremer, Esq.</div>
+  </header>
+
+  <!-- MAIN TABS -->
+  <nav class="bnc-main-tabs" role="tablist">
+    <button class="bnc-main-tab active" data-panel="standard" role="tab">
+      <span class="bnc-tab-num">i.</span>
+      Standard Narrative
+    </button>
+    <button class="bnc-main-tab" data-panel="bookends" role="tab">
+      <span class="bnc-tab-num">ii.</span>
+      Billing Bookends
+    </button>
+    <button class="bnc-main-tab" data-panel="multiphase" role="tab">
+      <span class="bnc-tab-num">iii.</span>
+      Multi-Phase Work
+    </button>
+  </nav>
+
+  <!-- BODY -->
+  <div class="bnc-body">
+
+    <!-- ============ PANEL 1: STANDARD ============ -->
+    <section class="bnc-panel active" data-panel="standard">
+      <div class="bnc-panel-intro">
+        <span class="bnc-framework-badge"><span class="bnc-dot"></span>ATVR Framework · Action · Task · Value · Result</span>
+        <h2>Single Narrative</h2>
+        <p>Paste a blurb about a billable task you just completed. The generator will return a polished 20-25 word narrative using the full ATVR framework calibrated to your role.</p>
+      </div>
+
+      <div class="bnc-section-label">Select Your Role</div>
+      <div class="bnc-role-grid" data-role-group="standard">
+        <button class="bnc-role-btn active" data-role="litigator">Litigator<span class="bnc-role-sub">attorney</span></button>
+        <button class="bnc-role-btn" data-role="transactional">Transactional<span class="bnc-role-sub">attorney</span></button>
+        <button class="bnc-role-btn" data-role="lit-paralegal">Litigation<span class="bnc-role-sub">paralegal</span></button>
+        <button class="bnc-role-btn" data-role="trans-paralegal">Transactional<span class="bnc-role-sub">paralegal</span></button>
+      </div>
+
+      <div class="bnc-form-grid">
+        <div class="bnc-field">
+          <label>What did you just work on? <span class="bnc-hint">a plain-English blurb is fine</span></label>
+          <textarea class="bnc-textarea" id="std-task" placeholder="e.g., Spent about 3 hours going through opposing counsel's motion to dismiss, pulled relevant case law on the preemption issue, and drafted the outline for our response brief."></textarea>
+        </div>
+
+        <div class="bnc-form-row">
+          <div class="bnc-field">
+            <label>Matter / Case context <span class="bnc-hint">optional</span></label>
+            <input class="bnc-input" id="std-context" placeholder="e.g., Employment discrimination case, defending employer, trial in Q2">
+          </div>
+          <div class="bnc-field">
+            <label>Total Time</label>
+            <input class="bnc-input" id="std-time" placeholder="e.g., 3.0">
+          </div>
+        </div>
+      </div>
+
+      <div class="bnc-guidelines" data-guidelines="standard">
+        <button class="bnc-guidelines-toggle">
+          <span class="bnc-guidelines-toggle-left">
+            <span class="bnc-guidelines-icon">+</span>
+            <span>Add Client Billing Guidelines <em style="color: var(--muted); font-weight: 400; font-style: italic;">(carrier-specific, optional)</em></span>
+          </span>
+          <span class="bnc-chev"></span>
+        </button>
+        <div class="bnc-guidelines-body">
+          <p>Paste relevant excerpts from your client's billing guidelines, or upload a PDF. The generator will check the narrative against these rules before returning it — flagging anything that may conflict with carrier-specific restrictions (block billing, minimum increments, prohibited verbs, etc.).</p>
+          <textarea class="bnc-textarea" data-guidelines-text placeholder="Paste billing guidelines text here — e.g., 'Client requires minimum .2 increments, prohibits block billing, disallows review of own firm's correspondence, caps senior associate rate at $X/hr...'"></textarea>
+          <div class="bnc-file-row">
+            <button class="bnc-file-btn" data-file-trigger>Upload PDF</button>
+            <input type="file" accept="application/pdf" style="display:none" data-file-input>
+            <span class="bnc-file-name" data-file-name>No file attached</span>
+            <button class="bnc-file-clear" data-file-clear style="display:none">remove</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bnc-generate-row">
+        <span class="bnc-generate-note">Built on Molly's proprietary ATVR framework · All rights reserved 2026</span>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="bnc-secondary-btn" data-copy-prompt="standard">Copy Prompt to Clipboard</button>
+          <button class="bnc-generate-btn" data-generate="standard">Generate Narrative</button>
+        </div>
+      </div>
+
+      <div class="bnc-output" data-output="standard"></div>
+    </section>
+
+    <!-- ============ PANEL 2: BOOKENDS ============ -->
+    <section class="bnc-panel" data-panel="bookends">
+      <div class="bnc-panel-intro">
+        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Billing Bookends · Before · Task · After</span>
+        <h2>Billing Bookends</h2>
+        <p>Capture the complete work cycle as three connected entries — the strategic prep before the main event, the event itself, and the substantive follow-up after. Nothing left on the table.</p>
+      </div>
+
+      <div class="bnc-section-label">Select Your Role</div>
+      <div class="bnc-role-grid" data-role-group="bookends">
+        <button class="bnc-role-btn active" data-role="litigator">Litigator<span class="bnc-role-sub">attorney</span></button>
+        <button class="bnc-role-btn" data-role="transactional">Transactional<span class="bnc-role-sub">attorney</span></button>
+        <button class="bnc-role-btn" data-role="lit-paralegal">Litigation<span class="bnc-role-sub">paralegal</span></button>
+        <button class="bnc-role-btn" data-role="trans-paralegal">Transactional<span class="bnc-role-sub">paralegal</span></button>
+      </div>
+
+      <div class="bnc-form-grid">
+        <div class="bnc-field">
+          <label>Main task / event <span class="bnc-hint">the "center" of the bookend set</span></label>
+          <input class="bnc-input" id="bk-task" placeholder="e.g., Deposition of plaintiff's expert witness">
+        </div>
+
+        <div class="bnc-field">
+          <label>Context <span class="bnc-hint">what was prepared, what was discussed, what follow-up is needed</span></label>
+          <textarea class="bnc-textarea" id="bk-context" placeholder="e.g., Prepared by reviewing expert report and recent deposition testimony in similar matter. During depo, locked in expert's methodology concessions. Afterward, updated trial strategy memo and coordinated with co-counsel on cross-examination approach."></textarea>
+        </div>
+
+        <div>
+          <label style="font-family:'Outfit',sans-serif; font-size:0.82rem; font-weight:600; color:var(--navy); margin-bottom:0.45rem; display:block;">Time Breakdown <span class="bnc-hint">Before / Task / After</span></label>
+          <div class="bnc-time-breakdown">
+            <input class="bnc-input" id="bk-time-before" placeholder="Before — e.g., 0.4">
+            <input class="bnc-input" id="bk-time-main" placeholder="Task — e.g., 1.5">
+            <input class="bnc-input" id="bk-time-after" placeholder="After — e.g., 0.3">
+          </div>
+        </div>
+      </div>
+
+      <div class="bnc-guidelines" data-guidelines="bookends">
+        <button class="bnc-guidelines-toggle">
+          <span class="bnc-guidelines-toggle-left">
+            <span class="bnc-guidelines-icon">+</span>
+            <span>Add Client Billing Guidelines <em style="color: var(--muted); font-weight: 400; font-style: italic;">(carrier-specific, optional)</em></span>
+          </span>
+          <span class="bnc-chev"></span>
+        </button>
+        <div class="bnc-guidelines-body">
+          <p>Paste client-specific billing rules or upload a PDF of the carrier guidelines. Bookend narratives will be drafted to avoid language flagged in those rules.</p>
+          <textarea class="bnc-textarea" data-guidelines-text placeholder="Paste billing guidelines text here..."></textarea>
+          <div class="bnc-file-row">
+            <button class="bnc-file-btn" data-file-trigger>Upload PDF</button>
+            <input type="file" accept="application/pdf" style="display:none" data-file-input>
+            <span class="bnc-file-name" data-file-name>No file attached</span>
+            <button class="bnc-file-clear" data-file-clear style="display:none">remove</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bnc-generate-row">
+        <span class="bnc-generate-note">Three separate entries · present tense throughout · strategic language</span>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="bnc-secondary-btn" data-copy-prompt="bookends">Copy Prompt to Clipboard</button>
+          <button class="bnc-generate-btn" data-generate="bookends">Generate Bookends</button>
+        </div>
+      </div>
+
+      <div class="bnc-output" data-output="bookends"></div>
+    </section>
+
+    <!-- ============ PANEL 3: MULTI-PHASE ============ -->
+    <section class="bnc-panel" data-panel="multiphase">
+      <div class="bnc-panel-intro">
+        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Four Phases · Analyze · Strategize · Draft · Finalize</span>
+        <h2>Multi-Phase Work</h2>
+        <p>Break a large project (MSJ, purchase agreement, trial prep) into four unbundled narratives — review/analyze, outlining/strategy, preparation/drafting, finalizing/review — so nothing reads as block billing.</p>
+      </div>
+
+      <div class="bnc-section-label">Select Your Role</div>
+      <div class="bnc-role-grid" data-role-group="multiphase">
+        <button class="bnc-role-btn active" data-role="litigator">Litigator<span class="bnc-role-sub">attorney</span></button>
+        <button class="bnc-role-btn" data-role="transactional">Transactional<span class="bnc-role-sub">attorney</span></button>
+        <button class="bnc-role-btn" data-role="lit-paralegal">Litigation<span class="bnc-role-sub">paralegal</span></button>
+        <button class="bnc-role-btn" data-role="trans-paralegal">Transactional<span class="bnc-role-sub">paralegal</span></button>
+      </div>
+
+      <div class="bnc-form-grid">
+        <div class="bnc-field">
+          <label>Work description <span class="bnc-hint">the full project you completed</span></label>
+          <input class="bnc-input" id="mp-task" placeholder="e.g., Motion for summary judgment on breach of contract claim">
+        </div>
+
+        <div class="bnc-field">
+          <label>Context <span class="bnc-hint">complexity, urgency, strategic considerations</span></label>
+          <textarea class="bnc-textarea" id="mp-context" placeholder="e.g., Three-count breach of contract case, novel preemption issue, MSJ due in 10 days, client wants aggressive posture to pressure settlement."></textarea>
+        </div>
+
+        <div class="bnc-form-row">
+          <div class="bnc-field">
+            <label>Total Time <span class="bnc-hint">will split across 4 phases</span></label>
+            <input class="bnc-input" id="mp-time" placeholder="e.g., 8.5">
+          </div>
+          <div class="bnc-field">
+            <label>Phase split <span class="bnc-hint">optional, e.g., 2-1.5-4-1</span></label>
+            <input class="bnc-input" id="mp-split" placeholder="auto-split if blank">
+          </div>
+        </div>
+      </div>
+
+      <div class="bnc-guidelines" data-guidelines="multiphase">
+        <button class="bnc-guidelines-toggle">
+          <span class="bnc-guidelines-toggle-left">
+            <span class="bnc-guidelines-icon">+</span>
+            <span>Add Client Billing Guidelines <em style="color: var(--muted); font-weight: 400; font-style: italic;">(carrier-specific, optional)</em></span>
+          </span>
+          <span class="bnc-chev"></span>
+        </button>
+        <div class="bnc-guidelines-body">
+          <p>Paste client-specific billing rules or upload a PDF of the carrier guidelines. Each of the four phase narratives will be drafted to comply.</p>
+          <textarea class="bnc-textarea" data-guidelines-text placeholder="Paste billing guidelines text here..."></textarea>
+          <div class="bnc-file-row">
+            <button class="bnc-file-btn" data-file-trigger>Upload PDF</button>
+            <input type="file" accept="application/pdf" style="display:none" data-file-input>
+            <span class="bnc-file-name" data-file-name>No file attached</span>
+            <button class="bnc-file-clear" data-file-clear style="display:none">remove</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bnc-generate-row">
+        <span class="bnc-generate-note">Four separate narratives · each stands alone · task name in every entry</span>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="bnc-secondary-btn" data-copy-prompt="multiphase">Copy Prompt to Clipboard</button>
+          <button class="bnc-generate-btn" data-generate="multiphase">Generate Phases</button>
+        </div>
+      </div>
+
+      <div class="bnc-output" data-output="multiphase"></div>
+    </section>
+  </div>
+
+  <footer class="bnc-footer">
+    Molly Kremer, Esq. · <span>The Billing Coach</span> · thebillingcoach.com
+  </footer>
+</div>
+
+<script>
+(function() {
+  // ============ BLUEPRINT DATA (embedded from Molly's ATVR blueprints) ============
+  const BLUEPRINTS = {
+    litigator: {
+      label: "Litigation Attorney",
+      actions: ["Review","Analyze","Evaluate","Strategize","Exchange","Prepare","Plan","Proceed","Draft","Execute","Summarize","Outline","Coordinate","Assess","Revise","Request","Finalize","Update","Document","Identify","Facilitate","Implement","Develop","Verify"],
+      tasks: ["Complaint","Pleading","Correspondence","Answer","Discovery","Motion","Deposition","Produced Documents","Hearing","Settlement Conference","Case Evaluation Report","Litigation Status Chart","Fact Witness Chart","Expert Chart","Motion in limine","Mediation","Litigation Budget","Risks Assessment Matrix","Evidence Summary","Trial Brief","Trial Exhibits","Timeline of Events"],
+      values: ["to evaluate relevant statutes applicable to case","to understand the legal precedents","to mitigate potential risks","to maximize favorable outcomes","in anticipation of opposing arguments","to identify potential risks associated with case","to explore various strategic options","to determine potential impact of same","to preserve appellate rights","to strengthen negotiating position","to maintain client confidentiality","to advance client's litigation objectives","to protect privileged information","to streamline discovery process","to preserve evidence","to challenge admissibility","to establish foundation for evidence","to build credibility with the court","to respond to emergent issues","to develop trial themes","to manage litigation costs","to coordinate with local counsel","to assess legal accuracy and consistency","to facilitate early case resolution"],
+      results: ["for initial case report and strategic recommendations","for summary judgment motion","for settlement negotiations","for mediation preparation","for trial preparation","for client status update and further handling","for motion to compel","for final case disposition","for dispositive motion practice","for case evaluation and liability assessment","for expert retention decision","for discovery response deadline","for pretrial conference","for appellate record preservation","for damages calculation","for litigation budget update","for witness preparation session","for early case resolution","for protective order application","for sanctions motion","for Rule 26 disclosures","for case management order compliance","for client reporting requirements"]
+    },
+    transactional: {
+      label: "Transactional Attorney",
+      actions: ["Review","Analyze","Evaluate","Strategize","Exchange","Prepare","Plan","Proceed","Draft","Audit","Appear","Outline","Coordinate","Assess","Revise","Request","Finalize","Update","Document","Identify","Facilitate","Implement","Develop","Verify"],
+      tasks: ["Purchase Agreement","Merger Agreement","Stock Purchase Agreement","Asset Purchase Agreement","Securities Filings","Disclosure Schedules","Due Diligence Request List","Closing Checklist","Board Resolutions","Shareholder Consents","Officer's Certificates","Legal Opinions","Corporate Governance Documents","Regulatory Filings","Term Sheets","Due Diligence Review","Document Repository","Signature Pages","Closing Deliverables","Transaction Timeline","Deal Summary","Risk Assessment Matrix","Compliance Checklist"],
+      values: ["to understand the legal precedents","to evaluate relevant statutes applicable to transaction","to mitigate potential risks","to maximize favorable outcomes","to identify potential risks","to satisfy conditions precedent","to assess legal accuracy and consistency","to determine potential impact of same","to minimize post-closing liability","to meet filing deadlines","to ensure regulatory compliance","to mitigate transaction risks","to optimize tax structure","to align with business objectives","to consider market standards","to facilitate timely closing","to protect client interests","to facilitate efficient closing","to maintain confidentiality","to streamline due diligence process","to enhance negotiating position","to ensure securities law compliance"],
+      results: ["for execution and closing","for client approval and signature","for submission to regulatory authorities","for due diligence completion","for closing checklist compliance","for conditions precedent satisfaction","for board/shareholder approval","for deal team distribution","for negotiation session with counterparty","for securities filing deadline","for financing commitment","for transaction signing","for post-closing integration","for escrow release","for third-party consent procurement","for HSR/antitrust clearance","for deal summary and client reporting","for opinion letter delivery","for closing binder compilation","for post-closing deliverables schedule"]
+    },
+    "lit-paralegal": {
+      label: "Litigation Paralegal",
+      actions: ["Review","Organize","Compile","Index","Summarize","Redact","Assemble","Prepare","Draft","Create","Format","Cite-check","Proofread","Catalog","Coordinate","Track","Update","Maintain","Request","Collect","Extract"],
+      tasks: ["Court Filings","Service of Process","Expert Materials","Hearing Binders","Settlement Documents","Status Reports","Case Files","Discovery Responses","Production Documents","Privilege Logs","Deposition Notices","Subpoenas","Chronologies","Document Database","Deposition Summaries","Exhibit Lists","Witness Lists","Correspondence","Pleadings","Motions"],
+      values: ["to ensure timely court filing","to facilitate efficient case management","to support attorney preparation","to maintain accurate case records","to meet discovery deadlines","to support litigation strategy","to maintain case organization","to facilitate trial preparation","to ensure proper service of process","to protect confidential information","to expedite case resolution","to maintain professional standards","to support settlement negotiations","to ensure complete case documentation","to facilitate attorney review","to meet court-imposed deadlines","as requested by attorney/partner","to enhance case presentation","to verify legal citations","to ensure accuracy of filings"],
+      results: ["for discovery deadline compliance","for attorney document review","for discovery response production","for witness scheduling coordination","for third-party document production","for case timeline development","for mediation/settlement conference","for litigation status reporting","for court submission deadline","for proof of service filing","for expert deposition preparation","for hearing presentation","for client status update","for case management compliance","for deposition digest completion","for pretrial submission deadline","for trial exhibit identification","for client/court communication","for motion/brief filing","for appellate record preservation"]
+    },
+    "trans-paralegal": {
+      label: "Transactional Paralegal",
+      actions: ["Review","Prepare","Organize","Compile","Index","Summarize","Assemble","Catalog","Draft","Create","Format","Proofread","Verify","Coordinate","Track","Maintain","Request","Collect","Compare","Reconcile","Circulate","Archive"],
+      tasks: ["Signature Pages","Closing Binders","Due Diligence Checklists","Data Room Documents","Contract Terms","Transaction Bibles","Closing Deliverables","Corporate Resolutions","Board Consents","Entity Formation Documents","Disclosure Schedules","Officer's Certificates","Signing Authority","State Filings","Closing Conditions","Transaction Timelines","Corporate Records","Good Standing Certificates","Executed Documents","Agreement Versions","Deal Documents","Post-Closing Documents"],
+      values: ["to ensure proper execution","to facilitate efficient transaction","to support attorney preparation","to organize for deal team access","to identify key provisions","to create permanent deal record","to track completion status","to document board approval","to authorize transaction","to establish new entity","to meet court-imposed deadlines","to verify corporate authority","to confirm execution authority","to ensure regulatory compliance","to monitor outstanding items","to maintain current deal status","to ensure accurate records","to verify entity good standing","to confirm proper execution","to identify negotiated changes","to verify accurate funds transfer","to obtain party approval","to facilitate buyer review","to preserve transaction records"],
+      results: ["for closing execution","for permanent transaction archive","for due diligence completion","for deal team coordination","for contract analysis","for client reference","for closing checklist compliance","for post-closing compliance","for board approval documentation","for closing condition satisfaction","for state filing submission","for purchase agreement exhibit","for closing deliverable package","for signature coordination","for entity compliance","for closing readiness","for deal team reporting","for corporate record book","for closing condition verification","for closing binder assembly","for attorney markup review","for funds transfer completion","for transaction progression","for due diligence period"]
+    }
+  };
+
+  // ============ STATE ============
+  const state = {
+    role: { standard: "litigator", bookends: "litigator", multiphase: "litigator" },
+    guidelinesFile: { standard: null, bookends: null, multiphase: null }
+  };
+
+  // ============ TAB SWITCHING ============
+  document.querySelectorAll('.bnc-main-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = btn.dataset.panel;
+      document.querySelectorAll('.bnc-main-tab').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.bnc-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === panel));
+    });
+  });
+
+  // ============ ROLE SELECTION ============
+  document.querySelectorAll('[data-role-group]').forEach(group => {
+    const panel = group.dataset.roleGroup;
+    group.querySelectorAll('.bnc-role-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        group.querySelectorAll('.bnc-role-btn').forEach(b => b.classList.toggle('active', b === btn));
+        state.role[panel] = btn.dataset.role;
+      });
+    });
+  });
+
+  // ============ GUIDELINES TOGGLE + FILE ============
+  document.querySelectorAll('.bnc-guidelines').forEach(container => {
+    const panel = container.dataset.guidelines;
+    const toggle = container.querySelector('.bnc-guidelines-toggle');
+    const fileTrigger = container.querySelector('[data-file-trigger]');
+    const fileInput = container.querySelector('[data-file-input]');
+    const fileName = container.querySelector('[data-file-name]');
+    const fileClear = container.querySelector('[data-file-clear]');
+    const textArea = container.querySelector('[data-guidelines-text]');
+
+    toggle.addEventListener('click', () => {
+      container.classList.toggle('open');
+    });
+
+    fileTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 10 * 1024 * 1024) {
+        alert("PDF is larger than 10MB. Please use a smaller file or paste the relevant excerpts into the text box instead.");
+        fileInput.value = "";
+        return;
+      }
+      fileName.textContent = file.name;
+      fileClear.style.display = "inline";
+      container.classList.add('active');
+      // convert to base64 and stash
+      const b64 = await toBase64(file);
+      state.guidelinesFile[panel] = { name: file.name, data: b64 };
+    });
+
+    fileClear.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.value = "";
+      fileName.textContent = "No file attached";
+      fileClear.style.display = "none";
+      state.guidelinesFile[panel] = null;
+      if (!textArea.value.trim()) container.classList.remove('active');
+    });
+
+    textArea.addEventListener('input', () => {
+      if (textArea.value.trim() || state.guidelinesFile[panel]) {
+        container.classList.add('active');
+      } else {
+        container.classList.remove('active');
+      }
+    });
+  });
+
+  function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result.split(",")[1]);
+      r.onerror = () => reject(new Error("Could not read file"));
+      r.readAsDataURL(file);
+    });
+  }
+
+  // ============ GENERATE BUTTONS ============
+  document.querySelectorAll('[data-generate]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = btn.dataset.generate;
+      if (panel === 'standard') handleStandard(btn, 'generate');
+      else if (panel === 'bookends') handleBookends(btn, 'generate');
+      else if (panel === 'multiphase') handleMultiphase(btn, 'generate');
+    });
+  });
+
+  // ============ COPY-PROMPT BUTTONS (fallback path) ============
+  document.querySelectorAll('[data-copy-prompt]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = btn.dataset.copyPrompt;
+      if (panel === 'standard') handleStandard(btn, 'copy');
+      else if (panel === 'bookends') handleBookends(btn, 'copy');
+      else if (panel === 'multiphase') handleMultiphase(btn, 'copy');
+    });
+  });
+
+  async function copyPromptToClipboard(btn, prompt, panel) {
+    const guidelines = getGuidelinesFor(panel);
+    let finalPrompt = prompt;
+    if (guidelines.file) {
+      finalPrompt = `[NOTE: You also attached a PDF called "${guidelines.file.name}" with client billing guidelines. Before pasting this into Claude, upload that same PDF into the Claude chat along with this prompt.]\n\n${prompt}`;
+    }
+    try {
+      await navigator.clipboard.writeText(finalPrompt);
+      const originalText = btn.textContent;
+      btn.textContent = "✓ Copied — paste into Claude";
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.classList.remove('copied');
+      }, 3000);
+    } catch (err) {
+      alert("Could not copy to clipboard automatically. Here's your prompt — copy it manually:\n\n" + finalPrompt.slice(0, 200) + "...");
+    }
+  }
+
+  function getGuidelinesFor(panel) {
+    const container = document.querySelector(`[data-guidelines="${panel}"]`);
+    const text = container.querySelector('[data-guidelines-text]').value.trim();
+    const file = state.guidelinesFile[panel];
+    return { text, file };
+  }
+
+  function renderBlueprint(role) {
+    const bp = BLUEPRINTS[role];
+    return `Role: ${bp.label}
+
+Reference pools from Molly Kremer's ATVR Billing Blueprint for this role (use these as inspiration — select the most appropriate terms for the specific task; do not force them if another phrasing is more accurate):
+
+ACTION verbs: ${bp.actions.join(", ")}
+
+TASK nouns: ${bp.tasks.join(", ")}
+
+VALUE phrases: ${bp.values.join(" · ")}
+
+RESULT phrases: ${bp.results.join(" · ")}`;
+  }
+
+  // ============ STANDARD ============
+  async function handleStandard(btn, mode) {
+    const task = document.getElementById('std-task').value.trim();
+    const context = document.getElementById('std-context').value.trim();
+    const time = document.getElementById('std-time').value.trim();
+    if (!task) { alert("Please describe the task you completed."); return; }
+    const role = state.role.standard;
+    const guidelines = getGuidelinesFor('standard');
+
+    const prompt = `You are assisting Molly Kremer, Esq. (The Billing Coach) in generating a billing narrative using her proprietary ATVR Framework.
+
+${renderBlueprint(role)}
+
+THE ATVR FRAMEWORK — 4 parts:
+• ACTION — what you are doing (2-3 action verbs strung together, present tense only)
+• TASK — what you are doing it for (named specifically)
+• VALUE — why it matters / the purpose of the focus
+• RESULT — the end goal: the deliverable, milestone, or strategic objective the work drives toward
+
+USER'S WORK BLURB:
+"${task}"
+${context ? `\nMATTER CONTEXT: ${context}` : ""}
+${time ? `\nTIME: ${time} hours` : ""}
+
+${guidelines.text || guidelines.file ? `CLIENT BILLING GUIDELINES (carrier-specific rules that the narrative MUST comply with — check for prohibited verbs, block billing rules, minimum increments, prohibited tasks, and any special language requirements):
+${guidelines.text || "[See attached PDF]"}` : ""}
+
+OUTPUT REQUIREMENTS:
+✓ 20-25 words total
+✓ ONLY present tense
+✓ Begin with 2-3 action words strung together (e.g., "Review and analyze" / "Strategize and draft" / "Assess and revise")
+✓ Include the specific TASK name
+✓ Include a VALUE phrase explaining why it matters
+✓ Include a RESULT phrase showing what the work drives toward
+✓ Sound like attorney-level (or seasoned paralegal) work — strategic, not clerical
+✓ Avoid administrative verbs used alone ("organize," "gather," "compile" with no strategic context)
+✓ If client guidelines were provided, strictly comply with them
+
+Return your response as JSON only, no preamble or code fences:
+{
+  "narrative": "the 20-25 word narrative here",
+  "compliance_note": "one short sentence — either 'Compliant with provided guidelines.' or a specific flag if something in the blurb conflicts with a rule you can see. If no guidelines were provided, write 'No client guidelines provided.'",
+  "coaching_tip": "one short sentence in Molly's voice with a tip about why this narrative reads as valuable"
+}`;
+
+    if (mode === 'copy') return copyPromptToClipboard(btn, prompt, 'standard');
+    await runGeneration(btn, 'standard', prompt, guidelines.file, renderStandard);
+  }
+
+  function renderStandard(data, time) {
+    const timeLabel = time ? `<span class="bnc-narrative-time">${time} hrs</span>` : "";
+    return `
+      <div class="bnc-narrative-entry">
+        <div class="bnc-narrative-label"><span>ATVR Narrative</span>${timeLabel}</div>
+        <div class="bnc-narrative-text">${escapeHtml(data.narrative || "")}</div>
+      </div>
+      ${data.compliance_note ? `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>` : ""}
+      ${data.coaching_tip ? `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">— ${escapeHtml(data.coaching_tip)}</div>` : ""}
+    `;
+  }
+
+  // ============ BOOKENDS ============
+  async function handleBookends(btn, mode) {
+    const task = document.getElementById('bk-task').value.trim();
+    const context = document.getElementById('bk-context').value.trim();
+    const tBefore = document.getElementById('bk-time-before').value.trim();
+    const tMain = document.getElementById('bk-time-main').value.trim();
+    const tAfter = document.getElementById('bk-time-after').value.trim();
+    if (!task) { alert("Please enter the main task/event."); return; }
+    const role = state.role.bookends;
+    const guidelines = getGuidelinesFor('bookends');
+
+    const prompt = `You are assisting Molly Kremer, Esq. (The Billing Coach) in generating a Billing Bookends narrative set using her proprietary framework.
+
+${renderBlueprint(role)}
+
+THE BILLING BOOKENDS FRAMEWORK — three separate time entries that together capture the complete work cycle:
+
+BEFORE BOOKEND — the strategic preparation/analysis done BEFORE the main event
+  • Start with 2-3 action words, present tense ("Strategize and assess" / "Research and analyze" / "Review and evaluate")
+  • Include a VALUE phrase showing the prep's purpose
+  • End with explicit connection to the upcoming task ("in advance of..." / "in preparation for..." / "prior to...")
+  • 12-18 words
+
+TASK / MAIN EVENT — the actual discrete task
+  • Start with action describing the task ("Telephone conference with..." / "Attend and participate in..." / "Draft and revise...")
+  • Include WHO is involved if applicable (client, co-counsel, opposing counsel)
+  • Describe what was accomplished or discussed
+  • Use "regarding" to introduce topics for conferences/calls
+  • 12-18 words
+
+AFTER BOOKEND — the strategic follow-up/implementation AFTER the main event
+  • Start with 2-3 action words, present tense ("Evaluate and determine" / "Assess and prioritize" / "Analyze and implement")
+  • Reference outputs from the task ("conference notes" / "research findings" / "client feedback")
+  • Include forward-looking impact (next steps, strategy refinement, risk assessment)
+  • 12-18 words
+
+USER'S INPUT:
+Main task/event: "${task}"
+${context ? `Context: ${context}` : ""}
+Times: BEFORE ${tBefore || "__"} · TASK ${tMain || "__"} · AFTER ${tAfter || "__"}
+
+${guidelines.text || guidelines.file ? `CLIENT BILLING GUIDELINES (the three narratives MUST comply with these rules — watch for prohibited language, minimum increments, block billing restrictions):
+${guidelines.text || "[See attached PDF]"}` : ""}
+
+CRITICAL:
+✓ ONLY present tense throughout all three entries
+✓ No administrative language — emphasize strategic thinking and legal judgment
+✓ Each bookend demonstrates SUBSTANTIAL intellectual work
+✓ All three entries work together as a cohesive narrative of the complete work cycle
+
+Return your response as JSON only, no preamble or code fences:
+{
+  "before": "narrative for before bookend",
+  "main": "narrative for main task",
+  "after": "narrative for after bookend",
+  "compliance_note": "one sentence — compliant with guidelines or specific flag. If no guidelines: 'No client guidelines provided.'",
+  "coaching_tip": "one short sentence in Molly's voice about why this bookend set captures the full work cycle"
+}`;
+
+    if (mode === 'copy') return copyPromptToClipboard(btn, prompt, 'bookends');
+    await runGeneration(btn, 'bookends', prompt, guidelines.file, (data) => renderBookends(data, tBefore, tMain, tAfter));
+  }
+
+  function renderBookends(data, tB, tM, tA) {
+    return `
+      <div class="bnc-narrative-entry">
+        <div class="bnc-narrative-label"><span>Before Bookend</span>${tB ? `<span class="bnc-narrative-time">${tB} hrs</span>` : ""}</div>
+        <div class="bnc-narrative-text">${escapeHtml(data.before || "")}</div>
+      </div>
+      <div class="bnc-narrative-entry">
+        <div class="bnc-narrative-label"><span>Task · Main Event</span>${tM ? `<span class="bnc-narrative-time">${tM} hrs</span>` : ""}</div>
+        <div class="bnc-narrative-text">${escapeHtml(data.main || "")}</div>
+      </div>
+      <div class="bnc-narrative-entry">
+        <div class="bnc-narrative-label"><span>After Bookend</span>${tA ? `<span class="bnc-narrative-time">${tA} hrs</span>` : ""}</div>
+        <div class="bnc-narrative-text">${escapeHtml(data.after || "")}</div>
+      </div>
+      ${data.compliance_note ? `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>` : ""}
+      ${data.coaching_tip ? `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">— ${escapeHtml(data.coaching_tip)}</div>` : ""}
+    `;
+  }
+
+  // ============ MULTI-PHASE ============
+  async function handleMultiphase(btn, mode) {
+    const task = document.getElementById('mp-task').value.trim();
+    const context = document.getElementById('mp-context').value.trim();
+    const time = document.getElementById('mp-time').value.trim();
+    const split = document.getElementById('mp-split').value.trim();
+    if (!task) { alert("Please describe the work."); return; }
+    const role = state.role.multiphase;
+    const guidelines = getGuidelinesFor('multiphase');
+
+    const prompt = `You are assisting Molly Kremer, Esq. (The Billing Coach) in generating a Multi-Phase Legal Work billing narrative set using her proprietary ATVR framework.
+
+${renderBlueprint(role)}
+
+THE MULTI-PHASE FRAMEWORK — four SEPARATE billing narratives (NOT block billed) that break one project into distinct phases. Each narrative:
+✓ 20-25 words total
+✓ ONLY present tense
+✓ Starts with 2-3 ACTION words strung together
+✓ Includes the TASK NAME in every single narrative (e.g., "motion to dismiss" appears in all four)
+✓ Includes VALUE phrase (what this phase accomplishes for the client)
+✓ Includes EXTRA VALUE or RESULT phrase when applicable
+✓ Sounds like attorney-level (or seasoned paralegal) work
+✓ Avoids administrative language used alone
+
+REQUIRED PHASES:
+1. REVIEW / ANALYZE PHASE — initial assessment, case law research, document review, strategic analysis
+2. OUTLINING / STRATEGY PHASE — strategic planning, argument development, approach formulation
+3. PREPARATION / DRAFTING PHASE — substantive drafting, preparation, creation work
+4. FINALIZING / REVIEW PHASE — quality control, strategic refinement, completion
+
+USER'S INPUT:
+Work description: "${task}"
+${context ? `Context: ${context}` : ""}
+Total time: ${time || "[not specified]"}${split ? `\nUser-specified phase split: ${split}` : "\nPhase split: auto-distribute the total time across the four phases sensibly (heavier on drafting typically)"}
+
+${guidelines.text || guidelines.file ? `CLIENT BILLING GUIDELINES (all four narratives MUST comply — watch for prohibited verbs, block billing rules, minimum increments, task-specific restrictions):
+${guidelines.text || "[See attached PDF]"}` : ""}
+
+CRITICAL:
+✓ Every phase demonstrates SUBSTANTIAL intellectual work
+✓ TASK NAME appears in every single narrative
+✓ Times should add up to the total provided
+✓ Each entry stands alone as a complete billing narrative
+✓ Partner-level sophistication in language
+
+Return your response as JSON only, no preamble or code fences:
+{
+  "phase1": {"narrative": "...", "time": "e.g., 1.5"},
+  "phase2": {"narrative": "...", "time": "..."},
+  "phase3": {"narrative": "...", "time": "..."},
+  "phase4": {"narrative": "...", "time": "..."},
+  "compliance_note": "one sentence — compliant with guidelines or specific flag. If no guidelines: 'No client guidelines provided.'",
+  "coaching_tip": "one short sentence in Molly's voice about why unbundling this work captures its full value"
+}`;
+
+    if (mode === 'copy') return copyPromptToClipboard(btn, prompt, 'multiphase');
+    await runGeneration(btn, 'multiphase', prompt, guidelines.file, renderMultiphase);
+  }
+
+  function renderMultiphase(data) {
+    const phaseLabels = ["Phase 1 · Review / Analyze", "Phase 2 · Outlining / Strategy", "Phase 3 · Preparation / Drafting", "Phase 4 · Finalizing / Review"];
+    const phases = [data.phase1, data.phase2, data.phase3, data.phase4];
+    let html = "";
+    phases.forEach((p, i) => {
+      if (!p) return;
+      html += `
+        <div class="bnc-narrative-entry">
+          <div class="bnc-narrative-label"><span>${phaseLabels[i]}</span>${p.time ? `<span class="bnc-narrative-time">${escapeHtml(p.time)} hrs</span>` : ""}</div>
+          <div class="bnc-narrative-text">${escapeHtml(p.narrative || "")}</div>
+        </div>
+      `;
+    });
+    if (data.compliance_note) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>`;
+    if (data.coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">— ${escapeHtml(data.coaching_tip)}</div>`;
+    return html;
+  }
+
+  // ============ GENERATION RUNNER ============
+  async function runGeneration(btn, panel, prompt, file, renderFn) {
+    const outputEl = document.querySelector(`[data-output="${panel}"]`);
+    const originalBtnText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Generating...";
+
+    outputEl.classList.add('visible');
+    outputEl.innerHTML = `
+      <div class="bnc-loading">
+        Molly's framework is drafting your narrative<span class="bnc-loading-dots"><span></span><span></span><span></span></span>
+      </div>
+    `;
+
+    try {
+      // Build message content
+      let content;
+      if (file) {
+        content = [
+          { type: "document", source: { type: "base64", media_type: "application/pdf", data: file.data } },
+          { type: "text", text: prompt }
+        ];
+      } else {
+        content = prompt;
+      }
+
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [{ role: "user", content }]
+        })
+      });
+
+      if (!response.ok) {
+        let errJson = {};
+        try { errJson = await response.json(); } catch (_) {}
+        throw new Error(errJson.error || `Server returned ${response.status}`);
+      }
+      const apiData = await response.json();
+
+      // Extract text from response
+      const rawText = apiData.content
+        .filter(b => b.type === "text")
+        .map(b => b.text)
+        .join("\n")
+        .trim();
+
+      // Strip code fences if present
+      const cleaned = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+      const data = JSON.parse(cleaned);
+
+      // Render output
+      outputEl.innerHTML = `
+        <div class="bnc-output-header">
+          <div class="bnc-output-title">Your Narrative${panel === 'standard' ? "" : " Set"}</div>
+          <button class="bnc-copy-btn" data-copy-all>Copy All</button>
+        </div>
+        <div data-narratives>${renderFn(data)}</div>
+      `;
+
+      // Attach copy handler
+      const copyBtn = outputEl.querySelector('[data-copy-all]');
+      copyBtn.addEventListener('click', () => {
+        const text = extractTextForCopy(data, panel);
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.textContent = "✓ Copied";
+          setTimeout(() => { copyBtn.textContent = "Copy All"; }, 2000);
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      const errorMsg = err.message || String(err);
+      outputEl.innerHTML = `
+        <div class="bnc-fallback-banner">
+          <strong>Something didn't land.</strong> ${escapeHtml(errorMsg)}
+          <br><br>
+          Try again in a moment. If the error mentions rate limits, wait a few minutes. If it persists, you can copy the prompt below and paste it into any Claude chat as a backup.
+          <br>
+          <button class="bnc-inline-btn" data-fallback-copy>Copy Prompt to Clipboard</button>
+        </div>
+      `;
+      const copyBtn = outputEl.querySelector('[data-fallback-copy]');
+      copyBtn.addEventListener('click', async () => {
+        let finalPrompt = prompt;
+        if (file) {
+          finalPrompt = `[NOTE: You also attached a PDF called "${file.name}" with client billing guidelines. Before pasting this into Claude, upload that same PDF into the Claude chat along with this prompt.]\n\n${prompt}`;
+        }
+        try {
+          await navigator.clipboard.writeText(finalPrompt);
+          copyBtn.textContent = "✓ Copied — paste into Claude";
+          copyBtn.classList.add('copied');
+        } catch (e) {
+          copyBtn.textContent = "Could not copy — please try manually";
+        }
+      });
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalBtnText;
+    }
+  }
+
+  function extractTextForCopy(data, panel) {
+    if (panel === 'standard') return data.narrative || "";
+    if (panel === 'bookends') return `BEFORE: ${data.before || ""}\nTASK: ${data.main || ""}\nAFTER: ${data.after || ""}`;
+    if (panel === 'multiphase') {
+      const labels = ["PHASE 1 (Review/Analyze)", "PHASE 2 (Outlining/Strategy)", "PHASE 3 (Preparation/Drafting)", "PHASE 4 (Finalizing/Review)"];
+      return [data.phase1, data.phase2, data.phase3, data.phase4]
+        .map((p, i) => p ? `${labels[i]}${p.time ? ` [${p.time} hrs]` : ""}: ${p.narrative || ""}` : "")
+        .filter(Boolean)
+        .join("\n\n");
+    }
+    return "";
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+})();
+</script>
