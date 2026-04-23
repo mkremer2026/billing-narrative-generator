@@ -1,13 +1,11 @@
-# ============================================================
-# The Billing Coach — Narrative Generator
-# Environment variables
-# ============================================================
-#
-# Copy this file to `.env.local` for local testing with `vercel dev`.
-# For production, set these in your Vercel dashboard under:
-#    Project → Settings → Environment Variables
-# ============================================================
-
-# Your Anthropic API key — get one at https://console.anthropic.com
-# NEVER commit the real key to Git. This file is just an example.
-ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
+{
+  "name": "billing-narrative-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Billing Coach — AI-powered billing narrative generator by Molly Kremer, Esq.",
+  "author": "Molly Kremer, Esq.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  }
+}
