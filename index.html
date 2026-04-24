@@ -759,7 +759,7 @@
     </button>
     <button class="bnc-main-tab" data-panel="multiphase" role="tab">
       <span class="bnc-tab-num">iii.</span>
-      Multi-Phase Work
+      The Breakdown
     </button>
   </nav>
 
@@ -902,9 +902,9 @@
     <!-- ============ PANEL 3: MULTI-PHASE ============ -->
     <section class="bnc-panel" data-panel="multiphase">
       <div class="bnc-panel-intro">
-        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Four Phases · Analyze · Strategize · Draft · Finalize</span>
-        <h2>Multi-Phase Work</h2>
-        <p>Break a large project (MSJ, purchase agreement, trial prep) into four unbundled narratives — review/analyze, outlining/strategy, preparation/drafting, finalizing/review — so nothing reads as block billing.</p>
+        <span class="bnc-framework-badge"><span class="bnc-dot"></span>The Breakdown · Four Phases · Analyze · Strategize · Draft · Finalize</span>
+        <h2>The Breakdown</h2>
+        <p>Defeat block billing. Take a large project (MSJ, purchase agreement, trial prep) and break it down into four unbundled narratives — review/analyze, outlining/strategy, preparation/drafting, finalizing/review — so nothing reads as block billing.</p>
       </div>
 
       <div class="bnc-section-label">Select Your Role</div>
@@ -959,10 +959,10 @@
       </div>
 
       <div class="bnc-generate-row">
-        <span class="bnc-generate-note">Four separate narratives · each stands alone · task name in every entry</span>
+        <span class="bnc-generate-note">Four separate narratives · each stands alone · block billing defeated</span>
         <div style="display: flex; gap: 0.5rem;">
           <button class="bnc-secondary-btn" data-copy-prompt="multiphase">Copy Prompt to Clipboard</button>
-          <button class="bnc-generate-btn" data-generate="multiphase">Generate Phases</button>
+          <button class="bnc-generate-btn" data-generate="multiphase">Run The Breakdown</button>
         </div>
       </div>
 
@@ -1312,11 +1312,11 @@ Return your response as JSON only, no preamble or code fences:
     const role = state.role.multiphase;
     const guidelines = getGuidelinesFor('multiphase');
 
-    const prompt = `You are assisting Molly Kremer, Esq. (The Billing Coach) in generating a Multi-Phase Legal Work billing narrative set using her proprietary ATVR framework.
+    const prompt = `You are assisting Molly Kremer, Esq. (The Billing Coach) in generating "The Breakdown" — a set of billing narratives using her proprietary ATVR framework.
 
 ${renderBlueprint(role)}
 
-THE MULTI-PHASE FRAMEWORK — four SEPARATE billing narratives (NOT block billed) that break one project into distinct phases. Each narrative:
+THE BREAKDOWN — four SEPARATE billing narratives (NOT block billed) that break one project into distinct phases. Each narrative:
 ✓ 20-25 words total
 ✓ ONLY present tense
 ✓ Starts with 2-3 ACTION words strung together
@@ -1354,7 +1354,7 @@ Return your response as JSON only, no preamble or code fences:
   "phase3": {"narrative": "...", "time": "..."},
   "phase4": {"narrative": "...", "time": "..."},
   "compliance_note": "one sentence — compliant with guidelines or specific flag. If no guidelines: 'No client guidelines provided.'",
-  "coaching_tip": "one short sentence in Molly's voice about why unbundling this work captures its full value"
+  "coaching_tip": "one short sentence in Molly's voice about why running this work through The Breakdown captures its full value and defeats block billing"
 }`;
 
     if (mode === 'copy') return copyPromptToClipboard(btn, prompt, 'multiphase');
@@ -1432,9 +1432,12 @@ Return your response as JSON only, no preamble or code fences:
       const data = JSON.parse(cleaned);
 
       // Render output
+      const outputTitle = panel === 'standard' ? 'Your Narrative'
+        : panel === 'bookends' ? 'Your Bookend Set'
+        : 'Your Breakdown';
       outputEl.innerHTML = `
         <div class="bnc-output-header">
-          <div class="bnc-output-title">Your Narrative${panel === 'standard' ? "" : " Set"}</div>
+          <div class="bnc-output-title">${outputTitle}</div>
           <button class="bnc-copy-btn" data-copy-all>Copy All</button>
         </div>
         <div data-narratives>${renderFn(data)}</div>
