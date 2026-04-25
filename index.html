@@ -1183,6 +1183,441 @@
     border-radius: 50%;
   }
 
+  /* ===== Help icons & tooltips ===== */
+  .bnc-help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin-left: 0.4rem;
+    border-radius: 50%;
+    background: var(--gold-soft);
+    color: var(--navy);
+    border: 1px solid rgba(203,161,53,0.4);
+    font-family: 'Playfair Display', serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-style: italic;
+    cursor: pointer;
+    user-select: none;
+    line-height: 1;
+    transition: all 0.15s ease;
+    vertical-align: middle;
+  }
+
+  .bnc-help-icon:hover { background: var(--gold); color: var(--navy-deep); border-color: var(--gold); }
+  .bnc-help-icon.active { background: var(--navy); color: var(--paper); border-color: var(--navy); }
+
+  .bnc-tooltip-anchor { position: relative; display: inline-block; }
+
+  .bnc-tooltip {
+    position: absolute;
+    z-index: 100;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 320px;
+    max-width: 90vw;
+    padding: 0.85rem 1rem;
+    background: var(--navy);
+    color: var(--paper);
+    border-radius: 8px;
+    font-family: Georgia, serif;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    display: none;
+    border: 1px solid var(--gold);
+  }
+
+  .bnc-tooltip.visible { display: block; animation: fadeIn 0.18s ease; }
+
+  .bnc-tooltip::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 16px;
+    width: 12px; height: 12px;
+    background: var(--navy);
+    border-top: 1px solid var(--gold);
+    border-left: 1px solid var(--gold);
+    transform: rotate(45deg);
+  }
+
+  .bnc-tooltip strong { color: var(--gold); font-family: 'Outfit', sans-serif; font-weight: 600; }
+  .bnc-tooltip em { color: var(--gold-light); font-style: italic; }
+
+  /* ===== Header help link ===== */
+  .bnc-header-actions {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.75rem;
+    z-index: 2;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .bnc-header-btn {
+    background: rgba(203,161,53,0.15);
+    border: 1px solid rgba(203,161,53,0.5);
+    color: var(--gold-light);
+    padding: 0.4rem 0.85rem;
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .bnc-header-btn:hover { background: var(--gold); color: var(--navy-deep); border-color: var(--gold); }
+
+  /* ===== Help modal ===== */
+  .bnc-help-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,21,48,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+  }
+
+  .bnc-help-modal.visible { display: flex; animation: fadeIn 0.2s ease; }
+
+  .bnc-help-content {
+    background: var(--paper);
+    border-radius: 12px;
+    max-width: 760px;
+    width: 100%;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+
+  .bnc-help-header {
+    padding: 1.5rem 1.75rem;
+    background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 100%);
+    color: var(--paper);
+    border-bottom: 2px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .bnc-help-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.45rem;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .bnc-help-header h2 em { color: var(--gold); font-style: italic; }
+
+  .bnc-help-close {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: var(--paper);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    transition: all 0.15s ease;
+  }
+
+  .bnc-help-close:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); color: var(--gold); }
+
+  .bnc-help-body {
+    padding: 1.5rem 1.75rem 2rem;
+    overflow-y: auto;
+    color: var(--charcoal);
+    line-height: 1.65;
+    font-size: 0.95rem;
+  }
+
+  .bnc-help-body h3 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
+    color: var(--navy);
+    font-size: 1.2rem;
+    margin: 1.5rem 0 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .bnc-help-body h3:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
+  .bnc-help-body h4 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    color: var(--navy);
+    font-size: 0.95rem;
+    margin: 1.1rem 0 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.82rem;
+  }
+
+  .bnc-help-body p { margin-bottom: 0.75rem; }
+  .bnc-help-body em { color: var(--navy-light); font-style: italic; }
+  .bnc-help-body strong { color: var(--navy-deep); }
+
+  .bnc-help-body ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 1rem;
+  }
+
+  .bnc-help-body ul li {
+    padding-left: 1.4rem;
+    position: relative;
+    margin-bottom: 0.55rem;
+  }
+
+  .bnc-help-body ul li::before {
+    content: '✱';
+    position: absolute;
+    left: 0;
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .bnc-help-body .bnc-help-tab-card {
+    background: var(--ivory);
+    border-left: 3px solid var(--gold);
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 0.85rem;
+  }
+
+  .bnc-help-body .bnc-help-tab-card .bnc-help-tab-num {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--gold);
+    font-size: 0.85rem;
+    margin-right: 0.5rem;
+  }
+
+  .bnc-help-body .bnc-help-tab-card strong {
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
+    font-size: 1.05rem;
+    color: var(--navy);
+  }
+
+  .bnc-help-body .bnc-help-tab-card p { margin: 0.4rem 0 0; }
+
+  .bnc-help-body .bnc-help-callout {
+    background: var(--gold-soft);
+    border: 1px solid rgba(203,161,53,0.35);
+    border-radius: 6px;
+    padding: 0.85rem 1.1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--navy);
+  }
+
+  .bnc-help-footer {
+    padding: 1rem 1.75rem 1.25rem;
+    background: var(--ivory);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .bnc-help-footer-text {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+  }
+
+  /* ===== Quick Start panel (in Library tab) ===== */
+  .bnc-quickstart {
+    background: linear-gradient(135deg, var(--ivory) 0%, var(--gold-soft) 100%);
+    border: 1px solid rgba(203,161,53,0.3);
+    border-radius: 10px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .bnc-quickstart-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+
+  .bnc-quickstart-head h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--navy);
+    font-weight: 500;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  .bnc-quickstart-head h3 em { color: var(--gold); font-style: italic; }
+
+  .bnc-quickstart-toggle {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--navy);
+    padding: 0.32rem 0.85rem;
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .bnc-quickstart-toggle:hover { background: var(--navy); color: var(--paper); border-color: var(--navy); }
+
+  .bnc-quickstart-body {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed rgba(203,161,53,0.3);
+    color: var(--charcoal);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .bnc-quickstart.collapsed .bnc-quickstart-body { display: none; }
+
+  .bnc-quickstart-body p { margin-bottom: 0.65rem; }
+  .bnc-quickstart-body strong { color: var(--navy); }
+
+  /* ===== First-time tour overlay ===== */
+  .bnc-tour-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,21,48,0.75);
+    z-index: 9998;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .bnc-tour-overlay.visible { display: flex; animation: fadeIn 0.3s ease; }
+
+  .bnc-tour-card {
+    background: var(--paper);
+    border-radius: 12px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    overflow: hidden;
+    border-top: 4px solid var(--gold);
+  }
+
+  .bnc-tour-card-header {
+    padding: 1.5rem 1.75rem 0.5rem;
+  }
+
+  .bnc-tour-card-header .bnc-tour-step {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--gold);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+  }
+
+  .bnc-tour-card-header h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--navy);
+    font-weight: 500;
+    font-size: 1.4rem;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .bnc-tour-card-body {
+    padding: 1rem 1.75rem 1.5rem;
+    color: var(--charcoal);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .bnc-tour-card-body p { margin-bottom: 0.55rem; }
+  .bnc-tour-card-body em { color: var(--gold-dark, #a38527); font-style: italic; }
+  .bnc-tour-card-body strong { color: var(--navy); }
+
+  .bnc-tour-card-footer {
+    padding: 1rem 1.75rem 1.25rem;
+    background: var(--ivory);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .bnc-tour-progress {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .bnc-tour-progress-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.2s ease;
+  }
+
+  .bnc-tour-progress-dot.active {
+    background: var(--gold);
+    transform: scale(1.3);
+  }
+
+  .bnc-tour-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .bnc-tour-skip {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    text-decoration: underline;
+  }
+
+  .bnc-tour-skip:hover { color: var(--navy); }
+
+  .bnc-tour-next {
+    background: var(--navy);
+    color: var(--paper);
+    border: none;
+    padding: 0.55rem 1.2rem;
+    border-radius: 5px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .bnc-tour-next:hover { background: var(--gold); color: var(--navy-deep); }
+
   /* ===== Responsive ===== */
   @media (max-width: 720px) {
     .bnc-header { padding: 2.25rem 1.5rem 2.5rem; }
@@ -1199,6 +1634,9 @@
 <div class="bnc-app">
   <!-- HEADER -->
   <header class="bnc-header">
+    <div class="bnc-header-actions">
+      <button class="bnc-header-btn" data-help-open>? Help</button>
+    </div>
     <div class="bnc-brand-line">
       <span class="bnc-brand-mark"></span>
       <span class="bnc-brand-tag">The Billing Coach</span>
@@ -1239,7 +1677,7 @@
         <p>Paste a blurb about a billable task you just completed. The generator will return a polished 20-25 word narrative using the full ATVR framework calibrated to your role.</p>
       </div>
 
-      <div class="bnc-section-label">Select Your Role</div>
+      <div class="bnc-section-label">Select Your Role <span class="bnc-help-icon" data-help-tip="role">?</span></div>
       <div class="bnc-role-grid" data-role-group="standard">
         <button class="bnc-role-btn active" data-role="litigator">Litigator<span class="bnc-role-sub">attorney</span></button>
         <button class="bnc-role-btn" data-role="transactional">Transactional<span class="bnc-role-sub">attorney</span></button>
@@ -1249,13 +1687,13 @@
 
       <div class="bnc-form-grid">
         <div class="bnc-field">
-          <label>What did you just work on? <span class="bnc-hint">a plain-English blurb is fine</span></label>
+          <label>What did you just work on? <span class="bnc-hint">a plain-English blurb is fine</span> <span class="bnc-help-icon" data-help-tip="task-blurb">?</span></label>
           <textarea class="bnc-textarea" id="std-task" data-persist placeholder="e.g., Spent about 3 hours going through opposing counsel's motion to dismiss, pulled relevant case law on the preemption issue, and drafted the outline for our response brief."></textarea>
         </div>
 
         <div class="bnc-form-row">
           <div class="bnc-field">
-            <label>Matter / Case context <span class="bnc-hint">optional</span></label>
+            <label>Matter / Case context <span class="bnc-hint">optional</span> <span class="bnc-help-icon" data-help-tip="matter-context">?</span></label>
             <input class="bnc-input" id="std-context" data-persist placeholder="e.g., Employment discrimination case, defending employer, trial in Q2">
           </div>
           <div class="bnc-field">
@@ -1311,7 +1749,7 @@
         <p>Capture the complete work cycle as three connected entries — the strategic prep before the main event, the event itself, and the substantive follow-up after. Nothing left on the table.</p>
       </div>
 
-      <div class="bnc-section-label">Select Your Role</div>
+      <div class="bnc-section-label">Select Your Role <span class="bnc-help-icon" data-help-tip="role">?</span></div>
       <div class="bnc-role-grid" data-role-group="bookends">
         <button class="bnc-role-btn active" data-role="litigator">Litigator<span class="bnc-role-sub">attorney</span></button>
         <button class="bnc-role-btn" data-role="transactional">Transactional<span class="bnc-role-sub">attorney</span></button>
@@ -1331,7 +1769,7 @@
         </div>
 
         <div>
-          <label style="font-family:'Outfit',sans-serif; font-size:0.82rem; font-weight:600; color:var(--navy); margin-bottom:0.45rem; display:block;">Time Breakdown <span class="bnc-hint">Before / Task / After</span></label>
+          <label style="font-family:'Outfit',sans-serif; font-size:0.82rem; font-weight:600; color:var(--navy); margin-bottom:0.45rem; display:block;">Time Breakdown <span class="bnc-hint">Before / Task / After</span> <span class="bnc-help-icon" data-help-tip="bookends-time">?</span></label>
           <div class="bnc-time-breakdown">
             <input class="bnc-input" id="bk-time-before" data-persist placeholder="Before — e.g., 0.4">
             <input class="bnc-input" id="bk-time-main" data-persist placeholder="Task — e.g., 1.5">
@@ -1386,7 +1824,7 @@
         <p>Defeat block billing. Take a large project (MSJ, purchase agreement, trial prep) and break it down into four unbundled narratives — review/analyze, outlining/strategy, preparation/drafting, finalizing/review — so nothing reads as block billing.</p>
       </div>
 
-      <div class="bnc-section-label">Select Your Role</div>
+      <div class="bnc-section-label">Select Your Role <span class="bnc-help-icon" data-help-tip="role">?</span></div>
       <div class="bnc-role-grid" data-role-group="multiphase">
         <button class="bnc-role-btn active" data-role="litigator">Litigator<span class="bnc-role-sub">attorney</span></button>
         <button class="bnc-role-btn" data-role="transactional">Transactional<span class="bnc-role-sub">attorney</span></button>
@@ -1411,7 +1849,7 @@
             <input class="bnc-input" id="mp-time" data-persist placeholder="e.g., 8.5">
           </div>
           <div class="bnc-field">
-            <label>Phase split <span class="bnc-hint">optional, e.g., 2-1.5-4-1</span></label>
+            <label>Phase split <span class="bnc-hint">optional, e.g., 2-1.5-4-1</span> <span class="bnc-help-icon" data-help-tip="phase-split">?</span></label>
             <input class="bnc-input" id="mp-split" data-persist placeholder="auto-split if blank">
           </div>
         </div>
@@ -1463,6 +1901,19 @@
         <p>Save carrier billing guidelines, client-specific rules, or matter-level instructions for instant reuse on any tab. <strong>Your guidelines stay on your device only</strong> — they never touch The Billing Coach's servers. Use Export to back up or move them between devices.</p>
       </div>
 
+      <div class="bnc-quickstart" id="bnc-quickstart">
+        <div class="bnc-quickstart-head" data-quickstart-toggle>
+          <h3>Quick Start <em>— how this tool works</em></h3>
+          <button class="bnc-quickstart-toggle">Hide</button>
+        </div>
+        <div class="bnc-quickstart-body">
+          <p><strong>The shortest version.</strong> Type or paste what you actually did into one of the three generation tabs. The AI returns a polished ATVR narrative. Copy it into your billing software. Move on with your day.</p>
+          <p><strong>Pick the right tab.</strong> One discrete task → <em>Standard Narrative</em>. A whole work cycle (prep → event → follow-up) → <em>Billing Bookends</em>. A big project you'd otherwise block bill → <em>The Breakdown</em>.</p>
+          <p><strong>The Library is yours.</strong> Save the carrier and client guidelines you bill against. Apply them with a dropdown click instead of pasting every time. Nothing leaves your device.</p>
+          <p><strong>Need more detail?</strong> Click <em>Help</em> in the top-right corner — full instructions, common pitfalls, and the four-part ATVR framework explained.</p>
+        </div>
+      </div>
+
       <div class="bnc-library-header">
         <div class="bnc-section-label">Saved Guidelines</div>
         <button class="bnc-library-add-btn" data-library-add>+ Add New</button>
@@ -1485,6 +1936,101 @@
     <div class="bnc-footer-brand">Molly Kremer, Esq. · <span>The Billing Coach</span> · thebillingcoach.com</div>
     <button class="bnc-logout-btn" onclick="window.bncLogout && window.bncLogout()">Log Out</button>
   </footer>
+</div>
+
+<!-- Help Modal -->
+<div class="bnc-help-modal" data-help-modal>
+  <div class="bnc-help-content">
+    <div class="bnc-help-header">
+      <h2>How to Use the <em>ATVR</em> Generator</h2>
+      <button class="bnc-help-close" data-help-close>×</button>
+    </div>
+    <div class="bnc-help-body">
+
+      <h3>Welcome — what this tool actually is</h3>
+      <p>This generator is a tool, not a substitute for the thinking. <strong>Your job is to know what work you actually did</strong> — strategically, substantively. My job is to help you say it in a way that doesn't get cut.</p>
+      <p>The ATVR framework does the heavy lifting, but you bring the raw material. The better the blurb you give it, the better the narrative comes back. Garbage in, polished garbage out.</p>
+
+      <div class="bnc-help-callout">
+        Bill the thinking, not the typing. If you almost don't bill it, you probably should.
+      </div>
+
+      <h3>The four tabs</h3>
+
+      <div class="bnc-help-tab-card">
+        <div><span class="bnc-help-tab-num">i.</span><strong>Standard Narrative</strong></div>
+        <p>One task, one entry. Use this when you finished a discrete piece of work and want to bill it cleanly. Paste the messy blurb you'd type into your timekeeper, hit generate, get the polished version. 20-25 words, full ATVR.</p>
+      </div>
+
+      <div class="bnc-help-tab-card">
+        <div><span class="bnc-help-tab-num">ii.</span><strong>Billing Bookends</strong></div>
+        <p>Capture the <em>whole</em> work cycle. The strategic prep <em>before</em>. The event itself. The substantive follow-up <em>after</em>. This is how you stop leaving 30-40% of your billable hours on the table — the prep and follow-up rarely get billed because they don't feel like "the thing." But they ARE the thing. Bookends puts them on paper.</p>
+      </div>
+
+      <div class="bnc-help-tab-card">
+        <div><span class="bnc-help-tab-num">iii.</span><strong>The Breakdown</strong></div>
+        <p>Anti-block-billing. Take a big project (MSJ, purchase agreement, trial prep) and unbundle it into four phase narratives — Review/Analyze, Outlining/Strategy, Preparation/Drafting, Finalizing/Review. Each one stands alone. Each one gets paid.</p>
+      </div>
+
+      <div class="bnc-help-tab-card">
+        <div><span class="bnc-help-tab-num">iv.</span><strong>My Library</strong></div>
+        <p>Save carrier and client guidelines once, apply them with a click thereafter. Your saved data stays on your device — never on my server. Export to back up or move to another device.</p>
+      </div>
+
+      <h3>Tips & pitfalls</h3>
+      <ul>
+        <li><strong>Don't paste your calendar.</strong> Describe what you DID, not what was scheduled.</li>
+        <li><strong>Strong verbs. Strong tasks. Strong value.</strong> If a verb feels weak, the AI won't fix it — it'll polish weakness. "Reviewed file" is a task hiding from itself. Tell it WHAT was in the file, what you were looking for, what you found.</li>
+        <li><strong>Specifics beat generalities.</strong> "Reviewed medical records" is a task. "Reviewed plaintiff's medical records for inconsistencies in the preemption argument" is a story. One gets cut. One gets paid.</li>
+        <li><strong>Matter context is a force multiplier.</strong> A few words about the case (type, posture, party) tell the generator more than the task blurb alone. Use it.</li>
+        <li><strong>When in doubt, cringe and count it.</strong> The hour you almost don't bill is usually the hour you should.</li>
+        <li><strong>The chip colors aren't decoration.</strong> They're showing you the four moves your narrative is making — Action, Task, Value, Result. If "Value" is empty, your billing reads as clerical. If "Result" is empty, the work has no destination. Over time, you stop needing the chips because your brain learns ATVR by default.</li>
+      </ul>
+
+      <h3>About the ATVR Framework</h3>
+      <p><strong>ACTION</strong> (the verbs) + <strong>TASK</strong> (the named work product) + <strong>VALUE</strong> (why it matters) + <strong>RESULT</strong> (where it's headed). Every solid billing entry has all four. Most attorneys nail Action and Task. Where they lose money — every single day — is in Value and Result.</p>
+      <p>The chips below each generated narrative show you what the four pieces look like in practice. The framework is the work. The tool just hands it to you.</p>
+
+      <h3>Privacy & how this works under the hood</h3>
+      <ul>
+        <li>Guidelines you save in My Library never leave your device. Stored in your browser, period.</li>
+        <li>Each generation goes to Anthropic's API for processing — same way Claude.ai or ChatGPT works — then comes back to your browser. <strong>Anthropic does not train on inputs from this tool.</strong></li>
+        <li>Your password and form drafts are stored locally in your browser. Not on any server.</li>
+        <li>Your work blurbs themselves are sent to Anthropic only for the moment of generation. Don't paste anything you wouldn't paste into Claude.ai (e.g., privileged client identifiers — describe the matter generically: "employment discrimination, defending employer" rather than "Smith v. Acme, settlement number $XYZ").</li>
+      </ul>
+
+      <h3>What if it breaks?</h3>
+      <p>Two things to try. First, hit <em>Generate</em> again — sometimes it's just a hiccup. Second, click <em>Copy Prompt to Clipboard</em>, open <em>Claude.ai</em> in a new tab, and paste. The exact same prompt will run there. The fallback is built in for a reason.</p>
+
+      <h3>Final note</h3>
+      <p>This tool exists because billing is psychology, not paperwork. The skills are real. The mindset is everything. If you're using this every day and your write-downs are still high — that's not a tool problem, that's a different conversation. <a href="https://thebillingcoach.com" target="_blank" style="color: var(--gold-dark, #a38527);">thebillingcoach.com</a></p>
+
+    </div>
+    <div class="bnc-help-footer">
+      <span class="bnc-help-footer-text">Built by Molly Kremer, Esq. · The Billing Coach</span>
+      <button class="bnc-secondary-btn" data-restart-tour style="padding: 0.55rem 1rem; font-size: 0.78rem;">Show Welcome Tour</button>
+    </div>
+  </div>
+</div>
+
+<!-- First-time Tour Overlay -->
+<div class="bnc-tour-overlay" data-tour-overlay>
+  <div class="bnc-tour-card">
+    <div class="bnc-tour-card-header">
+      <div class="bnc-tour-step" data-tour-step-label>Step 1 of 4</div>
+      <h3 data-tour-step-title>Welcome.</h3>
+    </div>
+    <div class="bnc-tour-card-body" data-tour-step-body>
+      <p>Loading…</p>
+    </div>
+    <div class="bnc-tour-card-footer">
+      <button class="bnc-tour-skip" data-tour-skip>Skip</button>
+      <div class="bnc-tour-progress" data-tour-progress></div>
+      <div class="bnc-tour-actions">
+        <button class="bnc-tour-next" data-tour-next>Next</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Library Add/Edit Modal -->
@@ -2392,10 +2938,178 @@ Return your response as JSON only, no preamble or code fences:
     return escapeHtml(str);
   }
 
+  // ============ HELP SYSTEM: TOOLTIPS ============
+  const TOOLTIPS = {
+    'role': "<strong>Pick the role that matches YOUR work</strong>, not the matter type. The generator pulls from a different vocabulary library for each. <em>If you're a paralegal supporting a litigator, pick Litigation Paralegal</em> — the language will read appropriately for your role.",
+    'task-blurb': "<strong>A messy blurb is fine.</strong> Tell me what you DID, not what was scheduled. The more specific, the better. <em>'Reviewed file'</em> becomes <em>'reviewed expert deposition transcript for inconsistencies on the preemption issue.'</em> Strong input, strong output.",
+    'matter-context': "<strong>Optional but powerful.</strong> A few words about the matter (case type, party, posture) helps the generator pick the right strategic framing. <em>'Employment discrimination, defending employer, MSJ pending'</em> tells the generator way more than the task blurb alone.",
+    'bookends-time': "<strong>Three separate clocks for three separate billable entries.</strong> BEFORE = time spent prepping. TASK = the main event itself. AFTER = time spent on substantive follow-up. Each gets its own narrative.",
+    'phase-split': "<strong>Optional.</strong> If you want to specify how time should split across the four phases, type it like <em>2-1.5-4-1</em> (Review-Strategy-Drafting-Finalizing). Otherwise leave blank — the generator will auto-distribute sensibly, typically heavier on drafting."
+  };
+
+  let activeTooltip = null;
+
+  function closeTooltip() {
+    if (activeTooltip) {
+      activeTooltip.tooltip.remove();
+      activeTooltip.icon.classList.remove('active');
+      activeTooltip = null;
+    }
+  }
+
+  document.querySelectorAll('[data-help-tip]').forEach(icon => {
+    icon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const key = icon.dataset.helpTip;
+      const content = TOOLTIPS[key];
+      if (!content) return;
+      // If clicking the active one, close it
+      if (activeTooltip && activeTooltip.icon === icon) {
+        closeTooltip();
+        return;
+      }
+      closeTooltip();
+      const tt = document.createElement('div');
+      tt.className = 'bnc-tooltip visible';
+      tt.innerHTML = content;
+      // Wrap icon in anchor if needed and append tooltip
+      const parent = icon.parentElement;
+      const wrapper = document.createElement('span');
+      wrapper.className = 'bnc-tooltip-anchor';
+      wrapper.style.position = 'relative';
+      wrapper.style.display = 'inline-block';
+      icon.classList.add('active');
+      // Insert tooltip right after icon
+      icon.insertAdjacentElement('afterend', tt);
+      activeTooltip = { icon, tooltip: tt };
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!activeTooltip) return;
+    if (e.target.classList && e.target.classList.contains('bnc-help-icon')) return;
+    if (e.target.closest && e.target.closest('.bnc-tooltip')) return;
+    closeTooltip();
+  });
+
+  // ============ HELP SYSTEM: HELP MODAL ============
+  const helpModal = document.querySelector('[data-help-modal]');
+  document.querySelector('[data-help-open]').addEventListener('click', () => {
+    helpModal.classList.add('visible');
+  });
+  document.querySelector('[data-help-close]').addEventListener('click', () => {
+    helpModal.classList.remove('visible');
+  });
+  helpModal.addEventListener('click', (e) => {
+    if (e.target === helpModal) helpModal.classList.remove('visible');
+  });
+
+  // ============ HELP SYSTEM: QUICKSTART COLLAPSE ============
+  const QUICKSTART_KEY = 'bnc_quickstart_collapsed';
+  const quickstart = document.getElementById('bnc-quickstart');
+  if (quickstart) {
+    const toggleEl = quickstart.querySelector('[data-quickstart-toggle]');
+    const toggleBtn = quickstart.querySelector('.bnc-quickstart-toggle');
+    if (localStorage.getItem(QUICKSTART_KEY) === '1') {
+      quickstart.classList.add('collapsed');
+      toggleBtn.textContent = 'Show';
+    }
+    function toggleQuickstart() {
+      quickstart.classList.toggle('collapsed');
+      const collapsed = quickstart.classList.contains('collapsed');
+      toggleBtn.textContent = collapsed ? 'Show' : 'Hide';
+      localStorage.setItem(QUICKSTART_KEY, collapsed ? '1' : '0');
+    }
+    toggleEl.addEventListener('click', (e) => {
+      // Avoid double-toggling when the button itself is clicked (bubbles up)
+      toggleQuickstart();
+    });
+  }
+
+  // ============ HELP SYSTEM: FIRST-TIME TOUR ============
+  const TOUR_KEY = 'bnc_tour_completed_v1';
+  const TOUR_STEPS = [
+    {
+      title: "Welcome to the ATVR Generator.",
+      body: "<p>This tool turns the messy way you'd describe your work into a polished billing narrative — using my four-part ATVR framework. Let me show you around in <strong>under 30 seconds</strong>.</p>"
+    },
+    {
+      title: "Three ways to bill, three tabs.",
+      body: "<p><strong>Standard Narrative</strong> — one task, one entry. The default.</p><p><strong>Billing Bookends</strong> — capture the prep, the event, and the follow-up as three separate entries. <em>This is where most attorneys leave money on the table.</em></p><p><strong>The Breakdown</strong> — break a big project (MSJ, purchase agreement) into four phase entries. Defeats block billing.</p>"
+    },
+    {
+      title: "Save your carrier guidelines once.",
+      body: "<p>If you bill against carrier or client guidelines (Allstate, Chubb, etc.), use the <strong>My Library</strong> tab to save them. Then apply them to any narrative with a single dropdown.</p><p><em>Your guidelines never touch my server.</em> They live on your device. Privacy by design.</p>"
+    },
+    {
+      title: "One last thing — the chips.",
+      body: "<p>Below every narrative you'll see four colored chips: <strong>Action · Task · Value · Result</strong>. Those are the four moves of the framework, pulled out of the narrative for you to see.</p><p>Over time, you stop needing them. Your brain learns ATVR by default. That's the goal.</p><p>Click <em>Help</em> in the top-right corner anytime you need a refresher.</p>"
+    }
+  ];
+
+  let tourStep = 0;
+  const tourOverlay = document.querySelector('[data-tour-overlay]');
+  const tourTitle = document.querySelector('[data-tour-step-title]');
+  const tourLabel = document.querySelector('[data-tour-step-label]');
+  const tourBody = document.querySelector('[data-tour-step-body]');
+  const tourProgress = document.querySelector('[data-tour-progress]');
+  const tourNext = document.querySelector('[data-tour-next]');
+  const tourSkip = document.querySelector('[data-tour-skip]');
+
+  function renderTourStep() {
+    const step = TOUR_STEPS[tourStep];
+    tourLabel.textContent = `Step ${tourStep + 1} of ${TOUR_STEPS.length}`;
+    tourTitle.textContent = step.title;
+    tourBody.innerHTML = step.body;
+    tourProgress.innerHTML = TOUR_STEPS.map((_, i) =>
+      `<span class="bnc-tour-progress-dot${i === tourStep ? ' active' : ''}"></span>`
+    ).join('');
+    tourNext.textContent = (tourStep === TOUR_STEPS.length - 1) ? "Got it" : "Next";
+  }
+
+  function openTour() {
+    tourStep = 0;
+    renderTourStep();
+    tourOverlay.classList.add('visible');
+  }
+
+  function closeTour(markCompleted) {
+    tourOverlay.classList.remove('visible');
+    if (markCompleted) localStorage.setItem(TOUR_KEY, '1');
+  }
+
+  tourNext.addEventListener('click', () => {
+    if (tourStep < TOUR_STEPS.length - 1) {
+      tourStep++;
+      renderTourStep();
+    } else {
+      closeTour(true);
+    }
+  });
+  tourSkip.addEventListener('click', () => closeTour(true));
+
+  // Restart tour from inside Help modal
+  document.querySelector('[data-restart-tour]').addEventListener('click', () => {
+    helpModal.classList.remove('visible');
+    setTimeout(openTour, 200);
+  });
+
+  // First-time auto-open: show tour on first visit (after gate is unlocked)
+  function maybeShowFirstTimeTour() {
+    if (localStorage.getItem(TOUR_KEY) === '1') return;
+    // Don't show if password gate is still up
+    if (document.getElementById('bnc_gate_overlay')) {
+      setTimeout(maybeShowFirstTimeTour, 800);
+      return;
+    }
+    setTimeout(openTour, 600);
+  }
+
   // ============ INITIALIZE ============
   restoreFormState();
   refreshLibraryDropdowns();
   refreshLibraryList();
+  maybeShowFirstTimeTour();
 
 })();
 </script>
