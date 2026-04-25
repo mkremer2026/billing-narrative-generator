@@ -1,3 +1,93 @@
+<script>
+// ============================================================================
+//  The Billing Coach — Access Gate
+//  Password-protects the generator + adds password to all API calls
+// ============================================================================
+(function() {
+  const STORAGE_KEY = 'bnc_access_pw';
+  let password = localStorage.getItem(STORAGE_KEY);
+
+  function showGate() {
+    const overlay = document.createElement('div');
+    overlay.id = 'bnc_gate_overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#1e2d4a;display:flex;align-items:center;justify-content:center;z-index:99999;font-family:Georgia,serif;';
+    overlay.innerHTML = `
+      <div style="background:white;padding:40px;border-radius:8px;max-width:380px;width:90%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+        <div style="font-size:11px;letter-spacing:2px;color:#c9a84c;text-transform:uppercase;margin-bottom:8px;">The Billing Coach</div>
+        <h2 style="margin:0 0 8px;color:#1e2d4a;font-size:22px;">ATVR Narrative Generator</h2>
+        <p style="margin:0 0 24px;color:#666;font-size:13px;">Enter your access password to continue.</p>
+        <input type="password" id="bnc_pw" style="width:100%;padding:12px;font-size:14px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;margin-bottom:12px;font-family:Georgia,serif;" autofocus placeholder="Access password" />
+        <div id="bnc_err" style="color:#c0392b;font-size:13px;margin-bottom:12px;min-height:18px;"></div>
+        <button id="bnc_submit" style="background:#1e2d4a;color:white;border:none;padding:12px 24px;border-radius:6px;font-size:14px;cursor:pointer;font-family:Georgia,serif;width:100%;font-weight:bold;">Unlock Generator</button>
+        <p style="margin:20px 0 0;color:#999;font-size:11px;">© Molly Kremer Coaching, LLC</p>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const input = document.getElementById('bnc_pw');
+    const button = document.getElementById('bnc_submit');
+    const errEl = document.getElementById('bnc_err');
+
+    async function submit() {
+      const pw = input.value.trim();
+      if (!pw) return;
+      errEl.textContent = '';
+      button.disabled = true;
+      button.textContent = 'Checking…';
+
+      try {
+        const r = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw })
+        });
+        if (r.ok) {
+          localStorage.setItem(STORAGE_KEY, pw);
+          password = pw;
+          overlay.remove();
+        } else {
+          errEl.textContent = 'Incorrect password. Please try again.';
+          button.disabled = false;
+          button.textContent = 'Unlock Generator';
+          input.select();
+        }
+      } catch (e) {
+        errEl.textContent = 'Connection error. Please try again.';
+        button.disabled = false;
+        button.textContent = 'Unlock Generator';
+      }
+    }
+
+    button.addEventListener('click', submit);
+    input.addEventListener('keypress', e => { if (e.key === 'Enter') submit(); });
+  }
+
+  // Intercept all /api/* fetch calls to inject the password header
+  const origFetch = window.fetch;
+  window.fetch = function(url, opts) {
+    if (typeof url === 'string' && url.startsWith('/api/') && !url.includes('/api/auth')) {
+      opts = opts || {};
+      opts.headers = opts.headers || {};
+      if (password) {
+        opts.headers['X-Access-Password'] = password;
+      }
+    }
+    return origFetch(url, opts).then(r => {
+      if (r.status === 401 && typeof url === 'string' && url.startsWith('/api/') && !url.includes('/api/auth')) {
+        localStorage.removeItem(STORAGE_KEY);
+        password = null;
+        if (!document.getElementById('bnc_gate_overlay')) showGate();
+      }
+      return r;
+    });
+  };
+
+  if (!password) {
+    if (document.body) showGate();
+    else document.addEventListener('DOMContentLoaded', showGate);
+  }
+})();
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
 
