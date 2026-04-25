@@ -81,6 +81,15 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
+  // ----- Access password check -----
+  const provided = req.headers['x-access-password'] || '';
+  const required = process.env.ACCESS_PASSWORD || '';
+  if (!required) {
+    return res.status(500).json({ error: 'Server misconfigured: ACCESS_PASSWORD not set' });
+  }
+  if (provided !== required) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   if (process.env.NODE_ENV === 'production' && !isOriginAllowed(originUrl)) {
     return res.status(403).json({ error: 'Origin not allowed.' });
   }
