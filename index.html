@@ -88,6 +88,14 @@
     });
   };
 
+  // Expose a logout function so the in-app button can use it
+  window.bncLogout = function() {
+    if (!confirm("Log out of the ATVR Generator?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    password = null;
+    location.reload();
+  };
+
   if (!password) {
     if (document.body) showGate();
     else document.addEventListener('DOMContentLoaded', showGate);
@@ -113,6 +121,11 @@
     --shadow-sm: 0 1px 3px rgba(0, 33, 71, 0.08);
     --shadow-md: 0 4px 20px rgba(0, 33, 71, 0.08);
     --shadow-lg: 0 20px 60px rgba(0, 33, 71, 0.12);
+    /* ATVR breakdown colors */
+    --atvr-action: #2c5282;
+    --atvr-task: #285e61;
+    --atvr-value: #b07c1c;
+    --atvr-result: #6b46c1;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -497,7 +510,7 @@
   }
 
   .bnc-guidelines.open .bnc-guidelines-body {
-    max-height: 600px;
+    max-height: 800px;
     padding: 0 1.1rem 1.1rem;
   }
 
@@ -507,6 +520,54 @@
     margin-bottom: 0.85rem;
   }
 
+  /* ===== Library dropdown row inside guidelines ===== */
+  .bnc-library-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .bnc-library-row label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--navy);
+    white-space: nowrap;
+  }
+
+  .bnc-library-select {
+    flex: 1;
+    padding: 0.55rem 0.75rem;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    color: var(--charcoal);
+    cursor: pointer;
+  }
+
+  .bnc-library-select:focus { outline: none; border-color: var(--gold); }
+
+  .bnc-save-to-library-btn {
+    padding: 0.5rem 0.85rem;
+    background: transparent;
+    color: var(--navy);
+    border: 1.5px solid var(--navy);
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+
+  .bnc-save-to-library-btn:hover { background: var(--navy); color: var(--paper); }
+
+  /* ===== File row ===== */
   .bnc-file-row {
     display: flex;
     align-items: center;
@@ -708,6 +769,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .bnc-narrative-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
   .bnc-narrative-time {
@@ -719,12 +789,82 @@
     letter-spacing: 0.02em;
   }
 
+  .bnc-word-count {
+    font-size: 0.68rem;
+    background: var(--gold-soft);
+    color: var(--navy);
+    padding: 0.18rem 0.55rem;
+    border-radius: 10px;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-weight: 500;
+    font-family: 'Outfit', sans-serif;
+    border: 1px solid rgba(203,161,53,0.3);
+  }
+
+  .bnc-word-count.warn { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+
+  .bnc-copy-mini {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 0.22rem 0.6rem;
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    color: var(--navy);
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+
+  .bnc-copy-mini:hover { background: var(--navy); color: var(--paper); border-color: var(--navy); }
+  .bnc-copy-mini.copied { background: var(--gold); color: var(--navy-deep); border-color: var(--gold); }
+
   .bnc-narrative-text {
     font-family: Georgia, serif;
     font-size: 1.02rem;
     color: var(--charcoal);
     line-height: 1.55;
   }
+
+  /* ===== ATVR Breakdown chips ===== */
+  .bnc-atvr-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border);
+  }
+
+  .bnc-atvr-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 0.32rem 0.7rem;
+    border-radius: 14px;
+    font-size: 0.78rem;
+    font-family: Georgia, serif;
+    background: var(--paper);
+    border: 1px solid;
+    line-height: 1.35;
+    max-width: 100%;
+  }
+
+  .bnc-atvr-chip strong {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+
+  .bnc-atvr-chip.action { border-color: rgba(44,82,130,0.3); background: rgba(44,82,130,0.06); color: var(--atvr-action); }
+  .bnc-atvr-chip.task   { border-color: rgba(40,94,97,0.3); background: rgba(40,94,97,0.06); color: var(--atvr-task); }
+  .bnc-atvr-chip.value  { border-color: rgba(176,124,28,0.35); background: rgba(176,124,28,0.07); color: var(--atvr-value); }
+  .bnc-atvr-chip.result { border-color: rgba(107,70,193,0.3); background: rgba(107,70,193,0.06); color: var(--atvr-result); }
 
   .bnc-copy-btn {
     background: transparent;
@@ -782,6 +922,206 @@
     margin-top: 1rem;
   }
 
+  /* ===== My Library Panel ===== */
+  .bnc-library-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .bnc-library-add-btn {
+    padding: 0.65rem 1.15rem;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    color: var(--navy-deep);
+    border: none;
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(203,161,53,0.3);
+  }
+
+  .bnc-library-add-btn:hover { transform: translateY(-1px); }
+
+  .bnc-library-empty {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    background: var(--ivory);
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+  }
+
+  .bnc-library-empty h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--navy);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    font-size: 1.15rem;
+  }
+
+  .bnc-library-list {
+    display: grid;
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .bnc-library-card {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .bnc-library-card:hover {
+    border-color: var(--gold);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .bnc-library-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .bnc-library-card-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--navy);
+    font-weight: 500;
+  }
+
+  .bnc-library-card-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  .bnc-library-card-btn {
+    padding: 0.32rem 0.7rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.74rem;
+    cursor: pointer;
+    color: var(--navy);
+    transition: all 0.15s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .bnc-library-card-btn:hover { background: var(--navy); color: var(--paper); border-color: var(--navy); }
+  .bnc-library-card-btn.danger:hover { background: #c0392b; color: white; border-color: #c0392b; }
+
+  .bnc-library-card-preview {
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-family: Georgia, serif;
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  .bnc-library-card-meta {
+    margin-top: 0.5rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .bnc-library-export-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .bnc-library-export-section .bnc-secondary-btn {
+    padding: 0.65rem 1.1rem;
+    font-size: 0.82rem;
+  }
+
+  .bnc-library-export-note {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+    margin-left: auto;
+  }
+
+  /* ===== Modal ===== */
+  .bnc-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,21,48,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+  }
+
+  .bnc-modal-overlay.visible { display: flex; animation: fadeIn 0.2s ease; }
+
+  .bnc-modal {
+    background: var(--paper);
+    border-radius: 12px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .bnc-modal-header {
+    padding: 1.5rem 1.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bnc-modal-header h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--navy);
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .bnc-modal-body {
+    padding: 1.25rem 1.75rem;
+  }
+
+  .bnc-modal-body label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 0.45rem;
+    margin-top: 0.85rem;
+  }
+
+  .bnc-modal-body label:first-child { margin-top: 0; }
+
+  .bnc-modal-footer {
+    padding: 1rem 1.75rem 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+  }
+
   /* ===== Footer ===== */
   .bnc-footer {
     padding: 1.5rem 2.5rem;
@@ -792,9 +1132,33 @@
     font-family: 'Playfair Display', serif;
     font-style: italic;
     letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
 
-  .bnc-footer span { color: var(--gold); font-style: normal; }
+  .bnc-footer-brand { flex: 1; text-align: center; }
+
+  .bnc-footer-brand span { color: var(--gold); font-style: normal; }
+
+  .bnc-logout-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.6);
+    padding: 0.4rem 0.85rem;
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    font-style: normal;
+    transition: all 0.15s ease;
+  }
+
+  .bnc-logout-btn:hover { background: rgba(255,255,255,0.08); color: var(--gold); border-color: var(--gold); }
 
   /* ===== Framework reference chip ===== */
   .bnc-framework-badge {
@@ -823,11 +1187,12 @@
   @media (max-width: 720px) {
     .bnc-header { padding: 2.25rem 1.5rem 2.5rem; }
     .bnc-body { padding: 1.75rem 1.5rem 2rem; }
-    .bnc-main-tab { font-size: 0.72rem; padding: 0.85rem 0.5rem; }
+    .bnc-main-tab { font-size: 0.7rem; padding: 0.85rem 0.4rem; }
     .bnc-role-grid { grid-template-columns: 1fr 1fr; }
     .bnc-form-row { grid-template-columns: 1fr; }
     .bnc-generate-row { flex-direction: column; align-items: stretch; }
-    .bnc-footer { padding: 1.25rem 1.5rem; }
+    .bnc-footer { padding: 1.25rem 1.5rem; flex-direction: column; }
+    .bnc-library-row { flex-wrap: wrap; }
   }
 </style>
 
@@ -857,6 +1222,10 @@
       <span class="bnc-tab-num">iii.</span>
       The Breakdown
     </button>
+    <button class="bnc-main-tab" data-panel="library" role="tab">
+      <span class="bnc-tab-num">iv.</span>
+      My Library
+    </button>
   </nav>
 
   <!-- BODY -->
@@ -881,17 +1250,17 @@
       <div class="bnc-form-grid">
         <div class="bnc-field">
           <label>What did you just work on? <span class="bnc-hint">a plain-English blurb is fine</span></label>
-          <textarea class="bnc-textarea" id="std-task" placeholder="e.g., Spent about 3 hours going through opposing counsel's motion to dismiss, pulled relevant case law on the preemption issue, and drafted the outline for our response brief."></textarea>
+          <textarea class="bnc-textarea" id="std-task" data-persist placeholder="e.g., Spent about 3 hours going through opposing counsel's motion to dismiss, pulled relevant case law on the preemption issue, and drafted the outline for our response brief."></textarea>
         </div>
 
         <div class="bnc-form-row">
           <div class="bnc-field">
             <label>Matter / Case context <span class="bnc-hint">optional</span></label>
-            <input class="bnc-input" id="std-context" placeholder="e.g., Employment discrimination case, defending employer, trial in Q2">
+            <input class="bnc-input" id="std-context" data-persist placeholder="e.g., Employment discrimination case, defending employer, trial in Q2">
           </div>
           <div class="bnc-field">
             <label>Total Time</label>
-            <input class="bnc-input" id="std-time" placeholder="e.g., 3.0">
+            <input class="bnc-input" id="std-time" data-persist placeholder="e.g., 3.0">
           </div>
         </div>
       </div>
@@ -905,12 +1274,19 @@
           <span class="bnc-chev"></span>
         </button>
         <div class="bnc-guidelines-body">
-          <p>Paste relevant excerpts from your client's billing guidelines, or upload a PDF. The generator will check the narrative against these rules before returning it — flagging anything that may conflict with carrier-specific restrictions (block billing, minimum increments, prohibited verbs, etc.).</p>
+          <p>Paste relevant excerpts from your client's billing guidelines, upload a PDF, or pick a saved set from your library. The generator will check the narrative against these rules.</p>
+          <div class="bnc-library-row">
+            <label>Apply Saved:</label>
+            <select class="bnc-library-select" data-library-select="standard">
+              <option value="">— None —</option>
+            </select>
+          </div>
           <textarea class="bnc-textarea" data-guidelines-text placeholder="Paste billing guidelines text here — e.g., 'Client requires minimum .2 increments, prohibits block billing, disallows review of own firm's correspondence, caps senior associate rate at $X/hr...'"></textarea>
           <div class="bnc-file-row">
             <button class="bnc-file-btn" data-file-trigger>Upload PDF</button>
             <input type="file" accept="application/pdf" style="display:none" data-file-input>
             <span class="bnc-file-name" data-file-name>No file attached</span>
+            <button class="bnc-save-to-library-btn" data-save-to-library="standard">💾 Save to Library</button>
             <button class="bnc-file-clear" data-file-clear style="display:none">remove</button>
           </div>
         </div>
@@ -946,20 +1322,20 @@
       <div class="bnc-form-grid">
         <div class="bnc-field">
           <label>Main task / event <span class="bnc-hint">the "center" of the bookend set</span></label>
-          <input class="bnc-input" id="bk-task" placeholder="e.g., Deposition of plaintiff's expert witness">
+          <input class="bnc-input" id="bk-task" data-persist placeholder="e.g., Deposition of plaintiff's expert witness">
         </div>
 
         <div class="bnc-field">
           <label>Context <span class="bnc-hint">what was prepared, what was discussed, what follow-up is needed</span></label>
-          <textarea class="bnc-textarea" id="bk-context" placeholder="e.g., Prepared by reviewing expert report and recent deposition testimony in similar matter. During depo, locked in expert's methodology concessions. Afterward, updated trial strategy memo and coordinated with co-counsel on cross-examination approach."></textarea>
+          <textarea class="bnc-textarea" id="bk-context" data-persist placeholder="e.g., Prepared by reviewing expert report and recent deposition testimony in similar matter. During depo, locked in expert's methodology concessions. Afterward, updated trial strategy memo and coordinated with co-counsel on cross-examination approach."></textarea>
         </div>
 
         <div>
           <label style="font-family:'Outfit',sans-serif; font-size:0.82rem; font-weight:600; color:var(--navy); margin-bottom:0.45rem; display:block;">Time Breakdown <span class="bnc-hint">Before / Task / After</span></label>
           <div class="bnc-time-breakdown">
-            <input class="bnc-input" id="bk-time-before" placeholder="Before — e.g., 0.4">
-            <input class="bnc-input" id="bk-time-main" placeholder="Task — e.g., 1.5">
-            <input class="bnc-input" id="bk-time-after" placeholder="After — e.g., 0.3">
+            <input class="bnc-input" id="bk-time-before" data-persist placeholder="Before — e.g., 0.4">
+            <input class="bnc-input" id="bk-time-main" data-persist placeholder="Task — e.g., 1.5">
+            <input class="bnc-input" id="bk-time-after" data-persist placeholder="After — e.g., 0.3">
           </div>
         </div>
       </div>
@@ -973,12 +1349,19 @@
           <span class="bnc-chev"></span>
         </button>
         <div class="bnc-guidelines-body">
-          <p>Paste client-specific billing rules or upload a PDF of the carrier guidelines. Bookend narratives will be drafted to avoid language flagged in those rules.</p>
+          <p>Paste client-specific billing rules, upload a PDF, or pick a saved set from your library. Bookend narratives will be drafted to comply.</p>
+          <div class="bnc-library-row">
+            <label>Apply Saved:</label>
+            <select class="bnc-library-select" data-library-select="bookends">
+              <option value="">— None —</option>
+            </select>
+          </div>
           <textarea class="bnc-textarea" data-guidelines-text placeholder="Paste billing guidelines text here..."></textarea>
           <div class="bnc-file-row">
             <button class="bnc-file-btn" data-file-trigger>Upload PDF</button>
             <input type="file" accept="application/pdf" style="display:none" data-file-input>
             <span class="bnc-file-name" data-file-name>No file attached</span>
+            <button class="bnc-save-to-library-btn" data-save-to-library="bookends">💾 Save to Library</button>
             <button class="bnc-file-clear" data-file-clear style="display:none">remove</button>
           </div>
         </div>
@@ -1014,22 +1397,22 @@
       <div class="bnc-form-grid">
         <div class="bnc-field">
           <label>Work description <span class="bnc-hint">the full project you completed</span></label>
-          <input class="bnc-input" id="mp-task" placeholder="e.g., Motion for summary judgment on breach of contract claim">
+          <input class="bnc-input" id="mp-task" data-persist placeholder="e.g., Motion for summary judgment on breach of contract claim">
         </div>
 
         <div class="bnc-field">
           <label>Context <span class="bnc-hint">complexity, urgency, strategic considerations</span></label>
-          <textarea class="bnc-textarea" id="mp-context" placeholder="e.g., Three-count breach of contract case, novel preemption issue, MSJ due in 10 days, client wants aggressive posture to pressure settlement."></textarea>
+          <textarea class="bnc-textarea" id="mp-context" data-persist placeholder="e.g., Three-count breach of contract case, novel preemption issue, MSJ due in 10 days, client wants aggressive posture to pressure settlement."></textarea>
         </div>
 
         <div class="bnc-form-row">
           <div class="bnc-field">
             <label>Total Time <span class="bnc-hint">will split across 4 phases</span></label>
-            <input class="bnc-input" id="mp-time" placeholder="e.g., 8.5">
+            <input class="bnc-input" id="mp-time" data-persist placeholder="e.g., 8.5">
           </div>
           <div class="bnc-field">
             <label>Phase split <span class="bnc-hint">optional, e.g., 2-1.5-4-1</span></label>
-            <input class="bnc-input" id="mp-split" placeholder="auto-split if blank">
+            <input class="bnc-input" id="mp-split" data-persist placeholder="auto-split if blank">
           </div>
         </div>
       </div>
@@ -1043,12 +1426,19 @@
           <span class="bnc-chev"></span>
         </button>
         <div class="bnc-guidelines-body">
-          <p>Paste client-specific billing rules or upload a PDF of the carrier guidelines. Each of the four phase narratives will be drafted to comply.</p>
+          <p>Paste client-specific billing rules, upload a PDF, or pick a saved set from your library. Each phase narrative will be drafted to comply.</p>
+          <div class="bnc-library-row">
+            <label>Apply Saved:</label>
+            <select class="bnc-library-select" data-library-select="multiphase">
+              <option value="">— None —</option>
+            </select>
+          </div>
           <textarea class="bnc-textarea" data-guidelines-text placeholder="Paste billing guidelines text here..."></textarea>
           <div class="bnc-file-row">
             <button class="bnc-file-btn" data-file-trigger>Upload PDF</button>
             <input type="file" accept="application/pdf" style="display:none" data-file-input>
             <span class="bnc-file-name" data-file-name>No file attached</span>
+            <button class="bnc-save-to-library-btn" data-save-to-library="multiphase">💾 Save to Library</button>
             <button class="bnc-file-clear" data-file-clear style="display:none">remove</button>
           </div>
         </div>
@@ -1064,11 +1454,56 @@
 
       <div class="bnc-output" data-output="multiphase"></div>
     </section>
+
+    <!-- ============ PANEL 4: MY LIBRARY ============ -->
+    <section class="bnc-panel" data-panel="library">
+      <div class="bnc-panel-intro">
+        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Your Personal Guidelines Library · Stored on This Device Only</span>
+        <h2>My Library</h2>
+        <p>Save carrier billing guidelines, client-specific rules, or matter-level instructions for instant reuse on any tab. <strong>Your guidelines stay on your device only</strong> — they never touch The Billing Coach's servers. Use Export to back up or move them between devices.</p>
+      </div>
+
+      <div class="bnc-library-header">
+        <div class="bnc-section-label">Saved Guidelines</div>
+        <button class="bnc-library-add-btn" data-library-add>+ Add New</button>
+      </div>
+
+      <div data-library-list></div>
+
+      <div class="bnc-library-export-section">
+        <button class="bnc-secondary-btn" data-library-export>⬇ Export My Library</button>
+        <button class="bnc-secondary-btn" data-library-import-trigger>⬆ Import from File</button>
+        <input type="file" accept="application/json" style="display:none" data-library-import-input>
+        <span class="bnc-library-export-note">Backups download as a small JSON file you can keep, share, or restore later.</span>
+      </div>
+    </section>
+
   </div>
 
   <footer class="bnc-footer">
-    Molly Kremer, Esq. · <span>The Billing Coach</span> · thebillingcoach.com
+    <div style="width:100px;"></div>
+    <div class="bnc-footer-brand">Molly Kremer, Esq. · <span>The Billing Coach</span> · thebillingcoach.com</div>
+    <button class="bnc-logout-btn" onclick="window.bncLogout && window.bncLogout()">Log Out</button>
   </footer>
+</div>
+
+<!-- Library Add/Edit Modal -->
+<div class="bnc-modal-overlay" data-library-modal>
+  <div class="bnc-modal">
+    <div class="bnc-modal-header">
+      <h3 data-modal-title>Add New Guidelines</h3>
+    </div>
+    <div class="bnc-modal-body">
+      <label>Label <span style="font-weight:400; color:var(--muted); font-size:0.78rem; font-style:italic;">— how you'll recognize it</span></label>
+      <input class="bnc-input" data-modal-label placeholder="e.g., Allstate Litigation, Chubb Coverage, Smith Matter">
+      <label>Guidelines content <span style="font-weight:400; color:var(--muted); font-size:0.78rem; font-style:italic;">— paste the text here</span></label>
+      <textarea class="bnc-textarea" data-modal-content style="min-height: 200px;" placeholder="Paste the carrier or client guidelines text here..."></textarea>
+    </div>
+    <div class="bnc-modal-footer">
+      <button class="bnc-secondary-btn" data-modal-cancel>Cancel</button>
+      <button class="bnc-generate-btn" data-modal-save style="padding: 0.7rem 1.25rem; box-shadow: none;">Save</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1111,12 +1546,38 @@
     guidelinesFile: { standard: null, bookends: null, multiphase: null }
   };
 
+  // ============ LIBRARY (localStorage-backed) ============
+  const LIBRARY_KEY = 'bnc_guidelines_library_v1';
+  const FORM_PREFIX = 'bnc_form_';
+  const ROLE_PREFIX = 'bnc_role_';
+
+  function loadLibrary() {
+    try {
+      const raw = localStorage.getItem(LIBRARY_KEY);
+      if (!raw) return { items: [] };
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.items)) return { items: [] };
+      return parsed;
+    } catch (e) { return { items: [] }; }
+  }
+
+  function saveLibrary(lib) {
+    localStorage.setItem(LIBRARY_KEY, JSON.stringify(lib));
+    refreshLibraryDropdowns();
+    refreshLibraryList();
+  }
+
+  function genId() {
+    return 'gl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
   // ============ TAB SWITCHING ============
   document.querySelectorAll('.bnc-main-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       const panel = btn.dataset.panel;
       document.querySelectorAll('.bnc-main-tab').forEach(b => b.classList.toggle('active', b === btn));
       document.querySelectorAll('.bnc-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === panel));
+      if (panel === 'library') refreshLibraryList();
     });
   });
 
@@ -1127,6 +1588,7 @@
       btn.addEventListener('click', () => {
         group.querySelectorAll('.bnc-role-btn').forEach(b => b.classList.toggle('active', b === btn));
         state.role[panel] = btn.dataset.role;
+        localStorage.setItem(ROLE_PREFIX + panel, btn.dataset.role);
       });
     });
   });
@@ -1161,7 +1623,6 @@
       fileName.textContent = file.name;
       fileClear.style.display = "inline";
       container.classList.add('active');
-      // convert to base64 and stash
       const b64 = await toBase64(file);
       state.guidelinesFile[panel] = { name: file.name, data: b64 };
     });
@@ -1183,6 +1644,249 @@
       }
     });
   });
+
+  // ============ LIBRARY DROPDOWN: select an existing set into textarea ============
+  document.querySelectorAll('[data-library-select]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const panel = sel.dataset.librarySelect;
+      const id = sel.value;
+      if (!id) return;
+      const lib = loadLibrary();
+      const item = lib.items.find(i => i.id === id);
+      if (!item) return;
+      const container = document.querySelector(`[data-guidelines="${panel}"]`);
+      const textArea = container.querySelector('[data-guidelines-text]');
+      if (textArea.value.trim() && !confirm("Replace the current guidelines text with the saved set?")) {
+        sel.value = "";
+        return;
+      }
+      textArea.value = item.content;
+      textArea.dispatchEvent(new Event('input'));
+      container.classList.add('active');
+      // Update lastUsed
+      item.lastUsedAt = new Date().toISOString();
+      saveLibrary(lib);
+    });
+  });
+
+  // ============ LIBRARY: SAVE TO LIBRARY (from inline button on each tab) ============
+  document.querySelectorAll('[data-save-to-library]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const panel = btn.dataset.saveToLibrary;
+      const container = document.querySelector(`[data-guidelines="${panel}"]`);
+      const textArea = container.querySelector('[data-guidelines-text]');
+      const content = textArea.value.trim();
+      if (!content) {
+        alert("There's nothing in the guidelines text box to save. Paste your guidelines text first, then click Save to Library.");
+        return;
+      }
+      openModal({ mode: 'create', initialContent: content });
+    });
+  });
+
+  function refreshLibraryDropdowns() {
+    const lib = loadLibrary();
+    const sorted = [...lib.items].sort((a, b) => a.label.localeCompare(b.label));
+    document.querySelectorAll('[data-library-select]').forEach(sel => {
+      const currentValue = sel.value;
+      sel.innerHTML = '<option value="">— None —</option>' +
+        sorted.map(i => `<option value="${i.id}">${escapeHtml(i.label)}</option>`).join('');
+      if (currentValue && sorted.find(i => i.id === currentValue)) sel.value = currentValue;
+    });
+  }
+
+  function refreshLibraryList() {
+    const lib = loadLibrary();
+    const list = document.querySelector('[data-library-list]');
+    if (!list) return;
+    if (!lib.items.length) {
+      list.innerHTML = `
+        <div class="bnc-library-empty">
+          <h3>Your library is empty</h3>
+          <p>Click <strong>+ Add New</strong> above to save your first set of carrier or client billing guidelines. Once saved, you can apply them on any generation tab with a single dropdown click.</p>
+        </div>`;
+      return;
+    }
+    const sorted = [...lib.items].sort((a, b) => (b.lastUsedAt || b.createdAt || '').localeCompare(a.lastUsedAt || a.createdAt || ''));
+    list.innerHTML = '<div class="bnc-library-list">' + sorted.map(item => `
+      <div class="bnc-library-card" data-card-id="${item.id}">
+        <div class="bnc-library-card-head">
+          <div class="bnc-library-card-label">${escapeHtml(item.label)}</div>
+          <div class="bnc-library-card-actions">
+            <button class="bnc-library-card-btn" data-edit="${item.id}">Edit</button>
+            <button class="bnc-library-card-btn danger" data-delete="${item.id}">Delete</button>
+          </div>
+        </div>
+        <div class="bnc-library-card-preview">${escapeHtml(item.content.slice(0, 280))}${item.content.length > 280 ? '…' : ''}</div>
+        <div class="bnc-library-card-meta">
+          ${item.content.length} characters · saved ${formatDate(item.createdAt)}${item.lastUsedAt && item.lastUsedAt !== item.createdAt ? ' · last used ' + formatDate(item.lastUsedAt) : ''}
+        </div>
+      </div>
+    `).join('') + '</div>';
+
+    list.querySelectorAll('[data-edit]').forEach(b => {
+      b.addEventListener('click', () => openModal({ mode: 'edit', id: b.dataset.edit }));
+    });
+    list.querySelectorAll('[data-delete]').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.dataset.delete;
+        const lib2 = loadLibrary();
+        const item = lib2.items.find(i => i.id === id);
+        if (!item) return;
+        if (!confirm(`Delete "${item.label}"? This can't be undone (unless you've exported a backup).`)) return;
+        lib2.items = lib2.items.filter(i => i.id !== id);
+        saveLibrary(lib2);
+      });
+    });
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch { return ''; }
+  }
+
+  // ============ LIBRARY MODAL ============
+  const modal = document.querySelector('[data-library-modal]');
+  const modalLabel = modal.querySelector('[data-modal-label]');
+  const modalContent = modal.querySelector('[data-modal-content]');
+  const modalTitle = modal.querySelector('[data-modal-title]');
+  let modalMode = null;
+  let modalEditId = null;
+
+  function openModal({ mode, id, initialContent }) {
+    modalMode = mode;
+    modalEditId = id || null;
+    if (mode === 'edit') {
+      const lib = loadLibrary();
+      const item = lib.items.find(i => i.id === id);
+      if (!item) return;
+      modalTitle.textContent = 'Edit Guidelines';
+      modalLabel.value = item.label;
+      modalContent.value = item.content;
+    } else {
+      modalTitle.textContent = 'Add New Guidelines';
+      modalLabel.value = '';
+      modalContent.value = initialContent || '';
+    }
+    modal.classList.add('visible');
+    setTimeout(() => modalLabel.focus(), 100);
+  }
+
+  function closeModal() {
+    modal.classList.remove('visible');
+    modalMode = null;
+    modalEditId = null;
+  }
+
+  modal.querySelector('[data-modal-cancel]').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  modal.querySelector('[data-modal-save]').addEventListener('click', () => {
+    const label = modalLabel.value.trim();
+    const content = modalContent.value.trim();
+    if (!label) { alert('Please enter a label so you can recognize this set later.'); modalLabel.focus(); return; }
+    if (!content) { alert('Please paste the guidelines content.'); modalContent.focus(); return; }
+    const lib = loadLibrary();
+    const now = new Date().toISOString();
+    if (modalMode === 'edit' && modalEditId) {
+      const item = lib.items.find(i => i.id === modalEditId);
+      if (item) {
+        item.label = label;
+        item.content = content;
+        item.updatedAt = now;
+      }
+    } else {
+      lib.items.push({ id: genId(), label, content, createdAt: now });
+    }
+    saveLibrary(lib);
+    closeModal();
+  });
+
+  document.querySelector('[data-library-add]').addEventListener('click', () => openModal({ mode: 'create' }));
+
+  // ============ LIBRARY EXPORT / IMPORT ============
+  document.querySelector('[data-library-export]').addEventListener('click', () => {
+    const lib = loadLibrary();
+    if (!lib.items.length) {
+      alert("Your library is empty — nothing to export yet.");
+      return;
+    }
+    const payload = { app: 'atvr-narrative-generator', version: 1, exportedAt: new Date().toISOString(), items: lib.items };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `atvr-guidelines-library-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  const importInput = document.querySelector('[data-library-import-input]');
+  document.querySelector('[data-library-import-trigger]').addEventListener('click', () => importInput.click());
+
+  importInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!parsed || !Array.isArray(parsed.items)) throw new Error('Not a valid library file.');
+      const incoming = parsed.items.filter(i => i && typeof i.label === 'string' && typeof i.content === 'string');
+      if (!incoming.length) { alert('No valid guideline entries found in that file.'); return; }
+      const lib = loadLibrary();
+      const choice = confirm(`Import ${incoming.length} guideline set(s)?\n\nClick OK to MERGE with your existing library (existing entries kept).\nClick Cancel to skip.`);
+      if (!choice) return;
+      // Merge: keep existing labels, append imported with new IDs to avoid collisions
+      incoming.forEach(item => {
+        lib.items.push({
+          id: genId(),
+          label: item.label,
+          content: item.content,
+          createdAt: item.createdAt || new Date().toISOString(),
+          importedAt: new Date().toISOString()
+        });
+      });
+      saveLibrary(lib);
+      alert(`Successfully imported ${incoming.length} guideline set(s).`);
+    } catch (err) {
+      alert("Could not read that file as a library export. Make sure it's the JSON file produced by the Export button.");
+    } finally {
+      importInput.value = '';
+    }
+  });
+
+  // ============ FORM PERSISTENCE ============
+  function persistField(el) {
+    if (!el.id) return;
+    const key = FORM_PREFIX + el.id;
+    if (el.value) localStorage.setItem(key, el.value);
+    else localStorage.removeItem(key);
+  }
+
+  function restoreFormState() {
+    document.querySelectorAll('[data-persist]').forEach(el => {
+      if (!el.id) return;
+      const key = FORM_PREFIX + el.id;
+      const stored = localStorage.getItem(key);
+      if (stored !== null) el.value = stored;
+      el.addEventListener('input', () => persistField(el));
+    });
+    // Restore role selections
+    Object.keys(state.role).forEach(panel => {
+      const stored = localStorage.getItem(ROLE_PREFIX + panel);
+      if (stored && BLUEPRINTS[stored]) {
+        state.role[panel] = stored;
+        const group = document.querySelector(`[data-role-group="${panel}"]`);
+        if (group) {
+          group.querySelectorAll('.bnc-role-btn').forEach(b => b.classList.toggle('active', b.dataset.role === stored));
+        }
+      }
+    });
+  }
 
   function toBase64(file) {
     return new Promise((resolve, reject) => {
@@ -1255,6 +1959,14 @@ VALUE phrases: ${bp.values.join(" · ")}
 RESULT phrases: ${bp.results.join(" · ")}`;
   }
 
+  // Common ATVR breakdown JSON spec we add to all prompts:
+  const ATVR_BREAKDOWN_SPEC = `For EACH narrative you generate, also return a "breakdown" object with these four short fields (each 2-12 words, taken DIRECTLY from the narrative text):
+  - "action": the action verbs portion (e.g., "Review and analyze")
+  - "task": the specific task or document (e.g., "opposing motion to dismiss")
+  - "value": the value phrase (e.g., "to identify weaknesses in preemption argument")
+  - "result": the result/deliverable phrase (e.g., "for response brief filing")
+The breakdown's pieces must read naturally as fragments of the narrative itself.`;
+
   // ============ STANDARD ============
   async function handleStandard(btn, mode) {
     const task = document.getElementById('std-task').value.trim();
@@ -1293,9 +2005,12 @@ OUTPUT REQUIREMENTS:
 ✓ Avoid administrative verbs used alone ("organize," "gather," "compile" with no strategic context)
 ✓ If client guidelines were provided, strictly comply with them
 
+${ATVR_BREAKDOWN_SPEC}
+
 Return your response as JSON only, no preamble or code fences:
 {
   "narrative": "the 20-25 word narrative here",
+  "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." },
   "compliance_note": "one short sentence — either 'Compliant with provided guidelines.' or a specific flag if something in the blurb conflicts with a rule you can see. If no guidelines were provided, write 'No client guidelines provided.'",
   "coaching_tip": "one short sentence in Molly's voice with a tip about why this narrative reads as valuable"
 }`;
@@ -1305,11 +2020,22 @@ Return your response as JSON only, no preamble or code fences:
   }
 
   function renderStandard(data, time) {
+    const narrative = data.narrative || "";
+    const wc = wordCount(narrative);
+    const wcWarn = (wc < 18 || wc > 28) ? 'warn' : '';
     const timeLabel = time ? `<span class="bnc-narrative-time">${time} hrs</span>` : "";
     return `
       <div class="bnc-narrative-entry">
-        <div class="bnc-narrative-label"><span>ATVR Narrative</span>${timeLabel}</div>
-        <div class="bnc-narrative-text">${escapeHtml(data.narrative || "")}</div>
+        <div class="bnc-narrative-label">
+          <span>ATVR Narrative</span>
+          <div class="bnc-narrative-meta">
+            <span class="bnc-word-count ${wcWarn}">${wc} words</span>
+            ${timeLabel}
+            <button class="bnc-copy-mini" data-copy-text="${escapeAttr(narrative)}">Copy</button>
+          </div>
+        </div>
+        <div class="bnc-narrative-text">${escapeHtml(narrative)}</div>
+        ${renderAtvrBreakdown(data.breakdown)}
       </div>
       ${data.compliance_note ? `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>` : ""}
       ${data.coaching_tip ? `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">— ${escapeHtml(data.coaching_tip)}</div>` : ""}
@@ -1366,11 +2092,16 @@ CRITICAL:
 ✓ Each bookend demonstrates SUBSTANTIAL intellectual work
 ✓ All three entries work together as a cohesive narrative of the complete work cycle
 
+${ATVR_BREAKDOWN_SPEC}
+
 Return your response as JSON only, no preamble or code fences:
 {
   "before": "narrative for before bookend",
+  "before_breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." },
   "main": "narrative for main task",
+  "main_breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." },
   "after": "narrative for after bookend",
+  "after_breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." },
   "compliance_note": "one sentence — compliant with guidelines or specific flag. If no guidelines: 'No client guidelines provided.'",
   "coaching_tip": "one short sentence in Molly's voice about why this bookend set captures the full work cycle"
 }`;
@@ -1380,22 +2111,33 @@ Return your response as JSON only, no preamble or code fences:
   }
 
   function renderBookends(data, tB, tM, tA) {
-    return `
-      <div class="bnc-narrative-entry">
-        <div class="bnc-narrative-label"><span>Before Bookend</span>${tB ? `<span class="bnc-narrative-time">${tB} hrs</span>` : ""}</div>
-        <div class="bnc-narrative-text">${escapeHtml(data.before || "")}</div>
-      </div>
-      <div class="bnc-narrative-entry">
-        <div class="bnc-narrative-label"><span>Task · Main Event</span>${tM ? `<span class="bnc-narrative-time">${tM} hrs</span>` : ""}</div>
-        <div class="bnc-narrative-text">${escapeHtml(data.main || "")}</div>
-      </div>
-      <div class="bnc-narrative-entry">
-        <div class="bnc-narrative-label"><span>After Bookend</span>${tA ? `<span class="bnc-narrative-time">${tA} hrs</span>` : ""}</div>
-        <div class="bnc-narrative-text">${escapeHtml(data.after || "")}</div>
-      </div>
-      ${data.compliance_note ? `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>` : ""}
-      ${data.coaching_tip ? `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">— ${escapeHtml(data.coaching_tip)}</div>` : ""}
-    `;
+    const items = [
+      { label: 'Before Bookend', text: data.before, time: tB, breakdown: data.before_breakdown },
+      { label: 'Task · Main Event', text: data.main, time: tM, breakdown: data.main_breakdown },
+      { label: 'After Bookend', text: data.after, time: tA, breakdown: data.after_breakdown }
+    ];
+    let html = '';
+    items.forEach(it => {
+      const text = it.text || '';
+      const wc = wordCount(text);
+      const wcWarn = (wc < 10 || wc > 22) ? 'warn' : '';
+      html += `
+        <div class="bnc-narrative-entry">
+          <div class="bnc-narrative-label">
+            <span>${it.label}</span>
+            <div class="bnc-narrative-meta">
+              <span class="bnc-word-count ${wcWarn}">${wc} words</span>
+              ${it.time ? `<span class="bnc-narrative-time">${it.time} hrs</span>` : ""}
+              <button class="bnc-copy-mini" data-copy-text="${escapeAttr(text)}">Copy</button>
+            </div>
+          </div>
+          <div class="bnc-narrative-text">${escapeHtml(text)}</div>
+          ${renderAtvrBreakdown(it.breakdown)}
+        </div>`;
+    });
+    if (data.compliance_note) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>`;
+    if (data.coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">— ${escapeHtml(data.coaching_tip)}</div>`;
+    return html;
   }
 
   // ============ MULTI-PHASE ============
@@ -1443,12 +2185,14 @@ CRITICAL:
 ✓ Each entry stands alone as a complete billing narrative
 ✓ Partner-level sophistication in language
 
+${ATVR_BREAKDOWN_SPEC}
+
 Return your response as JSON only, no preamble or code fences:
 {
-  "phase1": {"narrative": "...", "time": "e.g., 1.5"},
-  "phase2": {"narrative": "...", "time": "..."},
-  "phase3": {"narrative": "...", "time": "..."},
-  "phase4": {"narrative": "...", "time": "..."},
+  "phase1": {"narrative": "...", "time": "e.g., 1.5", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." }},
+  "phase2": {"narrative": "...", "time": "...", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." }},
+  "phase3": {"narrative": "...", "time": "...", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." }},
+  "phase4": {"narrative": "...", "time": "...", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." }},
   "compliance_note": "one sentence — compliant with guidelines or specific flag. If no guidelines: 'No client guidelines provided.'",
   "coaching_tip": "one short sentence in Molly's voice about why running this work through The Breakdown captures its full value and defeats block billing"
 }`;
@@ -1463,16 +2207,48 @@ Return your response as JSON only, no preamble or code fences:
     let html = "";
     phases.forEach((p, i) => {
       if (!p) return;
+      const text = p.narrative || "";
+      const wc = wordCount(text);
+      const wcWarn = (wc < 18 || wc > 28) ? 'warn' : '';
       html += `
         <div class="bnc-narrative-entry">
-          <div class="bnc-narrative-label"><span>${phaseLabels[i]}</span>${p.time ? `<span class="bnc-narrative-time">${escapeHtml(p.time)} hrs</span>` : ""}</div>
-          <div class="bnc-narrative-text">${escapeHtml(p.narrative || "")}</div>
+          <div class="bnc-narrative-label">
+            <span>${phaseLabels[i]}</span>
+            <div class="bnc-narrative-meta">
+              <span class="bnc-word-count ${wcWarn}">${wc} words</span>
+              ${p.time ? `<span class="bnc-narrative-time">${escapeHtml(p.time)} hrs</span>` : ""}
+              <button class="bnc-copy-mini" data-copy-text="${escapeAttr(text)}">Copy</button>
+            </div>
+          </div>
+          <div class="bnc-narrative-text">${escapeHtml(text)}</div>
+          ${renderAtvrBreakdown(p.breakdown)}
         </div>
       `;
     });
     if (data.compliance_note) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>`;
     if (data.coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">— ${escapeHtml(data.coaching_tip)}</div>`;
     return html;
+  }
+
+  // ============ ATVR BREAKDOWN RENDERER ============
+  function renderAtvrBreakdown(bd) {
+    if (!bd || typeof bd !== 'object') return '';
+    const parts = [
+      { key: 'action', label: 'Action', val: bd.action },
+      { key: 'task', label: 'Task', val: bd.task },
+      { key: 'value', label: 'Value', val: bd.value },
+      { key: 'result', label: 'Result', val: bd.result }
+    ];
+    const visible = parts.filter(p => p.val && String(p.val).trim());
+    if (!visible.length) return '';
+    return `<div class="bnc-atvr-breakdown" title="The four ATVR components, identified in this narrative">${
+      visible.map(p => `<span class="bnc-atvr-chip ${p.key}"><strong>${p.label}</strong> ${escapeHtml(p.val)}</span>`).join('')
+    }</div>`;
+  }
+
+  function wordCount(s) {
+    if (!s) return 0;
+    return String(s).trim().split(/\s+/).filter(Boolean).length;
   }
 
   // ============ GENERATION RUNNER ============
@@ -1490,7 +2266,6 @@ Return your response as JSON only, no preamble or code fences:
     `;
 
     try {
-      // Build message content
       let content;
       if (file) {
         content = [
@@ -1516,18 +2291,15 @@ Return your response as JSON only, no preamble or code fences:
       }
       const apiData = await response.json();
 
-      // Extract text from response
       const rawText = apiData.content
         .filter(b => b.type === "text")
         .map(b => b.text)
         .join("\n")
         .trim();
 
-      // Strip code fences if present
       const cleaned = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
       const data = JSON.parse(cleaned);
 
-      // Render output
       const outputTitle = panel === 'standard' ? 'Your Narrative'
         : panel === 'bookends' ? 'Your Bookend Set'
         : 'Your Breakdown';
@@ -1539,13 +2311,26 @@ Return your response as JSON only, no preamble or code fences:
         <div data-narratives>${renderFn(data)}</div>
       `;
 
-      // Attach copy handler
-      const copyBtn = outputEl.querySelector('[data-copy-all]');
-      copyBtn.addEventListener('click', () => {
+      // Attach Copy All handler
+      const copyAllBtn = outputEl.querySelector('[data-copy-all]');
+      copyAllBtn.addEventListener('click', () => {
         const text = extractTextForCopy(data, panel);
         navigator.clipboard.writeText(text).then(() => {
-          copyBtn.textContent = "✓ Copied";
-          setTimeout(() => { copyBtn.textContent = "Copy All"; }, 2000);
+          copyAllBtn.textContent = "✓ Copied";
+          setTimeout(() => { copyAllBtn.textContent = "Copy All"; }, 2000);
+        });
+      });
+
+      // Attach per-narrative mini-copy handlers
+      outputEl.querySelectorAll('.bnc-copy-mini').forEach(b => {
+        b.addEventListener('click', () => {
+          const text = b.getAttribute('data-copy-text') || '';
+          navigator.clipboard.writeText(text).then(() => {
+            const original = b.textContent;
+            b.textContent = '✓ Copied';
+            b.classList.add('copied');
+            setTimeout(() => { b.textContent = original; b.classList.remove('copied'); }, 1800);
+          });
         });
       });
     } catch (err) {
@@ -1594,7 +2379,7 @@ Return your response as JSON only, no preamble or code fences:
   }
 
   function escapeHtml(str) {
-    if (!str) return "";
+    if (str === null || str === undefined) return "";
     return String(str)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -1602,5 +2387,15 @@ Return your response as JSON only, no preamble or code fences:
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
+
+  function escapeAttr(str) {
+    return escapeHtml(str);
+  }
+
+  // ============ INITIALIZE ============
+  restoreFormState();
+  refreshLibraryDropdowns();
+  refreshLibraryList();
+
 })();
 </script>
