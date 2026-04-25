@@ -19,10 +19,11 @@ const CONFIG = {
   // Max payload size (protects against abuse)
   maxBodyBytes: 8 * 1024 * 1024, // 8MB
 
-  // Which origins are allowed to call this API.
-  allowedOrigins: [
+allowedOrigins: [
     'http://localhost:3000',
     'http://localhost:5173',
+    'https://atvr.thebillingcoach.com',
+    'https://billing-narrative-generator.vercel.app',
   ],
 
   // If true, allow any vercel.app subdomain (useful for preview deployments)
