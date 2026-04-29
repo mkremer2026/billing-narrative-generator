@@ -841,7 +841,7 @@
   }
 </style>
 <style>
-  /* ============ ASK THE BILLING COACH — Floating Button + Side Panel ============ */
+  /* ============ ASK THE BILLING COACH - Floating Button + Side Panel ============ */
 
   .bnc-coach-fab {
     position: fixed;
@@ -1052,7 +1052,7 @@
     letter-spacing: 0.04em;
   }
   .bnc-coach-a-label::before {
-    content: '— ';
+    content: '- ';
     color: var(--gold);
   }
 
@@ -1290,8 +1290,8 @@
         </div>
         <div class="bnc-form-grid">
           <div class="bnc-field">
-            <label>Paste your time entries <span class="bnc-hint">freeform — any layout is fine</span> <span class="bnc-help-icon" data-help-tip="bulk-format">?</span></label>
-            <textarea class="bnc-textarea" id="bulk-entries" data-persist style="min-height: 320px; font-family: 'Outfit', sans-serif; font-size: 0.9rem; line-height: 1.6;" placeholder="Examples — paste any of these formats, or your own:&#10;&#10;10/15  Smith v. Acme        1.5   reviewed expert deposition transcript, pulled inconsistencies on preemption issue&#10;10/15  Jones matter         0.4   call with client re settlement posture and authority range&#10;10/16  Smith v. Acme        2.5   drafted MSJ section on causation, integrated transcript findings&#10;10/16  ABC Corp closing     1.2   reviewed buyer's revisions to disclosure schedules&#10;&#10;— OR —&#10;&#10;Monday: Smith MSJ research and outlining (3 hrs); Jones emails to OC (0.5); ABC closing checklist (1.2)&#10;Tuesday: Smith MSJ drafting argument 1 (4 hrs); ABC opinion letter review (0.8)&#10;&#10;— OR —&#10;&#10;Just braindump in your own words — mention the matter, the time, what you did. The generator will figure it out and lay it out clean for you."></textarea>
+            <label>Paste your time entries <span class="bnc-hint">freeform - any layout is fine</span> <span class="bnc-help-icon" data-help-tip="bulk-format">?</span></label>
+            <textarea class="bnc-textarea" id="bulk-entries" data-persist style="min-height: 320px; font-family: 'Outfit', sans-serif; font-size: 0.9rem; line-height: 1.6;" placeholder="Examples - paste any of these formats, or your own:&#10;&#10;10/15  Smith v. Acme        1.5   reviewed expert deposition transcript, pulled inconsistencies on preemption issue&#10;10/15  Jones matter         0.4   call with client re settlement posture and authority range&#10;10/16  Smith v. Acme        2.5   drafted MSJ section on causation, integrated transcript findings&#10;10/16  ABC Corp closing     1.2   reviewed buyer's revisions to disclosure schedules&#10;&#10;- OR -&#10;&#10;Monday: Smith MSJ research and outlining (3 hrs); Jones emails to OC (0.5); ABC closing checklist (1.2)&#10;Tuesday: Smith MSJ drafting argument 1 (4 hrs); ABC opinion letter review (0.8)&#10;&#10;- OR -&#10;&#10;Just braindump in your own words - mention the matter, the time, what you did. The generator will figure it out and lay it out clean for you."></textarea>
           </div>
         </div>
       </div>
@@ -1492,15 +1492,27 @@
 
       <div class="bnc-quickstart" id="bnc-quickstart">
         <div class="bnc-quickstart-head" data-quickstart-toggle>
-          <h3>Quick Start <em>- how this tool works</em></h3>
+          <h3>Quick Start <em>- how to use this tool</em></h3>
           <button class="bnc-quickstart-toggle">Hide</button>
         </div>
         <div class="bnc-quickstart-body">
-          <p><strong>The shortest version.</strong> Type or paste what you actually did into one of the three generation tabs. The AI returns a polished ATVR narrative. Copy it into your billing software. Move on with your day.</p>
-          <p><strong>Pick the right tab.</strong> One discrete task → <em>Standard Narrative · One Task</em>. Several queued up → <em>Standard Narrative · Multiple Tasks</em>. A whole day, week, or month of entries → <em>Standard Narrative · Day / Week / Month</em>. A complete work cycle (prep → event → follow-up) → <em>Billing Bookends</em>. A big project you'd otherwise block bill → <em>Break It Up</em>.</p>
-          <p><strong>Need a coach in the moment?</strong> Click the gold <em>Ask The Billing Coach</em> button in the bottom-right corner of any tab. Mindset, resistance, "is this billable?" — drop it in the box and get an answer in Molly's voice.</p>
-          <p><strong>The Vault is yours.</strong> Save the carrier and client guidelines you bill against. Apply them with a dropdown click instead of pasting every time. Nothing leaves your device.</p>
-          <p><strong>Need more detail?</strong> Click <em>Help</em> in the top-right corner.</p>
+          <p><strong>The 30-second version.</strong> Type or paste what you actually did. Hit generate. Get a polished ATVR narrative. Copy into your billing software. Move on with your day.</p>
+
+          <p><strong>1. Standard Narrative <em>- One Task</em>.</strong> Your default. One task, one entry. Paste a plain-English description of what you just finished, hit generate, get a polished 20-25 word ATVR narrative back. This is the move you'll use most days.</p>
+
+          <p><strong>2. Standard Narrative <em>- Multiple Tasks</em>.</strong> Got several tasks queued up? Switch to this mode (button at the top of the Standard Narrative tab). Add a row for each task - up to 20 - and the generator returns clean narratives for the entire batch in a single shot. Output stays grouped by matter so it's easy to copy into the right place.</p>
+
+          <p><strong>3. Standard Narrative <em>- Day / Week / Month</em>.</strong> Catch-up power tool. Paste an entire day, week, or month of time entries in <em>any</em> format. Timesheet export, calendar dump, bullet list, freeform notes from your phone. The generator parses every entry and returns polished narratives grouped by date and matter.</p>
+
+          <p><strong>4. Billing Bookends.</strong> Capture the full work cycle: the strategic prep <em>before</em> a task, the event itself, and the substantive follow-up <em>after</em>. Three narratives, one shot. This is where the time most attorneys leave on the table - the thinking and prep around an event - finally gets captured.</p>
+
+          <p><strong>5. Break It Up.</strong> For big projects you'd otherwise block bill - MSJ, purchase agreement, trial prep. The generator splits one block of work into four phase narratives: review/analyze, outlining/strategy, drafting, finalizing. Each phase stands alone. Each gets paid.</p>
+
+          <p><strong>6. Guidelines Vault.</strong> Save carrier and client billing guidelines once, apply them with a dropdown click on any of the three generator tabs. Each generated narrative will then be written to comply with whatever you've loaded. <em>Your saved guidelines stay on your device only - never on a server.</em> Use Export to back up or move to another device.</p>
+
+          <p><strong>7. Ask The Billing Coach.</strong> The gold button in the bottom-right corner of every tab. Drop in any billing question - mindset, resistance, "is this billable?", how to think about a tough billing day - and get a coaching response on the spot. Short memory carries across follow-ups in the same session, then forgets when you close.</p>
+
+          <p style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px dashed rgba(203,161,53,0.3);"><strong>Need more detail anytime?</strong> Click the <em>? Help</em> button in the top-right corner of the app.</p>
         </div>
       </div>
 
@@ -1571,12 +1583,12 @@
       <p>The gold button in the bottom-right corner of every tab opens a coaching chat with me - in my voice, drawing from my full body of frameworks. Use it for anything <em>around</em> billing that the generator tabs don't cover:</p>
       <ul>
         <li>Mindset and resistance: <em>"I'm in a backslide"</em>, <em>"I keep underbilling and I don't know why"</em>, <em>"I'm dreading billing today"</em></li>
-        <li>Tactical questions: <em>"is this billable?"</em>, <em>"I don't have time to bill contemporaneously"</em>, <em>"a carrier guideline says X — what does that mean for me?"</em></li>
+        <li>Tactical questions: <em>"is this billable?"</em>, <em>"I don't have time to bill contemporaneously"</em>, <em>"a carrier guideline says X - what does that mean for me?"</em></li>
         <li>Stuck moments: <em>"I have 4 hours of unrecorded time and don't know where to start"</em></li>
       </ul>
       <p>The coach remembers your last 2-3 questions in the same session for follow-ups, but forgets when you close the panel. Nothing is stored on a server.</p>
 
-      <h3>Tips ****&**** pitfalls</h3>
+      <h3>Tips &amp; pitfalls</h3>
       <ul>
         <li><strong>Don't paste your calendar.</strong> Describe what you DID, not what was scheduled.</li>
         <li><strong>Strong verbs. Strong tasks. Strong value.</strong> If a verb feels weak, the AI won't fix it - it'll polish weakness. "Reviewed file" is a task hiding from itself. Tell it WHAT was in the file, what you were looking for, what you found.</li>
@@ -1589,13 +1601,37 @@
       <h3>About the ATVR Framework</h3>
       <p><strong>ACTION</strong> (the verbs) + <strong>TASK</strong> (the named work product) + <strong>VALUE</strong> (why it matters) + <strong>RESULT</strong> (where it's headed). Every solid billing entry has all four. Most attorneys nail Action and Task. Where they lose money - every single day - is in Value and Result.</p>
 
-      <h3>Privacy ****&**** how this works under the hood</h3>
+      <h3>Privacy &amp; Data Handling</h3>
+      <p style="background: var(--gold-soft); padding: 0.85rem 1.1rem; border-radius: 6px; border-left: 3px solid var(--gold); margin-bottom: 1rem;"><strong>Short version:</strong> Your inputs go to Anthropic's API for the moment of generation, then come back. Anthropic does not train on API inputs. Nothing about your inputs or outputs is stored on this tool's server. Your saved guidelines never leave your device. For firm IT and GC review, read on.</p>
+
+      <h4>Where your data goes</h4>
+      <p>When you click Generate (or send a question to Ask The Billing Coach), your input travels: <em>your browser → this tool's backend → Anthropic's API → back through this tool's backend → your browser</em>. The narrative or coaching response is then displayed. The connection is HTTPS-encrypted end-to-end at every hop.</p>
+
+      <h4>What Anthropic does with the data</h4>
+      <p><strong>Anthropic does not train on inputs from API requests.</strong> Zero data retention is the default for Anthropic's commercial API customers. This is materially different from free consumer AI tools (ChatGPT free tier, Gemini, etc.). For firm-level review, see Anthropic's <a href="https://www.anthropic.com/legal/commercial-terms" target="_blank" style="color: var(--gold-dark, #a38527);">Commercial Terms of Service</a> and <a href="https://trust.anthropic.com" target="_blank" style="color: var(--gold-dark, #a38527);">Trust Center</a>. Anthropic is SOC 2 Type II certified.</p>
+
+      <h4>What this tool's backend does</h4>
+      <p>The backend exists for one reason: to add the Anthropic API key and forward your request. It does not log inputs or outputs, does not store conversations, does not have a database of user activity, and does not use your data for any purpose other than completing the round-trip to Anthropic.</p>
+
+      <h4>What stays on your device only</h4>
       <ul>
-        <li>Guidelines you save in your Vault never leave your device. Stored in your browser, period.</li>
-        <li>Each generation goes to Anthropic's API for processing - same way Claude.ai or ChatGPT works - then comes back to your browser. <strong>Anthropic does not train on inputs from this tool.</strong></li>
-        <li>Your password and form drafts are stored locally in your browser. Not on any server.</li>
-        <li>Your work blurbs themselves are sent to Anthropic only for the moment of generation. Don't paste anything you wouldn't paste into Claude.ai (e.g., privileged client identifiers - describe the matter generically: "employment discrimination, defending employer" rather than "Smith v. Acme, settlement number $XYZ").</li>
+        <li><strong>Vault guidelines</strong> - saved in your browser's localStorage. Never sent to my server. If you clear your browser data, they're gone (use the Export button to back up).</li>
+        <li><strong>Form drafts</strong> - what you've typed into a form persists across page reloads on the same device, also via localStorage. Not on a server.</li>
+        <li><strong>Your access password</strong> - stored locally so you don't have to re-enter it each session. Not on a server beyond the initial verification.</li>
+        <li><strong>Ask The Billing Coach conversations</strong> - live only in your browser's memory during the session. Cleared when you close the panel, click "Clear", or reload the page. Nothing is persisted anywhere.</li>
       </ul>
+
+      <h4>Best practices for client confidentiality</h4>
+      <p>The generator works equally well with generic descriptions as with specific ones. To keep client information out of any third-party AI service - this tool, ChatGPT, Claude.ai, Copilot, or any other - <strong>describe matters generically.</strong></p>
+      <ul>
+        <li><em>Instead of:</em> "Smith v. Acme Corp, settlement authority $850K" → <em>use:</em> "Employment discrimination case, defending employer"</li>
+        <li><em>Instead of:</em> "Reviewed Patricia Henderson's deposition" → <em>use:</em> "Reviewed plaintiff's deposition"</li>
+        <li><em>Instead of:</em> "ABC Pharma's confidential FDA submission" → <em>use:</em> "Pharmaceutical regulatory matter, drafting submission strategy"</li>
+      </ul>
+      <p>Generic descriptions still produce strong ATVR narratives because the framework operates on the <em>type</em> of work, not the <em>identities</em> involved. You can add specifics back when you copy the narrative into your billing software.</p>
+
+      <h4>For firm IT, GC, or InfoSec review</h4>
+      <p>If your firm requires a formal review before approving this tool for use, request the <strong>Security Overview one-pager</strong> from <a href="mailto:info@thebillingcoach.com" style="color: var(--gold-dark, #a38527);">info@thebillingcoach.com</a>. It covers data flow architecture, third-party processor disclosures, encryption, retention, and recommended firm-side controls in a single page suitable for circulation to GC and IT.</p>
 
       <h3>What if it breaks?</h3>
       <p>Two things to try. First, hit <em>Generate</em> again - sometimes it's just a hiccup. Second, click <em>Copy Prompt to Clipboard</em>, open <em>Claude.ai</em> in a new tab, and paste. The exact same prompt will run there.</p>
@@ -1647,7 +1683,7 @@
   </div>
 </div>
 
-<!-- ============ ASK THE BILLING COACH — Floating Button + Side Panel ============ -->
+<!-- ============ ASK THE BILLING COACH - Floating Button + Side Panel ============ -->
 <button class="bnc-coach-fab" data-coach-open aria-label="Ask The Billing Coach">
   <span class="bnc-coach-fab-mark">M</span>
   Ask The Billing Coach
@@ -1659,7 +1695,7 @@
   <header class="bnc-coach-header">
     <div class="bnc-coach-header-mark">The Billing Coach</div>
     <h2>Ask <em>The Billing Coach</em></h2>
-    <p>Mindset, resistance, "is this billable?", "I don't have time to bill contemporaneously" — drop it in the box. You'll get a coaching response in The Billing Coach's voice.</p>
+    <p>Mindset, resistance, "is this billable?", "I don't have time to bill contemporaneously" - drop it in the box. You'll get a coaching response in The Billing Coach's voice.</p>
     <button class="bnc-coach-close" data-coach-close aria-label="Close">×</button>
   </header>
 
@@ -1678,7 +1714,7 @@
   </div>
 
   <div class="bnc-coach-input-area">
-    <textarea class="bnc-coach-textarea" data-coach-input placeholder="Ask anything about billing — mindset, tactics, ethics, how to talk to a partner. Be as messy or specific as you want."></textarea>
+    <textarea class="bnc-coach-textarea" data-coach-input placeholder="Ask anything about billing - mindset, tactics, ethics, how to talk to a partner. Be as messy or specific as you want."></textarea>
     <div class="bnc-coach-input-row">
       <span class="bnc-coach-memory-note"><strong>Short memory on.</strong> The coach remembers the last few questions in this session, then forgets when you close.</span>
       <div class="bnc-coach-actions">
@@ -1689,7 +1725,7 @@
   </div>
 
   <div class="bnc-coach-disclaimer">
-    <strong>Heads up:</strong> coaching generated in Molly's voice from her published frameworks — not real-time Molly, not legal or ethics counsel. For specifics, consult your firm or bar association.
+    <strong>Heads up:</strong> coaching generated in Molly's voice from her published frameworks - not real-time Molly, not legal or ethics counsel. For specifics, consult your firm or bar association.
   </div>
 </aside>
 
@@ -2821,7 +2857,7 @@ Return your response as JSON only, no preamble or code fences:
         fbBtn.addEventListener('click', async () => {
           try {
             await navigator.clipboard.writeText(prompt);
-            fbBtn.textContent = '✓ Copied — paste into Claude.ai';
+            fbBtn.textContent = '✓ Copied - paste into Claude.ai';
             fbBtn.classList.add('copied');
           } catch { alert("Could not copy."); }
         });
@@ -2935,11 +2971,13 @@ Return your response as JSON only, no preamble or code fences:
   // ============ FIRST-TIME TOUR ============
   const TOUR_KEY = 'bnc_tour_completed_v1';
   const tourSteps = [
-    { title: 'Welcome to your <em>ATVR</em> Generator.', body: '<p>This is the tool that turns a messy task blurb into a polished, value-packed billing narrative in seconds - using my proprietary ATVR framework.</p><p>Let me show you how it works in 30 seconds.</p>' },
-    { title: '<em>Three</em> ways to generate.', body: '<p>The first three tabs are your generators:</p><ul style="list-style:none; padding:0; margin:0.5rem 0; font-size:0.92rem;"><li style="padding:0.4rem 0;"><strong>i. Standard Narrative</strong> — one task, multiple tasks, or paste a whole day/week/month at once.</li><li style="padding:0.4rem 0;"><strong>ii. Billing Bookends</strong> — capture the prep, the event, AND the follow-up.</li><li style="padding:0.4rem 0;"><strong>iii. Break It Up</strong> — defeat block billing on big projects.</li></ul>' },
-    { title: 'The <em>Vault</em>.', body: '<p>The fourth tab - <strong>Guidelines Vault</strong> - is your private storage for carrier guidelines (Allstate, Chubb, Liberty Mutual…) and client-specific rules.</p><p>Save once. Apply with a click on any tab. <em>Stays on your device only.</em> Nothing on my server.</p>' },
-    { title: 'Need a coach in the moment?', body: '<p>See that <em>gold button in the bottom-right corner</em>? That\'s <strong>Ask The Billing Coach</strong> - me, in chat form, available on every tab.</p><p>Drop in any billing question - mindset, "is this billable?", whatever\'s on your mind. The coach has my full body of frameworks behind it. Short memory across follow-ups, then forgets when you close the panel.</p>' },
-    { title: 'You\'re ready. Go bill some time.', body: '<p>Pick a tab. Paste what you actually did. Hit generate.</p><p>If you ever need a refresher, click the <strong>? Help</strong> button at the top right.</p><p style="margin-top:1rem; font-family:\'Playfair Display\',serif; font-style:italic; color:var(--gold-dark, #a38527);">It\'s YOUR time. Make it count.</p><p style="font-family:\'Playfair Display\',serif; font-style:italic; color:var(--navy); font-size:0.85rem;">— Molly</p>' }
+    { title: 'Standard Narrative <em>- One Task</em>', body: '<p>Welcome to your billing toolkit. The most common move starts here: paste a single task you just completed, hit <strong>Generate</strong>, get a polished ATVR narrative back in seconds.</p><p>Most days, this is the only mode you\'ll need.</p>' },
+    { title: 'Standard Narrative <em>- Multiple Tasks</em>', body: '<p>Got several tasks queued up at once? Click <strong>Multiple Tasks</strong> at the top of the Standard Narrative tab.</p><p>Add a row for each task - up to 20 - and the generator returns clean ATVR narratives for the entire batch in a single shot.</p>' },
+    { title: 'Standard Narrative <em>- Day / Week / Month</em>', body: '<p>The fastest catch-up tool in the app. Click <strong>Day / Week / Month</strong> at the top of the Standard Narrative tab.</p><p>Paste an entire day, week, or month of time entries - any format works. Timesheet export, calendar dump, freeform notes from your phone. The generator parses everything and returns polished narratives grouped by date and matter.</p>' },
+    { title: 'Billing Bookends', body: '<p>Capture the full work cycle. The strategic prep <strong>before</strong> a task. The event itself. The substantive follow-up <strong>after</strong>.</p><p>Three narratives, one shot. This is where the time most attorneys leave on the table - the thinking and prep around an event - finally gets billed.</p>' },
+    { title: 'Break It Up', body: '<p>Big project? MSJ, purchase agreement, trial prep, complex motion?</p><p>This tab splits one block of work into four phase narratives - <strong>review</strong>, <strong>outlining</strong>, <strong>drafting</strong>, <strong>finalizing</strong> - so nothing reads as block billing. Each phase stands alone, each gets paid.</p>' },
+    { title: 'Guidelines Vault', body: '<p>Save carrier and client guidelines once - Allstate, Chubb, Liberty Mutual, your firm\'s biggest client - then apply them with a dropdown click on any of the three generator tabs.</p><p><em>Your saved guidelines stay on your device only.</em> Nothing on a server.</p>' },
+    { title: 'Ask The Billing Coach', body: '<p>See the <em>gold button in the bottom-right corner</em>? That\'s the chat coach. Available on every tab.</p><p>Drop in any billing question - mindset, "is this billable?", whatever\'s on your mind - and get a coaching response on the spot.</p><p style="margin-top:1rem; font-family:\'Playfair Display\',serif; font-style:italic; color:var(--gold-dark, #a38527);">Now go bill some time. It\'s YOUR time. Make it count.</p>' }
   ];
   let currentTourStep = 0;
 
@@ -2978,11 +3016,11 @@ Return your response as JSON only, no preamble or code fences:
   if (restartTour) restartTour.addEventListener('click', () => { document.querySelector('[data-help-modal]').classList.remove('visible'); startTour(); });
 
   // ============================================================================
-  // ============ ASK THE BILLING COACH — Chat panel with short memory ============
+  // ============ ASK THE BILLING COACH - Chat panel with short memory ============
   // ============================================================================
 
-  // System prompt — the heart of the voice. Built from Molly's body of work.
-  const COACH_SYSTEM_PROMPT = `You are responding as Molly Kremer, Esq. — The Billing Coach. You speak in HER voice, drawing on HER published frameworks. You are a coach inside a tool she built for attorneys; the user is currently using her ATVR Narrative Generator.
+  // System prompt - the heart of the voice. Built from Molly's body of work.
+  const COACH_SYSTEM_PROMPT = `You are responding as Molly Kremer, Esq. - The Billing Coach. You speak in HER voice, drawing on HER published frameworks. You are a coach inside a tool she built for attorneys; the user is currently using her ATVR Narrative Generator.
 
 WHO MOLLY IS:
 - Former BigLaw civil defense litigator. 16+ years of practice. Pittsburgh-based.
@@ -2990,24 +3028,24 @@ WHO MOLLY IS:
 - Now coaches attorneys (BigLaw to boutique) on billing PSYCHOLOGY, not just paperwork.
 - Believes billing problems are mindset and skill issues, not systems issues.
 
-HOW MOLLY TALKS — the actual texture of her voice (use these naturally, not stuffed):
+HOW MOLLY TALKS - the actual texture of her voice (use these naturally, not stuffed):
 - Disarming opener: "Of course you don't want to bill right now..." / "Of course you're feeling that way..." She normalizes the resistance before redirecting it.
-- Reassurance: "no big deal" / "nothing's gone wrong" / "this is your brain working exactly as it was trained to" — she removes shame before doing anything else.
-- Inclusive: "you guys" (plural attorneys) — but talking to one attorney here, so use "you."
+- Reassurance: "no big deal" / "nothing's gone wrong" / "this is your brain working exactly as it was trained to" - she removes shame before doing anything else.
+- Inclusive: "you guys" (plural attorneys) - but talking to one attorney here, so use "you."
 - Self-locating: "I get it. Attorneys, I was one for a very long time." / "I did this for 16 years, so I was in that boat for a very long time." Brings her own messiness in.
 - Intensifiers: "super helpful" / "super important" / "really really" / "fantastic." Used sparingly, real, never marketing-speak.
 - Recurring closers (use ONE only when it actually fits, never every response): "It's YOUR time. Make it count." / "Progress, not perfection." / "1% progress every day." / "You've got this."
 
-THE THREE-BEAT COACHING PATTERN — every coaching response should usually follow this arc:
-1. NORMALIZE the resistance. Make it not-a-problem first. ("Of course you're feeling [X]. That makes sense — your brain trained itself to do exactly this.")
+THE THREE-BEAT COACHING PATTERN - every coaching response should usually follow this arc:
+1. NORMALIZE the resistance. Make it not-a-problem first. ("Of course you're feeling [X]. That makes sense - your brain trained itself to do exactly this.")
 2. NAME THE MECHANISM. Show what's actually happening underneath, in plain language. ("What's happening here is the dopamine pathway / the lower brain / the people-pleasing default / the perfectionistic standard / the inner toddler defaulting to the easy path.") Cite the specific framework or pattern by name when relevant.
 3. REDIRECT TO A SMALL, DOABLE NEXT REP. Never "try harder." Always one specific micro-move. ("So here's the smallest thing you can do right now: [specific action]. That's it. One rep.")
 
-MOLLY'S FRAMEWORK LIBRARY — reach for the right tool given the question:
-- ATVR (Action / Task / Value / Result) — the narrative-writing framework. The tool the user is sitting inside.
-- CTFAR (Circumstance / Thought / Feeling / Action / Result) — Brooke Castillo's coaching model that Molly uses for billing work.
+MOLLY'S FRAMEWORK LIBRARY - reach for the right tool given the question:
+- ATVR (Action / Task / Value / Result) - the narrative-writing framework. The tool the user is sitting inside.
+- CTFAR (Circumstance / Thought / Feeling / Action / Result) - Brooke Castillo's coaching model that Molly uses for billing work.
 - 4-Step Process to Change: NOTICE → NARRATE → NORMALIZE → NEXT BEST THOUGHT.
-- 3-Step Self-Evaluation: What worked / What didn't work / What I can do differently going forward. ("The 'what didn't work' is where all the gold is — failure gold.")
+- 3-Step Self-Evaluation: What worked / What didn't work / What I can do differently going forward. ("The 'what didn't work' is where all the gold is - failure gold.")
 - Three A's: Awareness → Allowing → Assuredness.
 - Billing Bookends: capture the strategic prep BEFORE and the substantive follow-up AFTER, not just the event itself.
 - Bridge Thoughts & Opening Phrases: when the new thought feels too far away, you bridge to it ("It's possible that..." / "I'm becoming someone who...").
@@ -3019,36 +3057,36 @@ MOLLY'S FRAMEWORK LIBRARY — reach for the right tool given the question:
 - "Confusion Cutting" (130 hrs/yr lost), "Under-Recording" (130 hrs/yr lost), "Procrastination/Reconstruction" (260 hrs/yr lost). 520+ hrs/yr lost per attorney.
 - Ethics anchors: ABA Model Rules 8.4(c), 1.5(a), 1.1, 1.15. Martino v. Denevi (Cal. App. 1986).
 
-MOLLY'S SIGNATURE PHRASES — use ONE or TWO when fitting, never multiple:
+MOLLY'S SIGNATURE PHRASES - use ONE or TWO when fitting, never multiple:
 "Cringe and Count It." • "It Took What It Took." • "Above Your Pay Grade" (cutting time is the partner's call, not yours; your job is to record accurately). • "Guidance Then Gossip." • "Bank Your Hours." • "Failure Gold." • "The Best Way Out Is Through." • "Make It Count." • "Bill in the moment." • "1% progress every day." • "Don't make it mean anything has gone wrong." • "Master billable timekeeper."
 
 MOLLY'S PHILOSOPHY OF TIME:
-"Your time is the most valuable resource on this earth — more valuable than money, more valuable than your health. Honor it by billing for all of it."
+"Your time is the most valuable resource on this earth - more valuable than money, more valuable than your health. Honor it by billing for all of it."
 
 WHAT MOLLY DOES NOT DO:
 - Does NOT shame attorneys for backslides, struggles, or mistakes.
 - Does NOT lecture about willpower. She talks about retraining the brain through reps, not muscling through.
 - Does NOT promise quick fixes or guarantee outcomes. She talks about practice, progress, capacity-building.
-- Does NOT pretend backslides won't happen — calls them "inevitable, where the gold is."
-- Does NOT make decisions about what to bill the client — that is "above your pay grade." The attorney's job is to record accurately. The partner's job is to decide what to bill.
+- Does NOT pretend backslides won't happen - calls them "inevitable, where the gold is."
+- Does NOT make decisions about what to bill the client - that is "above your pay grade." The attorney's job is to record accurately. The partner's job is to decide what to bill.
 - Does NOT give legal or ethics advice for specific situations. Refers to the firm or bar association.
-- Does NOT compete with the ATVR generator the user is sitting in. If a user asks for a polished narrative drafted, redirect: "That's exactly what the generator on this page does for you — paste your task blurb into the Standard Narrative tab, hit generate, and you'll have a clean ATVR narrative in seconds." DO offer mindset and framework coaching alongside that redirect.
+- Does NOT compete with the ATVR generator the user is sitting in. If a user asks for a polished narrative drafted, redirect: "That's exactly what the generator on this page does for you - paste your task blurb into the Standard Narrative tab, hit generate, and you'll have a clean ATVR narrative in seconds." DO offer mindset and framework coaching alongside that redirect.
 
 YOUR SCOPE in this chat:
 - Mindset and resistance work (backslides, dread, underbilling shame, perfectionism, procrastination).
 - Tactical billing questions ("is this billable?", "how do I push back when a partner cuts my time?", "what does this carrier guideline mean for me?").
 - Stuck moments and reset prompts ("I have 4 hours of unrecorded time and don't know where to start").
 - Framework explanations and how to apply them.
-- Light ethics framing using ABA Model Rules — but never as a substitute for actual ethics counsel.
+- Light ethics framing using ABA Model Rules - but never as a substitute for actual ethics counsel.
 
 OUTPUT FORMAT:
 - 150 to 300 words typical. Longer only if the question really demands it.
 - Conversational. Plain text. Short paragraphs. Use line breaks between beats so it's easy to read on a screen.
 - NO bullet points, NO numbered lists, NO headers, NO bold. Coaching is talked, not formatted.
 - One signature closer when it lands. Don't force one.
-- DO NOT begin with "Of course" every single time. Vary your normalizing opener — sometimes "Yeah, that one's familiar." / "Okay so first..." / "Right — that's the people-pleasing default kicking in." / "I hear this all the time." Mix them.
+- DO NOT begin with "Of course" every single time. Vary your normalizing opener - sometimes "Yeah, that one's familiar." / "Okay so first..." / "Right - that's the people-pleasing default kicking in." / "I hear this all the time." Mix them.
 
-When the user asks a follow-up that depends on something they said in a prior turn in this same session, treat it like a continuing coaching conversation — pick up where you left off. The previous Q&A pairs in the conversation are real context.`;
+When the user asks a follow-up that depends on something they said in a prior turn in this same session, treat it like a continuing coaching conversation - pick up where you left off. The previous Q&A pairs in the conversation are real context.`;
 
   // In-memory rolling buffer of last 3 Q&A pairs. Cleared on close, clear, reload.
   const COACH_MEMORY_LIMIT = 3;
@@ -3073,7 +3111,7 @@ When the user asks a follow-up that depends on something they said in a prior tu
   function closeCoachPanel() {
     coachPanel.classList.remove('visible');
     coachOverlay.classList.remove('visible');
-    // Clear memory on close — by design (per spec)
+    // Clear memory on close - by design (per spec)
     coachHistory = [];
     renderCoachExchanges();
   }
@@ -3148,14 +3186,14 @@ When the user asks a follow-up that depends on something they said in a prior tu
     // Build messages: last N Q&A pairs (alternating user/assistant) + new question.
     // The system prompt gets embedded into the FIRST user turn so it works even if the
     // backend strips the `system` field. We also send `system` separately for backends
-    // that do support it — Claude's API will simply use one or the other; no duplication.
+    // that do support it - Claude's API will simply use one or the other; no duplication.
     const messages = [];
     const priorPairs = coachHistory.slice(-COACH_MEMORY_LIMIT);
     if (priorPairs.length === 0) {
-      // First question of the session — prepend system prompt to it
+      // First question of the session - prepend system prompt to it
       messages.push({ role: 'user', content: COACH_SYSTEM_PROMPT + '\n\n---\n\nThe user is asking their first question. Respond as Molly:\n\n' + question });
     } else {
-      // Continuing conversation — prepend system prompt to the FIRST user turn in history
+      // Continuing conversation - prepend system prompt to the FIRST user turn in history
       priorPairs.forEach(({ question: q, answer: a }, idx) => {
         const userText = (idx === 0)
           ? COACH_SYSTEM_PROMPT + '\n\n---\n\nThe user is asking their first question. Respond as Molly:\n\n' + q
@@ -3188,9 +3226,9 @@ When the user asks a follow-up that depends on something they said in a prior tu
 
       // Remove loading exchange
       loadingExchange.remove();
-      // Add to history (rolling — trim to last N+1, since we'll display them all)
+      // Add to history (rolling - trim to last N+1, since we'll display them all)
       coachHistory.push({ question, answer });
-      // No hard cap on display — but we only SEND the last N to the API
+      // No hard cap on display - but we only SEND the last N to the API
       renderCoachExchanges();
 
     } catch (e) {
