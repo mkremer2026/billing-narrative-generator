@@ -1456,6 +1456,92 @@
     font-weight: 600;
     margin-bottom: 0.3rem;
   }
+
+  /* Unbundled narratives - shown for block-billing findings */
+  .bnc-pf-unbundled {
+    margin-top: 0.55rem;
+  }
+  .bnc-pf-unbundled-header {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold-dark, #a38527);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .bnc-pf-unbundled-header::before {
+    content: '⤴';
+    font-size: 0.85rem;
+    transform: rotate(90deg);
+    display: inline-block;
+    color: var(--gold);
+  }
+  .bnc-pf-unbundled-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .bnc-pf-unbundled-card {
+    background: var(--gold-soft);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    padding: 0.65rem 0.85rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+  }
+  .bnc-pf-unbundled-num {
+    flex-shrink: 0;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--gold);
+    min-width: 1.2rem;
+    text-align: center;
+    padding-top: 1px;
+  }
+  .bnc-pf-unbundled-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .bnc-pf-unbundled-narrative {
+    font-family: Georgia, serif;
+    color: var(--navy);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 0.3rem;
+  }
+  .bnc-pf-unbundled-meta {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.72rem;
+    color: var(--gold-dark, #a38527);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .bnc-pf-unbundled-meta strong {
+    color: var(--navy);
+    font-weight: 700;
+  }
+  .bnc-pf-unbundled-actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+  }
+  .bnc-pf-unbundled-disclaimer {
+    margin-top: 0.5rem;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.5;
+    padding-top: 0.4rem;
+    border-top: 1px dashed rgba(203,161,53,0.3);
+  }
+
   .bnc-pf-finding-actions {
     display: flex;
     gap: 0.4rem;
@@ -3366,10 +3452,35 @@
       <div class="bnc-pf-loading">
         <div class="bnc-pf-loading-spinner"></div>
         <div class="bnc-pf-loading-title">Reading your pro forma...</div>
-        <div class="bnc-pf-loading-stage">Extracting time entries and matter names</div>
-        <div class="bnc-pf-loading-note">Larger pro formas can take 30-60 seconds. Hang tight.</div>
+        <div class="bnc-pf-loading-stage" data-pf-extract-stage>Opening the document and scanning the layout</div>
+        <div class="bnc-pf-loading-note">This usually takes 30-60 seconds. Feel free to step away.</div>
       </div>
     `;
+
+    // Scroll the loading message into view so the user can see it without scrolling
+    setTimeout(() => {
+      const loadingEl = pfOutput.querySelector('.bnc-pf-loading');
+      if (loadingEl) loadingEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+
+    // Toast lets the user know what's happening even if they look away from the page
+    toastInfo('Reading your pro forma - this takes about 30-60 seconds.', 'Working on it');
+
+    // Cycle the stage messages so the user sees the tool is alive throughout the wait
+    const extractStages = [
+      'Opening the document and scanning the layout',
+      'Identifying time entries...',
+      'Extracting matter names and timekeepers...',
+      'Cleaning up the data...',
+      'Almost there...'
+    ];
+    let extractStageIdx = 0;
+    const extractStageEl = pfOutput.querySelector('[data-pf-extract-stage]');
+    const extractStageInterval = setInterval(() => {
+      extractStageIdx = (extractStageIdx + 1) % extractStages.length;
+      const el = pfOutput.querySelector('[data-pf-extract-stage]');
+      if (el) el.textContent = extractStages[extractStageIdx];
+    }, 9000);
 
     const extractPrompt = `Your ONLY job in this response is to return a single JSON object. Do not include any preamble, explanation, commentary, or markdown formatting. Do not say "Here is the JSON" or "I'll extract the entries." Your entire response must start with the character { and end with the character }. Nothing before. Nothing after.
 
@@ -3429,9 +3540,11 @@ If the PDF doesn't appear to be a pro forma at all, return:
       try {
         data = parseJsonResilient(text);
       } catch (firstErr) {
-        // Initial parse failed - retry once with a stronger JSON-only reminder
+        // Initial parse failed - retry once with a stronger JSON-only reminder.
+        // Stop the cycling stage messages so the retry message stays visible.
+        clearInterval(extractStageInterval);
         console.warn('PF extract: initial parse failed, retrying. Error:', firstErr.message);
-        const stageEl = pfOutput.querySelector('.bnc-pf-loading-stage');
+        const stageEl = pfOutput.querySelector('[data-pf-extract-stage]');
         if (stageEl) stageEl.textContent = 'Cleaning up the response and retrying...';
 
         const retryPrompt = extractPrompt + `\n\nIMPORTANT: Your previous response could not be parsed as JSON. Common mistakes to avoid:
@@ -3467,6 +3580,7 @@ If the PDF doesn't appear to be a pro forma at all, return:
       }
 
       if (!data.entries || data.entries.length === 0) {
+        clearInterval(extractStageInterval);
         pfOutput.innerHTML = `
           <div class="bnc-pf-loading" style="border-color:#fde68a; background:#fef7e6;">
             <div class="bnc-pf-loading-title" style="color:#92400e;">Couldn't find time entries</div>
@@ -3476,11 +3590,17 @@ If the PDF doesn't appear to be a pro forma at all, return:
         return;
       }
 
+      clearInterval(extractStageInterval);
       proFormaState.extracted = data;
       pfOutput.innerHTML = '';
       pfRenderMappingUI();
       toastSuccess(`Found ${data.entries.length} entries across ${data.matters.length} matter${data.matters.length === 1 ? '' : 's'}.`, 'Extraction complete');
+      // Scroll Step 2 into view so the user sees what to do next
+      setTimeout(() => {
+        if (pfMappingStep) pfMappingStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
     } catch (err) {
+      clearInterval(extractStageInterval);
       console.error('PF extract error:', err);
       pfOutput.innerHTML = `
         <div class="bnc-pf-loading" style="border-color:#fecaca; background:#fef2f2;">
@@ -3594,6 +3714,18 @@ REVIEW EACH ENTRY for issues across these categories:
 2. BLOCK_BILLING (severity: high)
    The entry combines multiple distinct tasks under one time block (e.g., "drafted MSJ, reviewed deposition, called client - 4.5 hours"). This is prohibited by most carrier guidelines.
 
+   *** SPECIAL HANDLING FOR BLOCK BILLING ***
+   For block-billed entries, do NOT just produce a single suggested_rewrite. Instead, populate the "unbundled_narratives" array with 2-4 separate ATVR narratives - one per distinct task you can identify in the original block.
+
+   Each unbundled narrative must:
+   - Be a polished ATVR narrative (20-25 words, present tense, action verbs, specific task + value + result)
+   - Have its own suggested hours allocation that, summed across all unbundled narratives, approximately equals the original total hours for the block
+   - Cover ONE discrete task from the original block, not multiple
+
+   For block-billed entries, set suggested_rewrite to null (since unbundled_narratives is the rewrite).
+
+   Hours allocation: estimate proportionally based on the work described. If you can't tell from the description, distribute roughly evenly. The user is told these are estimates and will verify against their actual time.
+
 3. DUPLICATE_OR_OVERLAP (severity: medium or high)
    Two or more entries on the same date for the same matter that look like they describe the same or substantially overlapping work. Flag as a pair: identify both entry indexes.
 
@@ -3606,7 +3738,7 @@ REVIEW EACH ENTRY for issues across these categories:
 6. VAGUE_OR_THIN (severity: medium)
    The narrative is too short or generic to justify the time billed (e.g., "reviewed file - 2.5 hours").
 
-For each finding, also provide a SUGGESTED REWRITE in proper ATVR form (20-25 words, present tense, action verbs, specific task, value, result).
+For non-block-billing findings, provide a SUGGESTED REWRITE in proper ATVR form (20-25 words, present tense, action verbs, specific task, value, result). Block-billing findings use unbundled_narratives instead - see special handling above.
 
 CRITICAL JSON FORMATTING:
 - Inside any string, escape double quotes as \\"
@@ -3637,7 +3769,11 @@ Return this shape:
       "hours": "hours",
       "original_narrative": "the original narrative text",
       "issue": "one-sentence description of what's wrong",
-      "suggested_rewrite": "polished ATVR rewrite of the narrative" or null
+      "suggested_rewrite": "polished ATVR rewrite of the narrative" or null,
+      "unbundled_narratives": [
+        { "narrative": "...", "suggested_hours": "1.5" },
+        { "narrative": "...", "suggested_hours": "1.0" }
+      ] or null
     }
   ],
   "executive_summary": "one paragraph (3-5 sentences) summarizing the overall state of the pro forma in a coaching tone - what's working, what the biggest opportunities are, where the partner should focus their review time"
@@ -3829,6 +3965,30 @@ Tone: coaching, not punitive. The goal is to help the partner move through their
                     ${escapeHtml(f.original_narrative)}
                   </div>
                 ` : ''}
+                ${(Array.isArray(f.unbundled_narratives) && f.unbundled_narratives.length > 0) ? `
+                  <div class="bnc-pf-unbundled">
+                    <div class="bnc-pf-unbundled-header">Unbundled narratives (${f.unbundled_narratives.length})</div>
+                    <div class="bnc-pf-unbundled-list">
+                      ${f.unbundled_narratives.map((u, ui) => `
+                        <div class="bnc-pf-unbundled-card">
+                          <span class="bnc-pf-unbundled-num">${ui + 1}.</span>
+                          <div class="bnc-pf-unbundled-body">
+                            <div class="bnc-pf-unbundled-narrative">${escapeHtml(u.narrative || '')}</div>
+                            <div class="bnc-pf-unbundled-meta">
+                              <strong>${escapeHtml(u.suggested_hours || '?')} hrs</strong> suggested
+                            </div>
+                          </div>
+                          <div class="bnc-pf-unbundled-actions">
+                            <button class="bnc-pf-finding-btn" data-pf-copy-rewrite="${escapeAttr(u.narrative || '')}">Copy</button>
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                    <div class="bnc-pf-unbundled-disclaimer">
+                      Hours are estimates. Verify against your actual time before billing - the AI infers splits from the description, not from your records.
+                    </div>
+                  </div>
+                ` : ''}
                 ${f.suggested_rewrite ? `
                   <div class="bnc-pf-finding-suggestion">
                     <span class="bnc-pf-finding-suggestion-label">Suggested rewrite</span>
@@ -3847,7 +4007,7 @@ Tone: coaching, not punitive. The goal is to help the partner move through their
 
     html += `
         <div class="bnc-pf-disclaimer">
-          <strong>Reminder:</strong> The Pre-Check is an automated first-pass assistant, not a substitute for partner-level judgment. Final review and submission decisions remain with the timekeeper and reviewing partner. Suggested rewrites are starting points, not authoritative billing language.
+          <strong>Reminder:</strong> The Pre-Check is an automated first-pass assistant, not a substitute for partner-level judgment. Final review and submission decisions remain with the timekeeper and reviewing partner. Suggested rewrites - including unbundled narratives for block-billing entries - are starting points, not authoritative billing language. Hours suggested for unbundled narratives are estimates the AI infers from the work description, not from your actual time records.
         </div>
       </div>
     `;
@@ -3938,6 +4098,13 @@ Tone: coaching, not punitive. The goal is to help the partner move through their
           lines.push(`${i + 1}. [${(f.severity || 'low').toUpperCase()}] ${f.matter || ''} · ${f.date || ''} · ${f.timekeeper || ''} · ${f.hours || ''} hrs`);
           lines.push(`   Issue: ${f.issue || ''}`);
           if (f.original_narrative) lines.push(`   Original: ${f.original_narrative}`);
+          if (Array.isArray(f.unbundled_narratives) && f.unbundled_narratives.length > 0) {
+            lines.push(`   Unbundled rewrite (${f.unbundled_narratives.length} narratives):`);
+            f.unbundled_narratives.forEach((u, ui) => {
+              lines.push(`     ${ui + 1}. [${u.suggested_hours || '?'} hrs] ${u.narrative || ''}`);
+            });
+            lines.push(`   Note: Hours are estimates - verify against your actual time before billing.`);
+          }
           if (f.suggested_rewrite) lines.push(`   Rewrite: ${f.suggested_rewrite}`);
           lines.push('');
         });
@@ -4003,6 +4170,23 @@ Tone: coaching, not punitive. The goal is to help the partner move through their
               </p>
               <p style="margin: 0 0 6px; color: #002147; font-weight: 600;">${escapeHtml(f.issue || '')}</p>
               ${f.original_narrative ? `<p style="margin: 0 0 6px; font-family: Georgia, serif; font-size: 13px;"><em>Original:</em> ${escapeHtml(f.original_narrative)}</p>` : ''}
+              ${(Array.isArray(f.unbundled_narratives) && f.unbundled_narratives.length > 0) ? `
+                <div style="margin: 8px 0; padding: 10px 12px; background: #faf6e8; border: 1px solid #B0902A; border-radius: 3px;">
+                  <p style="margin: 0 0 8px; font-size: 11px; color: #a38527; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;">Unbundled rewrite (${f.unbundled_narratives.length} narratives)</p>
+                  <table style="width: 100%; border-collapse: collapse; margin: 0;">
+                    ${f.unbundled_narratives.map((u, ui) => `
+                      <tr>
+                        <td style="vertical-align: top; padding: 5px 6px 5px 0; width: 22px; font-family: Georgia, serif; font-style: italic; color: #a38527; font-size: 12px;">${ui + 1}.</td>
+                        <td style="vertical-align: top; padding: 5px 0; font-family: Georgia, serif; color: #002147; font-size: 13px; line-height: 1.45;">
+                          <span style="font-weight: 600; color: #a38527; font-family: 'Outfit', Arial, sans-serif; font-size: 11px; margin-right: 6px;">[${escapeHtml(u.suggested_hours || '?')} hrs]</span>
+                          ${escapeHtml(u.narrative || '')}
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </table>
+                  <p style="margin: 8px 0 0; font-family: Georgia, serif; font-style: italic; font-size: 11px; color: #777;">Hours are estimates. Verify against your actual time before billing.</p>
+                </div>
+              ` : ''}
               ${f.suggested_rewrite ? `<p style="margin: 0; padding: 6px 10px; background: #faf6e8; font-family: Georgia, serif; font-size: 13px; border: 1px solid #B0902A;"><em>Suggested rewrite:</em> ${escapeHtml(f.suggested_rewrite)}</p>` : ''}
             </div>
           `;
@@ -4015,7 +4199,7 @@ Tone: coaching, not punitive. The goal is to help the partner move through their
     body += `
       <hr style="margin: 32px 0 16px;">
       <p style="font-style: italic; color: #666; font-size: 12px;">
-        <strong>Reminder:</strong> The Pre-Check is an automated first-pass assistant, not a substitute for partner-level judgment. Final review and submission decisions remain with the timekeeper and reviewing partner. Suggested rewrites are starting points, not authoritative billing language.
+        <strong>Reminder:</strong> The Pre-Check is an automated first-pass assistant, not a substitute for partner-level judgment. Final review and submission decisions remain with the timekeeper and reviewing partner. Suggested rewrites - including unbundled narratives for block-billing entries - are starting points, not authoritative billing language. Hours suggested for unbundled narratives are estimates the AI infers from the work description, not from your actual time records.
       </p>
       <p style="font-size: 11px; color: #999; margin-top: 16px;">Generated by ATVR Narrative Generator · The Billing Coach · thebillingcoach.com</p>
     `;
