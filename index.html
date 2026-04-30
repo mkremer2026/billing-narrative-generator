@@ -1630,8 +1630,7 @@
   }
   .bnc-history-item {
     display: flex;
-    align-items: flex-start;
-    gap: 0.65rem;
+    flex-direction: column;
     padding: 0.7rem 0.85rem;
     background: var(--ivory);
     border: 1px solid var(--border);
@@ -1641,6 +1640,11 @@
   .bnc-history-item:hover {
     border-color: rgba(203,161,53,0.4);
     background: var(--paper);
+  }
+  .bnc-history-item-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
   }
   .bnc-history-item-num {
     flex-shrink: 0;
@@ -1678,6 +1682,43 @@
     flex-shrink: 0;
     display: flex;
     gap: 0.3rem;
+    flex-wrap: wrap;
+  }
+  /* Expanded full-content panel below the history row */
+  .bnc-history-item-expanded {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border);
+    animation: fadeIn 0.2s ease;
+  }
+  .bnc-history-item-full {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    margin: 0;
+    max-height: 420px;
+    overflow-y: auto;
+    font-family: Georgia, serif;
+    font-size: 0.85rem;
+    color: var(--charcoal);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .bnc-history-item-full::-webkit-scrollbar {
+    width: 8px;
+  }
+  .bnc-history-item-full::-webkit-scrollbar-track {
+    background: var(--ivory);
+    border-radius: 4px;
+  }
+  .bnc-history-item-full::-webkit-scrollbar-thumb {
+    background: var(--gold-soft);
+    border-radius: 4px;
+  }
+  .bnc-history-item-full::-webkit-scrollbar-thumb:hover {
+    background: var(--gold);
   }
   .bnc-history-item-btn {
     background: transparent;
@@ -3129,21 +3170,48 @@
       return;
     }
     section.classList.add('visible');
+    // Show Download button only on Pro Forma (where reports are long enough to warrant saving)
+    const showDownload = panel === 'proforma';
     list.innerHTML = items.map((item, i) => {
       const fullCopyText = item.copyText || item.snippet || '';
+      const downloadFilename = item.downloadFilename || `pre-check-${i + 1}.txt`;
       return `
         <div class="bnc-history-item" data-history-idx="${i}">
-          <span class="bnc-history-item-num">${i + 1}.</span>
-          <div class="bnc-history-item-body">
-            <div class="bnc-history-item-text">${escapeHtml(item.snippet)}</div>
-            <div class="bnc-history-item-meta">${escapeHtml(item.label || 'Generation')} · ${formatRelativeTime(item.timestamp)}</div>
+          <div class="bnc-history-item-row">
+            <span class="bnc-history-item-num">${i + 1}.</span>
+            <div class="bnc-history-item-body">
+              <div class="bnc-history-item-text">${escapeHtml(item.snippet)}</div>
+              <div class="bnc-history-item-meta">${escapeHtml(item.label || 'Generation')} · ${formatRelativeTime(item.timestamp)}</div>
+            </div>
+            <div class="bnc-history-item-actions">
+              <button class="bnc-history-item-btn" data-history-view="${i}" data-history-panel="${panel}">View</button>
+              <button class="bnc-history-item-btn" data-history-copy="${i}" data-history-panel="${panel}" data-history-text="${escapeAttr(fullCopyText)}">Copy</button>
+              ${showDownload ? `<button class="bnc-history-item-btn" data-history-download="${i}" data-history-panel="${panel}" data-history-filename="${escapeAttr(downloadFilename)}" data-history-text="${escapeAttr(fullCopyText)}">Download</button>` : ''}
+            </div>
           </div>
-          <div class="bnc-history-item-actions">
-            <button class="bnc-history-item-btn" data-history-copy="${i}" data-history-panel="${panel}" data-history-text="${escapeAttr(fullCopyText)}">Copy</button>
+          <div class="bnc-history-item-expanded" data-history-expanded="${i}" style="display:none;">
+            <pre class="bnc-history-item-full">${escapeHtml(fullCopyText)}</pre>
           </div>
         </div>
       `;
     }).join('');
+
+    // Wire up View buttons - toggle expand/collapse
+    list.querySelectorAll('[data-history-view]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = btn.dataset.historyView;
+        const expanded = list.querySelector(`[data-history-expanded="${i}"]`);
+        if (!expanded) return;
+        const isOpen = expanded.style.display !== 'none';
+        if (isOpen) {
+          expanded.style.display = 'none';
+          btn.textContent = 'View';
+        } else {
+          expanded.style.display = 'block';
+          btn.textContent = 'Hide';
+        }
+      });
+    });
 
     // Wire up copy buttons
     list.querySelectorAll('[data-history-copy]').forEach(btn => {
@@ -3157,6 +3225,32 @@
           setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
         } catch {
           toastError("Couldn't copy to clipboard.");
+        }
+      });
+    });
+
+    // Wire up download buttons (Pro Forma only)
+    list.querySelectorAll('[data-history-download]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const text = btn.dataset.historyText;
+        const filename = btn.dataset.historyFilename || 'pre-check.txt';
+        try {
+          const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          const orig = btn.textContent;
+          btn.textContent = '✓ Saved';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+        } catch (err) {
+          console.error('Download error:', err);
+          toastError("Couldn't download file.");
         }
       });
     });
@@ -3568,10 +3662,12 @@ Tone: coaching, not punitive. The goal is to help the partner move through their
       pfRenderReport(data);
 
       // Add to history
+      const baseFilename = (proFormaState.pdfFile.name || 'pro-forma').replace(/\.pdf$/i, '');
       addToHistory('proforma', {
         snippet: data.executive_summary || `${proFormaState.pdfFile.name} reviewed: ${data.summary.total_findings} findings across ${data.summary.total_entries} entries`,
         label: `Pro Forma · ${proFormaState.pdfFile.name}`,
-        copyText: pfReportToText(data)
+        copyText: pfReportToText(data),
+        downloadFilename: `${baseFilename}-pre-check-report.txt`
       });
 
       toastSuccess(`Pre-Check complete: ${data.summary.total_findings} finding${data.summary.total_findings === 1 ? '' : 's'} across ${data.summary.total_entries} entries.`, 'Done');
