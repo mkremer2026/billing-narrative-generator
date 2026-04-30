@@ -496,7 +496,8 @@
 </style>
 <style>
   /* Library Panel */
-  .bnc-library-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+  .bnc-library-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem; }
+  .bnc-library-header-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
   .bnc-library-add-btn {
     padding: 0.65rem 1.15rem;
     background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
@@ -505,6 +506,24 @@
     cursor: pointer; box-shadow: 0 3px 10px rgba(203,161,53,0.3);
   }
   .bnc-library-add-btn:hover { transform: translateY(-1px); }
+  .bnc-library-pdf-btn {
+    padding: 0.65rem 1.05rem;
+    background: var(--paper);
+    color: var(--navy);
+    border: 1.5px solid var(--gold);
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .bnc-library-pdf-btn:hover {
+    background: var(--gold-soft);
+    border-color: var(--gold);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(203,161,53,0.2);
+  }
+  .bnc-library-pdf-btn:disabled {
+    opacity: 0.6; cursor: wait;
+  }
   .bnc-library-empty {
     text-align: center; padding: 3rem 1.5rem;
     background: var(--ivory); border: 1.5px dashed var(--border);
@@ -1565,16 +1584,20 @@
 
       <div class="bnc-library-header">
         <div class="bnc-section-label">Saved Guidelines</div>
-        <button class="bnc-library-add-btn" data-library-add>+ Add New</button>
+        <div class="bnc-library-header-actions">
+          <button class="bnc-library-pdf-btn" data-library-upload-pdf>📄 Upload PDF Guidelines</button>
+          <button class="bnc-library-add-btn" data-library-add>+ Add New</button>
+        </div>
       </div>
+      <input type="file" accept="application/pdf" style="display:none" data-library-pdf-input>
 
       <div data-library-list></div>
 
       <div class="bnc-library-export-section">
         <button class="bnc-secondary-btn" data-library-export>⬇ Export My Vault</button>
-        <button class="bnc-secondary-btn" data-library-import-trigger>⬆ Import from File</button>
+        <button class="bnc-secondary-btn" data-library-import-trigger>⬆ Restore from Backup</button>
         <input type="file" accept="application/json" style="display:none" data-library-import-input>
-        <span class="bnc-library-export-note">Backups download as a small JSON file you can keep, share, or restore later.</span>
+        <span class="bnc-library-export-note">Vault backups are JSON files. To upload a PDF of carrier guidelines, use "Upload PDF Guidelines" above.</span>
       </div>
     </section>
 
@@ -1925,10 +1948,33 @@
       if (!item) return;
       const container = document.querySelector(`[data-guidelines="${panel}"]`);
       const textArea = container.querySelector('[data-guidelines-text]');
-      if (textArea.value.trim() && !confirm("Replace the current guidelines text with the saved set?")) {
+      const isPdfOnly = item.pdf && item.pdf.data && !item.content;
+
+      if ((textArea.value.trim() || state.guidelinesFile[panel]) && !confirm("Replace the current guidelines with the saved set?")) {
         sel.value = ""; return;
       }
-      textArea.value = item.content;
+
+      if (isPdfOnly) {
+        // PDF-only entry: attach PDF, don't populate textarea
+        textArea.value = '';
+        textArea.placeholder = `📄 PDF guidelines applied: ${item.pdf.name}`;
+        state.guidelinesFile[panel] = { name: item.pdf.name, data: item.pdf.data };
+        const fileName = container.querySelector('[data-file-name]');
+        const fileClear = container.querySelector('[data-file-clear]');
+        if (fileName) fileName.textContent = item.pdf.name;
+        if (fileClear) fileClear.style.display = "inline";
+      } else {
+        // Text entry (or hybrid with extracted text): populate textarea
+        textArea.value = item.content || '';
+        // Clear any previously-attached PDF
+        state.guidelinesFile[panel] = null;
+        const fileName = container.querySelector('[data-file-name]');
+        const fileClear = container.querySelector('[data-file-clear]');
+        const fileInput = container.querySelector('[data-file-input]');
+        if (fileName) fileName.textContent = "No file attached";
+        if (fileClear) fileClear.style.display = "none";
+        if (fileInput) fileInput.value = "";
+      }
       textArea.dispatchEvent(new Event('input'));
       container.classList.add('active');
       item.lastUsedAt = new Date().toISOString();
@@ -1971,27 +2017,39 @@
       list.innerHTML = `
         <div class="bnc-library-empty">
           <h3>Your Vault is empty</h3>
-          <p>Click <strong>+ Add New</strong> above to save your first set of carrier or client billing guidelines. Once saved, you can apply them on any generation tab with a single dropdown click.</p>
+          <p>Click <strong>+ Add New</strong> to paste guidelines text, or <strong>📄 Upload PDF Guidelines</strong> to upload a PDF directly. Once saved, you can apply them on any generation tab with a single dropdown click.</p>
         </div>`;
       return;
     }
     const sorted = [...lib.items].sort((a, b) => (b.lastUsedAt || b.createdAt || '').localeCompare(a.lastUsedAt || a.createdAt || ''));
-    list.innerHTML = '<div class="bnc-library-list">' + sorted.map(item => `
-      <div class="bnc-library-card" data-card-id="${item.id}">
-        <div class="bnc-library-card-head">
-          <div class="bnc-library-card-label">${escapeHtml(item.label)}</div>
-          <div class="bnc-library-card-actions">
-            <button class="bnc-library-card-btn" data-edit="${item.id}">Edit</button>
-            <button class="bnc-library-card-btn danger" data-delete="${item.id}">Delete</button>
+    list.innerHTML = '<div class="bnc-library-list">' + sorted.map(item => {
+      const isPdf = item.pdf && item.pdf.data;
+      const isPdfFallback = isPdf && !item.content;
+      const preview = item.content
+        ? `${escapeHtml(item.content.slice(0, 280))}${item.content.length > 280 ? '…' : ''}`
+        : `<em style="color:var(--muted);">PDF guidelines stored as image-based document. Will be sent to the AI as an attached PDF when applied.</em>`;
+      const meta = isPdfFallback
+        ? `📄 ${escapeHtml(item.pdf.name || 'PDF')} · saved ${formatDate(item.createdAt)}`
+        : isPdf
+        ? `📄 ${escapeHtml(item.pdf.name || 'PDF')} · ${item.content.length} chars extracted · saved ${formatDate(item.createdAt)}`
+        : `${item.content.length} characters · saved ${formatDate(item.createdAt)}`;
+      const usedSuffix = item.lastUsedAt && item.lastUsedAt !== item.createdAt ? ' · last used ' + formatDate(item.lastUsedAt) : '';
+      const editBtnDisabled = isPdfFallback ? 'disabled style="opacity:0.4;cursor:not-allowed;" title="PDF-only entries cannot be edited as text"' : '';
+      return `
+        <div class="bnc-library-card" data-card-id="${item.id}">
+          <div class="bnc-library-card-head">
+            <div class="bnc-library-card-label">${escapeHtml(item.label)}${isPdf ? ' <span style="font-size:0.7rem;background:var(--gold-soft);color:var(--navy);padding:0.15rem 0.55rem;border-radius:10px;font-weight:500;letter-spacing:0.04em;border:1px solid rgba(203,161,53,0.3);margin-left:0.4rem;vertical-align:middle;">PDF</span>' : ''}</div>
+            <div class="bnc-library-card-actions">
+              <button class="bnc-library-card-btn" data-edit="${item.id}" ${editBtnDisabled}>Edit</button>
+              <button class="bnc-library-card-btn danger" data-delete="${item.id}">Delete</button>
+            </div>
           </div>
+          <div class="bnc-library-card-preview">${preview}</div>
+          <div class="bnc-library-card-meta">${meta}${usedSuffix}</div>
         </div>
-        <div class="bnc-library-card-preview">${escapeHtml(item.content.slice(0, 280))}${item.content.length > 280 ? '…' : ''}</div>
-        <div class="bnc-library-card-meta">
-          ${item.content.length} characters · saved ${formatDate(item.createdAt)}${item.lastUsedAt && item.lastUsedAt !== item.createdAt ? ' · last used ' + formatDate(item.lastUsedAt) : ''}
-        </div>
-      </div>
-    `).join('') + '</div>';
-    list.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openModal({ mode: 'edit', id: b.dataset.edit })));
+      `;
+    }).join('') + '</div>';
+    list.querySelectorAll('[data-edit]:not([disabled])').forEach(b => b.addEventListener('click', () => openModal({ mode: 'edit', id: b.dataset.edit })));
     list.querySelectorAll('[data-delete]').forEach(b => {
       b.addEventListener('click', () => {
         const id = b.dataset.delete;
@@ -2034,23 +2092,66 @@
     modal.classList.add('visible');
     setTimeout(() => modalLabel.focus(), 100);
   }
-  function closeModal() { modal.classList.remove('visible'); modalMode = null; modalEditId = null; }
+  function closeModal() {
+    modal.classList.remove('visible');
+    modalMode = null;
+    modalEditId = null;
+    delete modal.dataset.pdfMode;
+    delete modal.dataset.pdfName;
+    delete modal.dataset.pdfData;
+    modalContent.style.opacity = '1';
+    modalContent.placeholder = "Paste the carrier or client guidelines text here...";
+  }
   modal.querySelector('[data-modal-cancel]').addEventListener('click', closeModal);
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
   modal.querySelector('[data-modal-save]').addEventListener('click', () => {
     const label = modalLabel.value.trim();
     const content = modalContent.value.trim();
+    const pdfMode = modal.dataset.pdfMode;
+    const pdfName = modal.dataset.pdfName;
+    const pdfData = modal.dataset.pdfData;
+
     if (!label) { alert('Please enter a label.'); modalLabel.focus(); return; }
-    if (!content) { alert('Please paste the guidelines content.'); modalContent.focus(); return; }
+
+    // For PDF-fallback mode (image PDF, no extractable text), content is allowed empty
+    const isPdfFallback = pdfMode === 'create-pdf-fallback';
+    if (!content && !isPdfFallback) {
+      alert('Please paste the guidelines content.');
+      modalContent.focus();
+      return;
+    }
+
     const lib = loadLibrary();
     const now = new Date().toISOString();
+
     if (modalMode === 'edit' && modalEditId) {
       const item = lib.items.find(i => i.id === modalEditId);
       if (item) { item.label = label; item.content = content; item.updatedAt = now; }
+    } else if (pdfMode) {
+      // PDF upload save - create entry with PDF metadata attached
+      const newEntry = { id: genId(), label, content, createdAt: now };
+      if (pdfData) newEntry.pdf = { name: pdfName || 'document.pdf', data: pdfData };
+      lib.items.push(newEntry);
     } else {
+      // Plain text add
       lib.items.push({ id: genId(), label, content, createdAt: now });
     }
-    saveLibrary(lib);
+
+    try {
+      saveLibrary(lib);
+    } catch (storageErr) {
+      // Most likely localStorage quota exceeded
+      console.error('Vault save failed:', storageErr);
+      alert("Couldn't save - your browser's storage is full. Try deleting some old Vault entries (especially large PDFs) before saving this one.");
+      return;
+    }
+
+    // Clean up transient PDF data on the modal
+    delete modal.dataset.pdfMode;
+    delete modal.dataset.pdfName;
+    delete modal.dataset.pdfData;
+    modalContent.style.opacity = '1';
+    modalContent.placeholder = "Paste the carrier or client guidelines text here...";
     closeModal();
   });
   document.querySelector('[data-library-add]').addEventListener('click', () => openModal({ mode: 'create' }));
@@ -2074,18 +2175,167 @@
       const text = await file.text();
       const parsed = JSON.parse(text);
       if (!parsed || !Array.isArray(parsed.items)) throw new Error('Not a valid Vault file.');
-      const incoming = parsed.items.filter(i => i && typeof i.label === 'string' && typeof i.content === 'string');
+      // Accept entries that have either text content or a PDF (or both)
+      const incoming = parsed.items.filter(i => i && typeof i.label === 'string' && (typeof i.content === 'string' || (i.pdf && typeof i.pdf.data === 'string')));
       if (!incoming.length) { alert('No valid guideline entries found.'); return; }
       const lib = loadLibrary();
       if (!confirm(`Import ${incoming.length} guideline set(s)?\n\nClick OK to MERGE with your existing Vault.\nClick Cancel to skip.`)) return;
       incoming.forEach(item => {
-        lib.items.push({ id: genId(), label: item.label, content: item.content, createdAt: item.createdAt || new Date().toISOString(), importedAt: new Date().toISOString() });
+        const newEntry = {
+          id: genId(),
+          label: item.label,
+          content: typeof item.content === 'string' ? item.content : '',
+          createdAt: item.createdAt || new Date().toISOString(),
+          importedAt: new Date().toISOString()
+        };
+        if (item.pdf && item.pdf.data) {
+          newEntry.pdf = { name: item.pdf.name || 'document.pdf', data: item.pdf.data };
+        }
+        lib.items.push(newEntry);
       });
       saveLibrary(lib);
       alert(`Successfully imported ${incoming.length} guideline set(s).`);
     } catch { alert("Could not read that file as a Vault export."); }
     finally { importInput.value = ''; }
   });
+
+  // ============ UPLOAD PDF GUIDELINES TO VAULT ============
+  // 4MB limit on PDFs. localStorage has ~5MB total per origin in most browsers,
+  // and base64 inflates by ~33%, so 4MB raw PDF = ~5.3MB base64. We need to
+  // leave room for other Vault entries plus form drafts.
+  const PDF_SIZE_LIMIT_BYTES = 4 * 1024 * 1024;
+  const pdfInput = document.querySelector('[data-library-pdf-input]');
+  const pdfBtn = document.querySelector('[data-library-upload-pdf]');
+
+  function fileNameToLabel(filename) {
+    if (!filename) return '';
+    // Drop extension, replace separators with spaces, collapse whitespace, title-case-ish
+    return filename
+      .replace(/\.[^.]+$/, '')
+      .replace(/[_\-\.]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  pdfBtn.addEventListener('click', () => pdfInput.click());
+
+  pdfInput.addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > PDF_SIZE_LIMIT_BYTES) {
+      alert(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB, which is larger than the 4 MB limit for Vault storage.\n\nFor large PDFs, paste the relevant excerpts as text using "+ Add New" instead.`);
+      pdfInput.value = '';
+      return;
+    }
+
+    const originalLabel = pdfBtn.textContent;
+    pdfBtn.disabled = true;
+    pdfBtn.textContent = 'Reading PDF…';
+
+    try {
+      const b64 = await toBase64(file);
+      const suggestedLabel = fileNameToLabel(file.name);
+
+      pdfBtn.textContent = 'Extracting text…';
+
+      // Try to extract the text content from the PDF via the API.
+      // We send the PDF to /api/generate with a small extraction prompt.
+      let extractedText = '';
+      let extractionFailed = false;
+      try {
+        const r = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [{
+              role: 'user',
+              content: [
+                { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
+                { type: 'text', text: 'Extract the full readable text content from this PDF document. Return ONLY the extracted text, with no preamble, no commentary, no markdown formatting, no summary. Preserve paragraph structure with double line breaks. If the PDF is image-based and contains no extractable text, respond with exactly the string: EXTRACTION_FAILED' }
+              ]
+            }]
+          })
+        });
+        if (!r.ok) throw new Error('API error ' + r.status);
+        const json = await r.json();
+        extractedText = ((json.content && json.content[0] && json.content[0].text) || json.text || '').trim();
+        // Heuristic: if response is too short or contains the failure marker, treat as failed
+        if (!extractedText || extractedText === 'EXTRACTION_FAILED' || extractedText.length < 50) {
+          extractionFailed = true;
+        }
+      } catch (apiErr) {
+        console.warn('PDF text extraction error:', apiErr);
+        extractionFailed = true;
+      }
+
+      pdfBtn.textContent = originalLabel;
+      pdfBtn.disabled = false;
+
+      if (extractionFailed) {
+        const proceed = confirm(
+          `We couldn't extract readable text from this PDF.\n\n` +
+          `This usually means the PDF is image-based (scanned). The Vault can still save it as-is, ` +
+          `and the AI will OCR it each time you apply it to a generation.\n\n` +
+          `OK = save the PDF as-is (slower but works)\n` +
+          `Cancel = don't save (try a different PDF or paste text manually)`
+        );
+        if (!proceed) {
+          pdfInput.value = '';
+          return;
+        }
+        // Save as PDF-only entry (fallback)
+        openPdfModal({
+          mode: 'create-pdf-fallback',
+          initialLabel: suggestedLabel,
+          pdfName: file.name,
+          pdfData: b64,
+          extractedContent: ''
+        });
+      } else {
+        // Save as text entry (preferred), but also keep the PDF for reference if needed
+        openPdfModal({
+          mode: 'create-pdf-extracted',
+          initialLabel: suggestedLabel,
+          pdfName: file.name,
+          pdfData: b64,
+          extractedContent: extractedText
+        });
+      }
+    } catch (err) {
+      console.error('PDF upload error:', err);
+      alert("Couldn't read that PDF. Please try a different file or paste the guidelines as text.");
+      pdfBtn.textContent = originalLabel;
+      pdfBtn.disabled = false;
+    } finally {
+      pdfInput.value = '';
+    }
+  });
+
+  // Specialized modal flow for PDF uploads - reuses the existing add/edit modal,
+  // but pre-fills the label, shows extracted content (editable), and saves with PDF metadata
+  function openPdfModal({ mode, initialLabel, pdfName, pdfData, extractedContent }) {
+    // Store transient context on the modal so saveModal can use it
+    modal.dataset.pdfMode = mode;
+    modal.dataset.pdfName = pdfName;
+    modal.dataset.pdfData = pdfData; // base64 (may be large; held only briefly)
+
+    modalMode = 'create-pdf';
+    modalEditId = null;
+    modalTitle.textContent = mode === 'create-pdf-fallback'
+      ? `Save PDF: ${pdfName}`
+      : `Save Guidelines: ${pdfName}`;
+    modalLabel.value = initialLabel;
+    modalContent.value = extractedContent || '';
+    if (mode === 'create-pdf-fallback') {
+      modalContent.placeholder = "(Image-based PDF - no extractable text. The PDF itself will be saved and applied directly.)";
+      modalContent.style.opacity = '0.6';
+    } else {
+      modalContent.placeholder = "Extracted text from your PDF - review and edit before saving if needed.";
+      modalContent.style.opacity = '1';
+    }
+    modal.classList.add('visible');
+    setTimeout(() => modalLabel.focus(), 100);
+  }
 
   // ============ FORM PERSISTENCE ============
   function persistField(el) {
