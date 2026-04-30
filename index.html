@@ -407,6 +407,53 @@
   .bnc-copy-mini.copied { background: var(--gold); color: var(--navy-deep); border-color: var(--gold); }
   .bnc-narrative-text { font-family: Georgia, serif; font-size: 1.02rem; color: var(--charcoal); line-height: 1.55; }
 
+  /* Task code chip - appears above narrative when guidelines specify codes */
+  .bnc-code-chip-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 0.6rem; padding-bottom: 0.55rem;
+    border-bottom: 1px dashed var(--border);
+    flex-wrap: wrap;
+  }
+  .bnc-code-chip {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.32rem 0.7rem 0.32rem 0.55rem;
+    background: var(--gold-soft); border: 1.5px solid var(--gold);
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.85rem; font-weight: 600; color: var(--navy);
+    letter-spacing: 0.04em;
+  }
+  .bnc-code-chip-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.62rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--gold); margin-right: 0.15rem;
+  }
+  .bnc-code-copy-mini {
+    background: transparent; border: 1px solid var(--border);
+    padding: 0.22rem 0.55rem; border-radius: 4px;
+    font-family: 'Outfit', sans-serif; font-size: 0.65rem;
+    text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer;
+    color: var(--navy); font-weight: 500; transition: all 0.15s ease;
+  }
+  .bnc-code-copy-mini:hover { background: var(--navy); color: var(--paper); border-color: var(--navy); }
+  .bnc-code-copy-mini.copied { background: var(--gold); color: var(--navy-deep); border-color: var(--gold); }
+  .bnc-code-attribution {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: 0.78rem; color: var(--muted);
+    margin-top: 0.85rem; padding-top: 0.7rem;
+    border-top: 1px dashed var(--border);
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .bnc-code-attribution::before {
+    content: '✓'; color: var(--gold); font-style: normal;
+    font-weight: 700; font-size: 0.95rem;
+  }
+  .bnc-code-attribution strong {
+    color: var(--navy); font-style: normal;
+    font-family: 'Outfit', sans-serif; font-weight: 600;
+  }
+
   .bnc-atvr-breakdown {
     display: flex; flex-wrap: wrap; gap: 0.4rem;
     margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);
@@ -1675,6 +1722,9 @@
       <input class="bnc-input" data-modal-label placeholder="e.g., Allstate Litigation, Chubb Coverage, Smith Matter">
       <label>Guidelines content <span style="font-weight:400; color:var(--muted); font-size:0.78rem; font-style:italic;">- paste the text here</span></label>
       <textarea class="bnc-textarea" data-modal-content style="min-height: 200px;" placeholder="Paste the carrier or client guidelines text here..."></textarea>
+      <p style="font-size: 0.78rem; color: var(--muted); font-style: italic; margin-top: 0.55rem; padding: 0.55rem 0.75rem; background: var(--gold-soft); border-left: 2px solid var(--gold); border-radius: 4px;">
+        <strong style="color: var(--navy); font-style: normal;">Tip:</strong> If your guidelines specify task or activity codes (UTBMS L-codes, A-codes, custom codes, anything), the generator will detect them and apply the right code to every narrative automatically. Just paste the guidelines as-is - including any code tables or lists.
+      </p>
     </div>
     <div class="bnc-modal-footer">
       <button class="bnc-secondary-btn" data-modal-cancel>Cancel</button>
@@ -2098,6 +2148,28 @@ RESULT phrases: ${bp.results.join(" · ")}`;
   - "result": the result/deliverable phrase (e.g., "for response brief filing")
 The breakdown's pieces must read naturally as fragments of the narrative itself.`;
 
+  const CODES_SPEC = `TASK / ACTIVITY CODES - CRITICAL INSTRUCTIONS:
+
+If the loaded client billing guidelines specify a code system (UTBMS L-codes/A-codes, modified UTBMS, custom codes, anything), you MUST extract the relevant codes from the guidelines and apply the most appropriate code(s) to each narrative.
+
+Rules for codes:
+1. ONLY apply codes if the guidelines explicitly include or reference a code list. NEVER invent codes.
+2. NEVER apply UTBMS by default unless the guidelines specifically mention UTBMS or include a UTBMS-aligned code list.
+3. Pick the MOST DEFENSIBLE code(s) for the work described. If multiple codes could apply, pick the one most directly aligned with the dominant action.
+4. If the guidelines require both a phase/task code AND an activity code, return both. If only one type is required, return only that type and set the other to null.
+5. If the guidelines mention codes but don't provide a complete enough list to pick confidently, return codes: null (better to omit than to guess wrong).
+6. If the guidelines say nothing about codes, return codes: null.
+
+Code object shape for each narrative:
+"codes": { "phase_task": "L120", "activity": "A104" }    // both required
+"codes": { "phase_task": "L120", "activity": null }      // only phase/task required
+"codes": { "phase_task": null, "activity": "A104" }      // only activity required
+"codes": null                                            // no codes apply
+
+Top-level "codes_source" field (for attribution):
+- If you applied codes from the guidelines, return a short label naming the source (e.g., "Allstate Litigation Guidelines", "Chubb Coverage Guidelines", "Client Custom Codes"). Pull the name from the guidelines text or the user's saved Vault label if visible.
+- If no codes were applied, return codes_source: null.`;
+
   // ============ GENERATE / COPY-PROMPT BUTTON WIRING ============
   document.querySelectorAll('[data-generate]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -2181,10 +2253,14 @@ OUTPUT REQUIREMENTS:
 
 ${ATVR_BREAKDOWN_SPEC}
 
+${CODES_SPEC}
+
 Return your response as JSON only, no preamble or code fences:
 {
   "narrative": "the 20-25 word narrative here",
   "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." },
+  "codes": { "phase_task": "...", "activity": "..." } or null,
+  "codes_source": "name of guidelines that supplied the codes" or null,
   "compliance_note": "one short sentence on compliance status. If no guidelines, write 'No client guidelines provided.'",
   "coaching_tip": "one short sentence in Molly's voice about why this narrative reads as valuable"
 }`;
@@ -2200,6 +2276,7 @@ Return your response as JSON only, no preamble or code fences:
     const timeLabel = time ? `<span class="bnc-narrative-time">${escapeHtml(time)} hrs</span>` : "";
     return `
       <div class="bnc-narrative-entry">
+        ${renderCodeChip(data.codes)}
         <div class="bnc-narrative-label">
           <span>ATVR Narrative</span>
           <div class="bnc-narrative-meta">
@@ -2211,6 +2288,7 @@ Return your response as JSON only, no preamble or code fences:
         <div class="bnc-narrative-text">${escapeHtml(narrative)}</div>
         ${renderAtvrBreakdown(data.breakdown)}
       </div>
+      ${renderCodesAttribution(data.codes_source)}
       ${data.compliance_note ? `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>` : ""}
       ${data.coaching_tip ? `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.coaching_tip)}</div>` : ""}
     `;
@@ -2365,7 +2443,9 @@ OUTPUT REQUIREMENTS PER NARRATIVE: 20-25 words, present tense only, 2-3 action v
 
 ${ATVR_BREAKDOWN_SPEC}
 
-CRITICAL: Return one narrative per input task, in the SAME ORDER as input.
+${CODES_SPEC}
+
+CRITICAL: Return one narrative per input task, in the SAME ORDER as input. Each narrative gets its OWN codes object inferred from its specific work blurb (different tasks within the same batch may have different codes).
 
 Return your response as JSON only, no preamble or code fences:
 {
@@ -2374,9 +2454,11 @@ Return your response as JSON only, no preamble or code fences:
       "task_index": 1,
       "narrative": "...",
       "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." },
+      "codes": { "phase_task": "...", "activity": "..." } or null,
       "compliance_note": "compliance status or 'OK'"
     }
   ],
+  "codes_source": "name of guidelines that supplied codes" or null,
   "batch_compliance_summary": "one sentence on overall compliance",
   "batch_coaching_tip": "one short sentence in Molly's voice about a pattern you noticed"
 }`;
@@ -2422,6 +2504,7 @@ Return your response as JSON only, no preamble or code fences:
         const time = inputTask.time ? `<span class="bnc-narrative-time">${escapeHtml(inputTask.time)} hrs</span>` : '';
         html += `
           <div class="bnc-narrative-entry multi-entry">
+            ${renderCodeChip(n.codes)}
             <div class="bnc-narrative-label">
               <span><span class="bnc-task-pos">${originalPos}</span> ATVR Narrative</span>
               <div class="bnc-narrative-meta">
@@ -2438,6 +2521,7 @@ Return your response as JSON only, no preamble or code fences:
       });
     });
 
+    html += renderCodesAttribution(data.codes_source);
     if (data.batch_compliance_summary) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Batch Compliance:</strong> ${escapeHtml(data.batch_compliance_summary)}</div>`;
     if (data.batch_coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.batch_coaching_tip)}</div>`;
     return html;
@@ -2477,6 +2561,18 @@ OUTPUT REQUIREMENTS PER NARRATIVE: 20-25 words, present tense only, 2-3 action v
 
 ${ATVR_BREAKDOWN_SPEC}
 
+${CODES_SPEC}
+
+NOTE: Each entry gets its OWN codes object inferred from its specific work blurb (different tasks within the same day/week may have different codes).
+
+CRITICAL JSON FORMATTING RULES:
+- Inside any string value, escape every double quote as \\" (e.g., "narrative": "Review plaintiff's response to \\"the motion\\" for...")
+- Do NOT use smart/curly quotes ("" '' ‚ „) anywhere in the output. Use only straight ASCII quotes (")
+- Do NOT include newlines or tab characters inside any string value - replace with single spaces
+- Do NOT add trailing commas before closing brackets ] or }
+- Return ONLY the JSON object - no preamble, no markdown fences, no commentary before or after
+- Validate your output is parseable as strict JSON before returning
+
 Return your response as JSON only, no preamble or code fences:
 {
   "entries": [
@@ -2486,9 +2582,11 @@ Return your response as JSON only, no preamble or code fences:
       "time": "1.5",
       "original_blurb": "the original text from the paste, verbatim or near-verbatim",
       "narrative": "the polished 20-25 word ATVR narrative",
-      "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." }
+      "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." },
+      "codes": { "phase_task": "...", "activity": "..." } or null
     }
   ],
+  "codes_source": "name of guidelines that supplied codes" or null,
   "batch_compliance_summary": "one sentence on overall compliance with guidelines (or 'No client guidelines provided.')",
   "batch_coaching_tip": "one short sentence in Molly's voice about a pattern you noticed across these entries"
 }`;
@@ -2549,6 +2647,7 @@ Return your response as JSON only, no preamble or code fences:
           const time = e.time ? `<span class="bnc-narrative-time">${escapeHtml(e.time)} hrs</span>` : '';
           html += `
             <div class="bnc-narrative-entry multi-entry">
+              ${renderCodeChip(e.codes)}
               <div class="bnc-narrative-label">
                 <span><span class="bnc-task-pos">${runningPos}</span> ATVR Narrative</span>
                 <div class="bnc-narrative-meta">
@@ -2566,6 +2665,7 @@ Return your response as JSON only, no preamble or code fences:
       });
     });
 
+    html += renderCodesAttribution(data.codes_source);
     if (data.batch_compliance_summary) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Batch Compliance:</strong> ${escapeHtml(data.batch_compliance_summary)}</div>`;
     if (data.batch_coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.batch_coaching_tip)}</div>`;
     return html;
@@ -2603,11 +2703,16 @@ OUTPUT: 3 separate narratives. Each 20-25 words. Present tense only. Each follow
 
 ${ATVR_BREAKDOWN_SPEC}
 
+${CODES_SPEC}
+
+NOTE: Each of the three bookends (before, main, after) gets its OWN codes object - they may have different codes since they describe different work (e.g., a "before" prep task may map to a different phase code than the "main" event).
+
 Return your response as JSON only, no preamble or code fences:
 {
-  "before": { "narrative": "...", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." } },
-  "main":   { "narrative": "...", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." } },
-  "after":  { "narrative": "...", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." } },
+  "before": { "narrative": "...", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." }, "codes": { "phase_task": "...", "activity": "..." } or null },
+  "main":   { "narrative": "...", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." }, "codes": { "phase_task": "...", "activity": "..." } or null },
+  "after":  { "narrative": "...", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." }, "codes": { "phase_task": "...", "activity": "..." } or null },
+  "codes_source": "name of guidelines that supplied codes" or null,
   "compliance_note": "compliance status or 'No client guidelines provided.'",
   "coaching_tip": "one short sentence in Molly's voice on the value of capturing bookends"
 }`;
@@ -2639,6 +2744,7 @@ Return your response as JSON only, no preamble or code fences:
       const time = s.time ? `<span class="bnc-narrative-time">${escapeHtml(s.time)} hrs</span>` : '';
       html += `
         <div class="bnc-narrative-entry">
+          ${renderCodeChip(item.codes)}
           <div class="bnc-narrative-label">
             <span>${s.label}</span>
             <div class="bnc-narrative-meta">
@@ -2653,6 +2759,7 @@ Return your response as JSON only, no preamble or code fences:
       `;
     });
 
+    html += renderCodesAttribution(data.codes_source);
     if (data.compliance_note) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>`;
     if (data.coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.coaching_tip)}</div>`;
     return html;
@@ -2691,12 +2798,17 @@ OUTPUT: 4 separate narratives. Each 20-25 words. Present tense only. Each follow
 
 ${ATVR_BREAKDOWN_SPEC}
 
+${CODES_SPEC}
+
+NOTE: Each phase gets its OWN codes object - the phases describe different kinds of work (review/analyze vs. drafting vs. finalizing) and will commonly map to different activity codes (A104 vs. A103 vs. A102, for example).
+
 Return your response as JSON only, no preamble or code fences:
 {
-  "phase1": { "narrative": "...", "phase_time": "1.5", "breakdown": {...} },
-  "phase2": { "narrative": "...", "phase_time": "1.0", "breakdown": {...} },
-  "phase3": { "narrative": "...", "phase_time": "4.5", "breakdown": {...} },
-  "phase4": { "narrative": "...", "phase_time": "1.5", "breakdown": {...} },
+  "phase1": { "narrative": "...", "phase_time": "1.5", "breakdown": {...}, "codes": { "phase_task": "...", "activity": "..." } or null },
+  "phase2": { "narrative": "...", "phase_time": "1.0", "breakdown": {...}, "codes": { "phase_task": "...", "activity": "..." } or null },
+  "phase3": { "narrative": "...", "phase_time": "4.5", "breakdown": {...}, "codes": { "phase_task": "...", "activity": "..." } or null },
+  "phase4": { "narrative": "...", "phase_time": "1.5", "breakdown": {...}, "codes": { "phase_task": "...", "activity": "..." } or null },
+  "codes_source": "name of guidelines that supplied codes" or null,
   "total_time": "${time || ''}",
   "compliance_note": "compliance status or 'No client guidelines provided.'",
   "coaching_tip": "one short sentence in Molly's voice on why breaking it up matters"
@@ -2729,6 +2841,7 @@ Return your response as JSON only, no preamble or code fences:
       const time = item.phase_time ? `<span class="bnc-narrative-time">${escapeHtml(item.phase_time)} hrs</span>` : '';
       html += `
         <div class="bnc-narrative-entry">
+          ${renderCodeChip(item.codes)}
           <div class="bnc-narrative-label">
             <span>${p.label}</span>
             <div class="bnc-narrative-meta">
@@ -2743,6 +2856,7 @@ Return your response as JSON only, no preamble or code fences:
       `;
     });
 
+    html += renderCodesAttribution(data.codes_source);
     if (data.compliance_note) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>`;
     if (data.coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.coaching_tip)}</div>`;
     return html;
@@ -2757,6 +2871,145 @@ Return your response as JSON only, no preamble or code fences:
     if (bd.result) parts.push(`<span class="bnc-atvr-chip result"><strong>R</strong>${escapeHtml(bd.result)}</span>`);
     if (parts.length === 0) return '';
     return `<div class="bnc-atvr-breakdown">${parts.join('')}</div>`;
+  }
+
+  // Format codes object into a display string (for chip text + copy)
+  function formatCodes(codes) {
+    if (!codes || typeof codes !== 'object') return null;
+    const parts = [];
+    if (codes.phase_task) parts.push(String(codes.phase_task).trim());
+    if (codes.activity)   parts.push(String(codes.activity).trim());
+    if (parts.length === 0) return null;
+    return parts.join(' / ');
+  }
+
+  // Render the code chip row above a narrative (returns empty string if no codes)
+  function renderCodeChip(codes) {
+    const formatted = formatCodes(codes);
+    if (!formatted) return '';
+    return `
+      <div class="bnc-code-chip-row">
+        <span class="bnc-code-chip">
+          <span class="bnc-code-chip-label">CODE</span>
+          ${escapeHtml(formatted)}
+        </span>
+        <button class="bnc-code-copy-mini" data-copy-text="${escapeAttr(formatted)}">Copy Code</button>
+      </div>
+    `;
+  }
+
+  // Render the codes attribution line at the bottom of an output panel
+  function renderCodesAttribution(codesSource) {
+    if (!codesSource || typeof codesSource !== 'string' || !codesSource.trim()) return '';
+    return `<div class="bnc-code-attribution">Codes applied per <strong>${escapeHtml(codesSource.trim())}</strong>. Verify before billing.</div>`;
+  }
+
+  // Helper: did any narrative in the data have codes?
+  function dataHasAnyCodes(data, panel) {
+    if (panel === 'standard' && data.narrative) return formatCodes(data.codes) !== null;
+    if (Array.isArray(data.narratives)) return data.narratives.some(n => formatCodes(n.codes) !== null);
+    if (Array.isArray(data.entries))    return data.entries.some(e => formatCodes(e.codes) !== null);
+    if (data.before || data.main || data.after) {
+      return ['before','main','after'].some(k => data[k] && formatCodes(data[k].codes) !== null);
+    }
+    if (data.phase1 || data.phase2 || data.phase3 || data.phase4) {
+      return ['phase1','phase2','phase3','phase4'].some(k => data[k] && formatCodes(data[k].codes) !== null);
+    }
+    return false;
+  }
+
+  // Resilient JSON parser - tries progressively more aggressive recovery strategies
+  // Throws only if all strategies fail
+  function parseJsonResilient(text) {
+    if (!text || typeof text !== 'string') throw new Error('Empty response from generator');
+
+    // Strategy 1: strip code fences and try as-is
+    let cleaned = text
+      .replace(/```json\s*/gi, '')
+      .replace(/```\s*$/g, '')
+      .replace(/```/g, '')
+      .trim();
+
+    try { return JSON.parse(cleaned); } catch (e1) { /* fall through */ }
+
+    // Strategy 2: extract the largest {...} block and try that
+    const objMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (objMatch) {
+      try { return JSON.parse(objMatch[0]); } catch (e2) { /* fall through */ }
+    }
+
+    // Strategy 3: normalize common LLM quote/whitespace issues
+    let normalized = (objMatch ? objMatch[0] : cleaned)
+      // Convert smart quotes to straight quotes
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2018\u2019]/g, "'")
+      // Remove BOM and zero-width characters
+      .replace(/[\uFEFF\u200B-\u200D]/g, '')
+      // Remove trailing commas before } or ]
+      .replace(/,(\s*[\}\]])/g, '$1');
+
+    try { return JSON.parse(normalized); } catch (e3) { /* fall through */ }
+
+    // Strategy 4: try to surgically repair by truncating at the last complete entry
+    // For arrays where one entry is malformed, sometimes we can salvage prior entries
+    try {
+      const repaired = attemptArrayTruncation(normalized);
+      if (repaired) return JSON.parse(repaired);
+    } catch (e4) { /* fall through */ }
+
+    // All strategies failed
+    throw new Error('Invalid JSON from generator after all recovery attempts');
+  }
+
+  // Last-ditch effort: if the JSON is mostly intact but a late array element broke it,
+  // try truncating at the last complete element. Only safe for the multi/bulk shapes
+  // where partial results are still useful.
+  function attemptArrayTruncation(jsonText) {
+    // Find arrays "narratives": [...] or "entries": [...]
+    const arrayKeys = ['narratives', 'entries'];
+    for (const key of arrayKeys) {
+      const arrayStart = jsonText.indexOf(`"${key}"`);
+      if (arrayStart === -1) continue;
+      const bracketStart = jsonText.indexOf('[', arrayStart);
+      if (bracketStart === -1) continue;
+
+      // Walk forward, tracking brace depth, and find the last point where we
+      // had a complete object inside the array
+      let depth = 0;
+      let inString = false;
+      let escapeNext = false;
+      let lastCompleteEntryEnd = -1;
+      for (let i = bracketStart; i < jsonText.length; i++) {
+        const c = jsonText[i];
+        if (escapeNext) { escapeNext = false; continue; }
+        if (c === '\\') { escapeNext = true; continue; }
+        if (c === '"') { inString = !inString; continue; }
+        if (inString) continue;
+        if (c === '{') depth++;
+        else if (c === '}') {
+          depth--;
+          if (depth === 1) lastCompleteEntryEnd = i; // end of an array element
+        }
+        else if (c === ']' && depth === 0) break;
+      }
+
+      if (lastCompleteEntryEnd > 0) {
+        // Truncate the array at the last complete entry, close it, and close the outer object
+        const truncated = jsonText.slice(0, lastCompleteEntryEnd + 1) + ']';
+        // Now we need to find where the original outer object ended (or just close it)
+        // Simplest: close the outer object after the array
+        const afterArray = truncated + '}';
+        try { JSON.parse(afterArray); return afterArray; } catch {}
+        // If that didn't work, try keeping the rest of the original after the array
+        const restStart = jsonText.indexOf(']', bracketStart);
+        if (restStart > -1) {
+          const rest = jsonText.slice(restStart + 1);
+          const reassembled = truncated + rest;
+          try { JSON.parse(reassembled); return reassembled; } catch {}
+        }
+      }
+    }
+    return null;
   }
 
   // ============ RUN GENERATION (shared API call) ============
@@ -2788,13 +3041,46 @@ Return your response as JSON only, no preamble or code fences:
       if (!r.ok) throw new Error(`Server returned ${r.status}`);
       const json = await r.json();
       const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
-      const cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*$/g, '').trim();
       let data;
-      try { data = JSON.parse(cleaned); }
-      catch {
-        const m = cleaned.match(/\{[\s\S]*\}/);
-        if (m) data = JSON.parse(m[0]);
-        else throw new Error('Invalid JSON from generator');
+      try {
+        data = parseJsonResilient(text);
+      } catch (firstErr) {
+        // First attempt failed - retry once with a stronger reminder about JSON formatting
+        console.warn('Initial JSON parse failed, retrying:', firstErr.message);
+        output.innerHTML = `<div class="bnc-loading">Cleaning up the response and retrying<span class="bnc-loading-dots"><span></span><span></span><span></span></span></div>`;
+
+        const retryPrompt = prompt + `\n\nIMPORTANT JSON FORMATTING REMINDER: Your previous response had a JSON formatting error. This time, be EXTRA careful:
+- Escape every double quote inside string values as \\"
+- Do NOT use smart quotes (use straight " only)
+- Replace any newline inside a string value with a single space
+- Do not add trailing commas
+- Return ONLY the JSON object, no preamble, no markdown fences, no commentary
+- Validate your output is parseable as strict JSON before returning it`;
+
+        let retryUserContent;
+        if (guidelinesFile) {
+          retryUserContent = [
+            { type: "document", source: { type: "base64", media_type: "application/pdf", data: guidelinesFile.data } },
+            { type: "text", text: retryPrompt }
+          ];
+        } else {
+          retryUserContent = retryPrompt;
+        }
+
+        const r2 = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: [{ role: 'user', content: retryUserContent }] })
+        });
+        if (!r2.ok) throw new Error(`Retry server returned ${r2.status}`);
+        const json2 = await r2.json();
+        const text2 = (json2.content && json2.content[0] && json2.content[0].text) || json2.text || '';
+        try {
+          data = parseJsonResilient(text2);
+        } catch (secondErr) {
+          console.error('Retry also failed:', secondErr.message);
+          throw new Error('Could not parse generator response after retry');
+        }
       }
 
       const totalTokens = (json.usage && (json.usage.input_tokens + json.usage.output_tokens)) || 0;
@@ -2869,6 +3155,12 @@ Return your response as JSON only, no preamble or code fences:
   }
 
   function extractTextForCopy(panel, data) {
+    // Helper: prepend codes to a narrative as tab-separated when codes exist
+    const withCode = (codes, narrative) => {
+      const c = formatCodes(codes);
+      return c ? `${c}\t${narrative}` : narrative;
+    };
+
     if (panel === 'standard' && currentStandardMode === 'bulk') {
       const entries = Array.isArray(data.entries) ? data.entries : [];
       const dateGroups = new Map();
@@ -2884,7 +3176,7 @@ Return your response as JSON only, no preamble or code fences:
           const matter = (e.matter || '').trim();
           const time = e.time ? ` [${e.time} hrs]` : '';
           const matterPrefix = matter ? `${matter} · ` : '';
-          lines.push(`${matterPrefix}${e.narrative}${time}`);
+          lines.push(`${matterPrefix}${withCode(e.codes, e.narrative)}${time}`);
         });
         lines.push('');
       });
@@ -2892,22 +3184,22 @@ Return your response as JSON only, no preamble or code fences:
     }
     if (panel === 'standard' && currentStandardMode === 'multi') {
       const narratives = Array.isArray(data.narratives) ? data.narratives : [];
-      return narratives.map((n, i) => `${i + 1}. ${n.narrative}`).join('\n\n');
+      return narratives.map((n, i) => `${i + 1}. ${withCode(n.codes, n.narrative)}`).join('\n\n');
     }
-    if (panel === 'standard') return data.narrative || '';
+    if (panel === 'standard') return withCode(data.codes, data.narrative || '');
     if (panel === 'bookends') {
       return [
-        data.before && `BEFORE BOOKEND:\n${data.before.narrative}`,
-        data.main   && `MAIN TASK:\n${data.main.narrative}`,
-        data.after  && `AFTER BOOKEND:\n${data.after.narrative}`
+        data.before && `BEFORE BOOKEND:\n${withCode(data.before.codes, data.before.narrative)}`,
+        data.main   && `MAIN TASK:\n${withCode(data.main.codes, data.main.narrative)}`,
+        data.after  && `AFTER BOOKEND:\n${withCode(data.after.codes, data.after.narrative)}`
       ].filter(Boolean).join('\n\n');
     }
     if (panel === 'multiphase') {
       return [
-        data.phase1 && `PHASE 1 - REVIEW/ANALYZE:\n${data.phase1.narrative}`,
-        data.phase2 && `PHASE 2 - OUTLINING/STRATEGY:\n${data.phase2.narrative}`,
-        data.phase3 && `PHASE 3 - PREPARATION/DRAFTING:\n${data.phase3.narrative}`,
-        data.phase4 && `PHASE 4 - FINALIZING/REVIEW:\n${data.phase4.narrative}`
+        data.phase1 && `PHASE 1 - REVIEW/ANALYZE:\n${withCode(data.phase1.codes, data.phase1.narrative)}`,
+        data.phase2 && `PHASE 2 - OUTLINING/STRATEGY:\n${withCode(data.phase2.codes, data.phase2.narrative)}`,
+        data.phase3 && `PHASE 3 - PREPARATION/DRAFTING:\n${withCode(data.phase3.codes, data.phase3.narrative)}`,
+        data.phase4 && `PHASE 4 - FINALIZING/REVIEW:\n${withCode(data.phase4.codes, data.phase4.narrative)}`
       ].filter(Boolean).join('\n\n');
     }
     return '';
