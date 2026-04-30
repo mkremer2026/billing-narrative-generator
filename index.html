@@ -454,6 +454,33 @@
     font-family: 'Outfit', sans-serif; font-weight: 600;
   }
 
+  /* Inferred-codes variant - when no guidelines were loaded, codes are AI-suggested.
+     Visually distinct from the gold-checkmark "applied per X" variant so the user
+     reads it as a warning, not a confirmation. */
+  .bnc-code-attribution.inferred {
+    background: #FEF7E6;
+    border: 1px solid #F2D78F;
+    border-top: 1px solid #F2D78F;
+    border-radius: 6px;
+    padding: 0.6rem 0.85rem 0.6rem 0.75rem;
+    color: #8A6A12;
+    font-size: 0.8rem;
+    margin-top: 0.85rem;
+    line-height: 1.5;
+  }
+  .bnc-code-attribution.inferred::before {
+    content: '⚠';
+    color: #D97706;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .bnc-code-attribution.inferred strong {
+    color: #6F4E07;
+  }
+
   .bnc-atvr-breakdown {
     display: flex; flex-wrap: wrap; gap: 0.4rem;
     margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);
@@ -781,6 +808,367 @@
   }
 </style>
 <style>
+  /* ============ TOAST NOTIFICATIONS ============ */
+  .bnc-toast-container {
+    position: fixed;
+    bottom: 6.5rem;
+    right: 1.75rem;
+    z-index: 9500;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    pointer-events: none;
+    max-width: 380px;
+  }
+  .bnc-toast {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-left: 4px solid var(--gold);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    box-shadow: 0 8px 24px rgba(0,33,71,0.12), 0 2px 6px rgba(0,33,71,0.06);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.88rem;
+    color: var(--charcoal);
+    line-height: 1.5;
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    transform: translateX(440px);
+    opacity: 0;
+    transition: transform 0.32s cubic-bezier(.2,.8,.2,1), opacity 0.25s ease;
+  }
+  .bnc-toast.visible { transform: translateX(0); opacity: 1; }
+  .bnc-toast.hiding { transform: translateX(440px); opacity: 0; }
+  .bnc-toast-icon {
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 1px;
+  }
+  .bnc-toast.success .bnc-toast-icon { background: var(--gold); color: var(--navy-deep); }
+  .bnc-toast.success { border-left-color: var(--gold); }
+  .bnc-toast.error .bnc-toast-icon { background: #c0392b; color: white; }
+  .bnc-toast.error { border-left-color: #c0392b; }
+  .bnc-toast.info .bnc-toast-icon { background: var(--navy); color: var(--paper); }
+  .bnc-toast.info { border-left-color: var(--navy); }
+  .bnc-toast.warning .bnc-toast-icon { background: #d97706; color: white; }
+  .bnc-toast.warning { border-left-color: #d97706; }
+  .bnc-toast-body { flex: 1; min-width: 0; }
+  .bnc-toast-title {
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 0.15rem;
+    font-size: 0.88rem;
+  }
+  .bnc-toast-message {
+    color: var(--charcoal);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  .bnc-toast-close {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0;
+    width: 20px; height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    margin-top: -2px;
+  }
+  .bnc-toast-close:hover { background: var(--ivory); color: var(--navy); }
+
+  /* ============ STYLED CONFIRM DIALOG ============ */
+  .bnc-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,21,48,0.55);
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease;
+  }
+  .bnc-confirm-overlay.visible { display: flex; }
+  .bnc-confirm-dialog {
+    background: var(--paper);
+    border-radius: 12px;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    border-top: 4px solid var(--gold);
+    overflow: hidden;
+    animation: slideUp 0.25s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .bnc-confirm-header {
+    padding: 1.5rem 1.75rem 0.5rem;
+  }
+  .bnc-confirm-title {
+    font-family: 'Playfair Display', serif;
+    color: var(--navy);
+    font-weight: 500;
+    font-size: 1.25rem;
+    margin: 0;
+  }
+  .bnc-confirm-body {
+    padding: 0.75rem 1.75rem 1.5rem;
+    color: var(--charcoal);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    font-family: 'Outfit', sans-serif;
+  }
+  .bnc-confirm-body strong { color: var(--navy); }
+  .bnc-confirm-footer {
+    padding: 1rem 1.75rem 1.4rem;
+    background: var(--ivory);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+  }
+  .bnc-confirm-btn {
+    padding: 0.65rem 1.25rem;
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1.5px solid var(--border);
+  }
+  .bnc-confirm-btn-cancel {
+    background: var(--paper);
+    color: var(--navy);
+  }
+  .bnc-confirm-btn-cancel:hover {
+    background: var(--ivory);
+    border-color: var(--navy);
+  }
+  .bnc-confirm-btn-confirm {
+    background: var(--navy);
+    color: var(--paper);
+    border-color: var(--navy);
+    font-weight: 600;
+  }
+  .bnc-confirm-btn-confirm:hover {
+    background: var(--navy-light);
+  }
+  .bnc-confirm-btn-confirm.danger {
+    background: #c0392b;
+    border-color: #c0392b;
+  }
+  .bnc-confirm-btn-confirm.danger:hover {
+    background: #a93226;
+  }
+
+  /* ============ APPLIED GUIDELINES PILL ============ */
+  .bnc-applied-pill-row {
+    margin-bottom: 1rem;
+    margin-top: -0.5rem;
+    display: none;
+  }
+  .bnc-applied-pill-row.visible { display: block; animation: fadeIn 0.25s ease; }
+  .bnc-applied-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.55rem 0.85rem 0.55rem 0.65rem;
+    background: linear-gradient(135deg, var(--gold-soft) 0%, #f7e8b8 100%);
+    border: 1.5px solid var(--gold);
+    border-radius: 24px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    color: var(--navy);
+    box-shadow: 0 2px 8px rgba(203,161,53,0.18);
+  }
+  .bnc-applied-pill-icon {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy-deep);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+  }
+  .bnc-applied-pill-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+  }
+  .bnc-applied-pill-name {
+    font-weight: 600;
+    color: var(--navy);
+  }
+  .bnc-applied-pill-name em {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--gold);
+    font-weight: 400;
+    margin-left: 0.2rem;
+  }
+  .bnc-applied-pill-clear {
+    background: transparent;
+    border: none;
+    color: var(--navy);
+    cursor: pointer;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    line-height: 1;
+    transition: all 0.15s ease;
+    margin-left: 0.2rem;
+  }
+  .bnc-applied-pill-clear:hover {
+    background: var(--navy);
+    color: var(--paper);
+  }
+
+  /* ============ GENERATION HISTORY STRIP ============ */
+  .bnc-history-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed var(--border);
+    display: none;
+  }
+  .bnc-history-section.visible { display: block; animation: fadeIn 0.3s ease; }
+  .bnc-history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.85rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .bnc-history-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--gold-dark, #a38527);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .bnc-history-title::before {
+    content: '';
+    width: 1.25rem;
+    height: 1.5px;
+    background: var(--gold);
+  }
+  .bnc-history-clear-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .bnc-history-clear-btn:hover { color: var(--navy); border-color: var(--navy); }
+  .bnc-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .bnc-history-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.7rem 0.85rem;
+    background: var(--ivory);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: all 0.15s ease;
+  }
+  .bnc-history-item:hover {
+    border-color: rgba(203,161,53,0.4);
+    background: var(--paper);
+  }
+  .bnc-history-item-num {
+    flex-shrink: 0;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.78rem;
+    color: var(--gold);
+    min-width: 1.5rem;
+    text-align: center;
+    padding-top: 1px;
+  }
+  .bnc-history-item-body {
+    flex: 1;
+    min-width: 0;
+    font-family: Georgia, serif;
+    font-size: 0.88rem;
+    color: var(--charcoal);
+    line-height: 1.4;
+  }
+  .bnc-history-item-text {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+  }
+  .bnc-history-item-meta {
+    margin-top: 0.25rem;
+    font-family: 'Outfit', sans-serif;
+    font-style: italic;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .bnc-history-item-actions {
+    flex-shrink: 0;
+    display: flex;
+    gap: 0.3rem;
+  }
+  .bnc-history-item-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    color: var(--navy);
+    transition: all 0.15s ease;
+  }
+  .bnc-history-item-btn:hover { background: var(--navy); color: var(--paper); border-color: var(--navy); }
+  .bnc-history-item-btn.copied { background: var(--gold); color: var(--navy-deep); border-color: var(--gold); }
+
   /* Help icons & tooltips */
   .bnc-help-icon {
     display: inline-flex; align-items: center; justify-content: center;
@@ -1370,6 +1758,15 @@
         <button class="bnc-role-btn" data-role="trans-paralegal">Transactional<span class="bnc-role-sub">paralegal</span></button>
       </div>
 
+      <div class="bnc-applied-pill-row" data-applied-pill="standard">
+        <span class="bnc-applied-pill">
+          <span class="bnc-applied-pill-icon">📌</span>
+          <span class="bnc-applied-pill-label">Applied</span>
+          <span class="bnc-applied-pill-name" data-applied-pill-name></span>
+          <button class="bnc-applied-pill-clear" data-applied-pill-clear="standard" aria-label="Clear applied guidelines" title="Clear applied guidelines">×</button>
+        </span>
+      </div>
+
       <!-- ===== SINGLE MODE ===== -->
       <div class="bnc-mode-form active" data-mode-form="single">
         <div class="bnc-form-grid">
@@ -1451,6 +1848,14 @@
       </div>
 
       <div class="bnc-output" data-output="standard"></div>
+
+      <div class="bnc-history-section" data-history-section="standard">
+        <div class="bnc-history-header">
+          <span class="bnc-history-title">Recent Generations</span>
+          <button class="bnc-history-clear-btn" data-history-clear="standard">Clear History</button>
+        </div>
+        <div class="bnc-history-list" data-history-list="standard"></div>
+      </div>
     </section>
 
     <!-- ============ PANEL 2: BOOKENDS ============ -->
@@ -1467,6 +1872,15 @@
         <button class="bnc-role-btn" data-role="transactional">Transactional<span class="bnc-role-sub">attorney</span></button>
         <button class="bnc-role-btn" data-role="lit-paralegal">Litigation<span class="bnc-role-sub">paralegal</span></button>
         <button class="bnc-role-btn" data-role="trans-paralegal">Transactional<span class="bnc-role-sub">paralegal</span></button>
+      </div>
+
+      <div class="bnc-applied-pill-row" data-applied-pill="bookends">
+        <span class="bnc-applied-pill">
+          <span class="bnc-applied-pill-icon">📌</span>
+          <span class="bnc-applied-pill-label">Applied</span>
+          <span class="bnc-applied-pill-name" data-applied-pill-name></span>
+          <button class="bnc-applied-pill-clear" data-applied-pill-clear="bookends" aria-label="Clear applied guidelines" title="Clear applied guidelines">×</button>
+        </span>
       </div>
 
       <div class="bnc-form-grid">
@@ -1524,6 +1938,14 @@
       </div>
 
       <div class="bnc-output" data-output="bookends"></div>
+
+      <div class="bnc-history-section" data-history-section="bookends">
+        <div class="bnc-history-header">
+          <span class="bnc-history-title">Recent Generations</span>
+          <button class="bnc-history-clear-btn" data-history-clear="bookends">Clear History</button>
+        </div>
+        <div class="bnc-history-list" data-history-list="bookends"></div>
+      </div>
     </section>
 
     <!-- ============ PANEL 3: MULTI-PHASE ============ -->
@@ -1540,6 +1962,15 @@
         <button class="bnc-role-btn" data-role="transactional">Transactional<span class="bnc-role-sub">attorney</span></button>
         <button class="bnc-role-btn" data-role="lit-paralegal">Litigation<span class="bnc-role-sub">paralegal</span></button>
         <button class="bnc-role-btn" data-role="trans-paralegal">Transactional<span class="bnc-role-sub">paralegal</span></button>
+      </div>
+
+      <div class="bnc-applied-pill-row" data-applied-pill="multiphase">
+        <span class="bnc-applied-pill">
+          <span class="bnc-applied-pill-icon">📌</span>
+          <span class="bnc-applied-pill-label">Applied</span>
+          <span class="bnc-applied-pill-name" data-applied-pill-name></span>
+          <button class="bnc-applied-pill-clear" data-applied-pill-clear="multiphase" aria-label="Clear applied guidelines" title="Clear applied guidelines">×</button>
+        </span>
       </div>
 
       <div class="bnc-form-grid">
@@ -1599,6 +2030,14 @@
       </div>
 
       <div class="bnc-output" data-output="multiphase"></div>
+
+      <div class="bnc-history-section" data-history-section="multiphase">
+        <div class="bnc-history-header">
+          <span class="bnc-history-title">Recent Generations</span>
+          <button class="bnc-history-clear-btn" data-history-clear="multiphase">Clear History</button>
+        </div>
+        <div class="bnc-history-list" data-history-list="multiphase"></div>
+      </div>
     </section>
 
     <!-- ============ PANEL 4: LIBRARY ============ -->
@@ -1809,6 +2248,23 @@
   </div>
 </div>
 
+<!-- ============ TOAST NOTIFICATIONS ============ -->
+<div class="bnc-toast-container" data-toast-container></div>
+
+<!-- ============ STYLED CONFIRM DIALOG ============ -->
+<div class="bnc-confirm-overlay" data-confirm-overlay>
+  <div class="bnc-confirm-dialog">
+    <div class="bnc-confirm-header">
+      <h3 class="bnc-confirm-title" data-confirm-title>Are you sure?</h3>
+    </div>
+    <div class="bnc-confirm-body" data-confirm-body>This action cannot be undone.</div>
+    <div class="bnc-confirm-footer">
+      <button class="bnc-confirm-btn bnc-confirm-btn-cancel" data-confirm-cancel>Cancel</button>
+      <button class="bnc-confirm-btn bnc-confirm-btn-confirm" data-confirm-ok>Confirm</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ ASK THE BILLING COACH - Floating Button + Side Panel ============ -->
 <button class="bnc-coach-fab" data-coach-open aria-label="Ask The Billing Coach">
   <span class="bnc-coach-fab-mark">M</span>
@@ -1910,6 +2366,219 @@
   function wordCount(s) { if (!s) return 0; return String(s).trim().split(/\s+/).filter(Boolean).length; }
   function genId() { return 'gl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); }
 
+  // ============ TOAST NOTIFICATIONS ============
+  // Replaces native browser alert() with styled, non-blocking toasts.
+  // Usage: toast({ title, message, kind: 'info'|'success'|'error'|'warning', duration })
+  const toastContainer = document.querySelector('[data-toast-container]');
+  let toastIdCounter = 0;
+
+  function toast(opts) {
+    if (typeof opts === 'string') opts = { message: opts };
+    const {
+      title = '',
+      message = '',
+      kind = 'info',
+      duration = kind === 'error' ? 7000 : 4500
+    } = opts;
+    const id = ++toastIdCounter;
+    const iconMap = { info: 'i', success: '✓', error: '!', warning: '!' };
+    const el = document.createElement('div');
+    el.className = `bnc-toast ${kind}`;
+    el.dataset.toastId = id;
+    el.innerHTML = `
+      <span class="bnc-toast-icon">${iconMap[kind] || 'i'}</span>
+      <div class="bnc-toast-body">
+        ${title ? `<div class="bnc-toast-title">${escapeHtml(title)}</div>` : ''}
+        <div class="bnc-toast-message">${escapeHtml(message)}</div>
+      </div>
+      <button class="bnc-toast-close" aria-label="Dismiss">×</button>
+    `;
+    toastContainer.appendChild(el);
+    // trigger entry animation
+    requestAnimationFrame(() => el.classList.add('visible'));
+    const dismiss = () => {
+      el.classList.add('hiding');
+      el.classList.remove('visible');
+      setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 350);
+    };
+    el.querySelector('.bnc-toast-close').addEventListener('click', dismiss);
+    if (duration > 0) setTimeout(dismiss, duration);
+    return { dismiss };
+  }
+
+  // Convenience aliases
+  function toastInfo(message, title)    { return toast({ kind: 'info',    title: title || '', message }); }
+  function toastSuccess(message, title) { return toast({ kind: 'success', title: title || '', message }); }
+  function toastError(message, title)   { return toast({ kind: 'error',   title: title || '', message }); }
+  function toastWarn(message, title)    { return toast({ kind: 'warning', title: title || '', message }); }
+
+  // ============ STYLED CONFIRM DIALOG ============
+  // Replaces native confirm() with a Promise-returning styled dialog.
+  // Returns a Promise<boolean> - true if user clicked Confirm, false otherwise.
+  const confirmOverlay = document.querySelector('[data-confirm-overlay]');
+  const confirmTitle = document.querySelector('[data-confirm-title]');
+  const confirmBody = document.querySelector('[data-confirm-body]');
+  const confirmOkBtn = document.querySelector('[data-confirm-ok]');
+  const confirmCancelBtn = document.querySelector('[data-confirm-cancel]');
+  let confirmResolver = null;
+
+  function confirmDialog(opts) {
+    if (typeof opts === 'string') opts = { body: opts };
+    const {
+      title = 'Are you sure?',
+      body = 'This action cannot be undone.',
+      okLabel = 'Confirm',
+      cancelLabel = 'Cancel',
+      danger = false
+    } = opts;
+    confirmTitle.textContent = title;
+    confirmBody.innerHTML = body; // allow simple HTML in body for emphasis
+    confirmOkBtn.textContent = okLabel;
+    confirmCancelBtn.textContent = cancelLabel;
+    confirmOkBtn.classList.toggle('danger', !!danger);
+    confirmOverlay.classList.add('visible');
+    setTimeout(() => confirmOkBtn.focus(), 50);
+    return new Promise(resolve => { confirmResolver = resolve; });
+  }
+  function closeConfirmDialog(result) {
+    confirmOverlay.classList.remove('visible');
+    if (confirmResolver) { confirmResolver(result); confirmResolver = null; }
+  }
+  confirmOkBtn.addEventListener('click', () => closeConfirmDialog(true));
+  confirmCancelBtn.addEventListener('click', () => closeConfirmDialog(false));
+  confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) closeConfirmDialog(false); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && confirmOverlay.classList.contains('visible')) closeConfirmDialog(false);
+  });
+
+  // ============ APPLIED GUIDELINES PILL ============
+  // Tracks which Vault entry (if any) is currently applied to each generator tab,
+  // so we can show a clear visual confirmation. Pill only shown when a SAVED Vault
+  // entry is loaded - not for raw text pasted directly into the textarea.
+  const appliedGuidelines = { standard: null, bookends: null, multiphase: null };
+
+  function showAppliedPill(panel, label, isPdf) {
+    const row = document.querySelector(`[data-applied-pill="${panel}"]`);
+    if (!row) return;
+    const nameEl = row.querySelector('[data-applied-pill-name]');
+    nameEl.innerHTML = escapeHtml(label) + (isPdf ? ' <em>PDF</em>' : '');
+    row.classList.add('visible');
+    appliedGuidelines[panel] = label;
+  }
+
+  function hideAppliedPill(panel) {
+    const row = document.querySelector(`[data-applied-pill="${panel}"]`);
+    if (!row) return;
+    row.classList.remove('visible');
+    appliedGuidelines[panel] = null;
+  }
+
+  // Wire up the × buttons on each pill to clear the loaded Vault entry
+  document.querySelectorAll('[data-applied-pill-clear]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = btn.dataset.appliedPillClear;
+      const container = document.querySelector(`[data-guidelines="${panel}"]`);
+      if (!container) return;
+      const textArea = container.querySelector('[data-guidelines-text]');
+      const fileName = container.querySelector('[data-file-name]');
+      const fileClear = container.querySelector('[data-file-clear]');
+      const fileInput = container.querySelector('[data-file-input]');
+      const sel = document.querySelector(`[data-library-select="${panel}"]`);
+      // Reset everything related to the applied guidelines
+      textArea.value = '';
+      textArea.placeholder = '';
+      state.guidelinesFile[panel] = null;
+      if (fileName) fileName.textContent = "No file attached";
+      if (fileClear) fileClear.style.display = "none";
+      if (fileInput) fileInput.value = "";
+      if (sel) sel.value = "";
+      container.classList.remove('active');
+      hideAppliedPill(panel);
+    });
+  });
+
+  // ============ GENERATION HISTORY (per-tab, in-memory only) ============
+  // Stores up to 5 most recent successful generations per tab in this session.
+  // Cleared on page reload, on Clear History click, or per-tab via the Clear button.
+  // Shape: { standard: [{narrative, snippet, timestamp}, ...], bookends: [...], multiphase: [...] }
+  const HISTORY_LIMIT = 5;
+  const generationHistory = { standard: [], bookends: [], multiphase: [] };
+
+  function addToHistory(panel, entry) {
+    if (!entry || !entry.snippet) return;
+    const list = generationHistory[panel];
+    if (!list) return;
+    list.unshift({ ...entry, timestamp: new Date() });
+    if (list.length > HISTORY_LIMIT) list.length = HISTORY_LIMIT;
+    renderHistory(panel);
+  }
+
+  function clearHistory(panel) {
+    generationHistory[panel] = [];
+    renderHistory(panel);
+  }
+
+  function formatRelativeTime(date) {
+    const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diffSec < 5) return 'just now';
+    if (diffSec < 60) return `${diffSec}s ago`;
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    return `${Math.floor(diffSec / 3600)}h ago`;
+  }
+
+  function renderHistory(panel) {
+    const section = document.querySelector(`[data-history-section="${panel}"]`);
+    const list = document.querySelector(`[data-history-list="${panel}"]`);
+    if (!section || !list) return;
+    const items = generationHistory[panel] || [];
+    if (items.length === 0) {
+      section.classList.remove('visible');
+      list.innerHTML = '';
+      return;
+    }
+    section.classList.add('visible');
+    list.innerHTML = items.map((item, i) => {
+      const fullCopyText = item.copyText || item.snippet || '';
+      return `
+        <div class="bnc-history-item" data-history-idx="${i}">
+          <span class="bnc-history-item-num">${i + 1}.</span>
+          <div class="bnc-history-item-body">
+            <div class="bnc-history-item-text">${escapeHtml(item.snippet)}</div>
+            <div class="bnc-history-item-meta">${escapeHtml(item.label || 'Generation')} · ${formatRelativeTime(item.timestamp)}</div>
+          </div>
+          <div class="bnc-history-item-actions">
+            <button class="bnc-history-item-btn" data-history-copy="${i}" data-history-panel="${panel}" data-history-text="${escapeAttr(fullCopyText)}">Copy</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Wire up copy buttons
+    list.querySelectorAll('[data-history-copy]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const text = btn.dataset.historyText;
+        try {
+          await navigator.clipboard.writeText(text);
+          const orig = btn.textContent;
+          btn.textContent = '✓ Copied';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+        } catch {
+          toastError("Couldn't copy to clipboard.");
+        }
+      });
+    });
+  }
+
+  // Wire up Clear History buttons (one per panel)
+  document.querySelectorAll('[data-history-clear]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = btn.dataset.historyClear;
+      clearHistory(panel);
+      toastInfo(`Cleared history for this tab.`);
+    });
+  });
+
   // ============ LIBRARY ============
   function loadLibrary() {
     try {
@@ -1965,7 +2634,7 @@
       const file = e.target.files[0];
       if (!file) return;
       if (file.size > 10 * 1024 * 1024) {
-        alert("PDF is larger than 10MB. Please use a smaller file or paste the relevant excerpts into the text box instead.");
+        toastWarn("PDF is larger than 10MB. Use a smaller file or paste the relevant excerpts into the text box instead.", "PDF too large");
         fileInput.value = ""; return;
       }
       fileName.textContent = file.name;
@@ -1982,17 +2651,25 @@
       fileClear.style.display = "none";
       state.guidelinesFile[panel] = null;
       if (!textArea.value.trim()) container.classList.remove('active');
+      // If a Vault PDF was applied via this panel, clearing the file also clears the pill
+      if (appliedGuidelines[panel]) hideAppliedPill(panel);
     });
 
-    textArea.addEventListener('input', () => {
+    textArea.addEventListener('input', e => {
       if (textArea.value.trim() || state.guidelinesFile[panel]) container.classList.add('active');
       else container.classList.remove('active');
+      // If the user is manually typing/pasting (i.e., a real input event from the user,
+      // not a programmatic dispatchEvent), hide the Applied pill since the loaded entry
+      // is no longer "as saved." isTrusted is true only for genuine user-initiated events.
+      if (e.isTrusted && appliedGuidelines[panel]) {
+        hideAppliedPill(panel);
+      }
     });
   });
 
   // ============ LIBRARY DROPDOWN: load saved set ============
   document.querySelectorAll('[data-library-select]').forEach(sel => {
-    sel.addEventListener('change', () => {
+    sel.addEventListener('change', async () => {
       const panel = sel.dataset.librarySelect;
       const id = sel.value;
       if (!id) return;
@@ -2003,8 +2680,14 @@
       const textArea = container.querySelector('[data-guidelines-text]');
       const isPdfOnly = item.pdf && item.pdf.data && !item.content;
 
-      if ((textArea.value.trim() || state.guidelinesFile[panel]) && !confirm("Replace the current guidelines with the saved set?")) {
-        sel.value = ""; return;
+      if (textArea.value.trim() || state.guidelinesFile[panel]) {
+        const ok = await confirmDialog({
+          title: 'Replace current guidelines?',
+          body: `You already have guidelines loaded on this tab. Loading <strong>${escapeHtml(item.label)}</strong> will replace them.`,
+          okLabel: 'Replace',
+          cancelLabel: 'Keep current'
+        });
+        if (!ok) { sel.value = ""; return; }
       }
 
       if (isPdfOnly) {
@@ -2032,6 +2715,9 @@
       container.classList.add('active');
       item.lastUsedAt = new Date().toISOString();
       saveLibrary(lib);
+      // Show the Applied pill so the user has a clear visual confirmation
+      showAppliedPill(panel, item.label, isPdfOnly);
+      toastSuccess(`Applied: ${item.label}`);
     });
   });
 
@@ -2044,7 +2730,7 @@
       const textArea = container.querySelector('[data-guidelines-text]');
       const content = textArea.value.trim();
       if (!content) {
-        alert("There's nothing in the guidelines text box to save. Paste your guidelines text first, then click Save to Vault.");
+        toastInfo("Paste your guidelines text into the box first, then click Save to Vault.", "Nothing to save");
         return;
       }
       openModal({ mode: 'create', initialContent: content });
@@ -2126,14 +2812,22 @@
       });
     });
     list.querySelectorAll('[data-delete]').forEach(b => {
-      b.addEventListener('click', () => {
+      b.addEventListener('click', async () => {
         const id = b.dataset.delete;
         const lib2 = loadLibrary();
         const item = lib2.items.find(i => i.id === id);
         if (!item) return;
-        if (!confirm(`Delete "${item.label}"? This can't be undone (unless you've exported a backup).`)) return;
+        const ok = await confirmDialog({
+          title: 'Delete this guideline set?',
+          body: `<strong>${escapeHtml(item.label)}</strong> will be permanently removed from your Vault. This can't be undone (unless you've exported a backup).`,
+          okLabel: 'Delete',
+          cancelLabel: 'Keep',
+          danger: true
+        });
+        if (!ok) return;
         lib2.items = lib2.items.filter(i => i.id !== id);
         saveLibrary(lib2);
+        toastSuccess(`Deleted "${item.label}".`);
       });
     });
   }
@@ -2186,12 +2880,12 @@
     const pdfName = modal.dataset.pdfName;
     const pdfData = modal.dataset.pdfData;
 
-    if (!label) { alert('Please enter a label.'); modalLabel.focus(); return; }
+    if (!label) { toastWarn('Please enter a label for this guideline set.'); modalLabel.focus(); return; }
 
     // For PDF-fallback mode (image PDF, no extractable text), content is allowed empty
     const isPdfFallback = pdfMode === 'create-pdf-fallback';
     if (!content && !isPdfFallback) {
-      alert('Please paste the guidelines content.');
+      toastWarn('Please paste the guidelines content.');
       modalContent.focus();
       return;
     }
@@ -2217,7 +2911,7 @@
     } catch (storageErr) {
       // Most likely localStorage quota exceeded
       console.error('Vault save failed:', storageErr);
-      alert("Couldn't save - your browser's storage is full. Try deleting some old Vault entries (especially large PDFs) before saving this one.");
+      toastError("Your browser's storage is full. Try deleting some old Vault entries (especially large PDFs) before saving this one.", "Couldn't save");
       return;
     }
 
@@ -2234,7 +2928,7 @@
   // ============ EXPORT / IMPORT ============
   document.querySelector('[data-library-export]').addEventListener('click', () => {
     const lib = loadLibrary();
-    if (!lib.items.length) { alert("Your Vault is empty - nothing to export yet."); return; }
+    if (!lib.items.length) { toastInfo("Your Vault is empty - nothing to export yet.", "Nothing to export"); return; }
     const payload = { app: 'atvr-narrative-generator', version: 1, exportedAt: new Date().toISOString(), items: lib.items };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -2252,9 +2946,15 @@
       if (!parsed || !Array.isArray(parsed.items)) throw new Error('Not a valid Vault file.');
       // Accept entries that have either text content or a PDF (or both)
       const incoming = parsed.items.filter(i => i && typeof i.label === 'string' && (typeof i.content === 'string' || (i.pdf && typeof i.pdf.data === 'string')));
-      if (!incoming.length) { alert('No valid guideline entries found.'); return; }
+      if (!incoming.length) { toastWarn('No valid guideline entries found in that file.'); return; }
       const lib = loadLibrary();
-      if (!confirm(`Import ${incoming.length} guideline set(s)?\n\nClick OK to MERGE with your existing Vault.\nClick Cancel to skip.`)) return;
+      const ok = await confirmDialog({
+        title: `Import ${incoming.length} guideline set${incoming.length === 1 ? '' : 's'}?`,
+        body: `These will be <strong>merged</strong> with your existing Vault. Existing entries will not be overwritten.`,
+        okLabel: 'Merge',
+        cancelLabel: 'Cancel'
+      });
+      if (!ok) return;
       incoming.forEach(item => {
         const newEntry = {
           id: genId(),
@@ -2269,8 +2969,8 @@
         lib.items.push(newEntry);
       });
       saveLibrary(lib);
-      alert(`Successfully imported ${incoming.length} guideline set(s).`);
-    } catch { alert("Could not read that file as a Vault export."); }
+      toastSuccess(`Imported ${incoming.length} guideline set${incoming.length === 1 ? "" : "s"}.`, "Done");
+    } catch { toastError("Could not read that file as a Vault export. Make sure it's a JSON file from the Export My Vault button."); }
     finally { importInput.value = ''; }
   });
 
@@ -2298,7 +2998,7 @@
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > PDF_SIZE_LIMIT_BYTES) {
-      alert(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB, which is larger than the 4 MB limit for Vault storage.\n\nFor large PDFs, paste the relevant excerpts as text using "+ Add New" instead.`);
+      toastWarn(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB. Vault storage caps at 4 MB. For large PDFs, paste the relevant excerpts as text using "+ Add New" instead.`, "PDF too large");
       pdfInput.value = '';
       return;
     }
@@ -2347,13 +3047,12 @@
       pdfBtn.disabled = false;
 
       if (extractionFailed) {
-        const proceed = confirm(
-          `We couldn't extract readable text from this PDF.\n\n` +
-          `This usually means the PDF is image-based (scanned). The Vault can still save it as-is, ` +
-          `and the AI will OCR it each time you apply it to a generation.\n\n` +
-          `OK = save the PDF as-is (slower but works)\n` +
-          `Cancel = don't save (try a different PDF or paste text manually)`
-        );
+        const proceed = await confirmDialog({
+          title: "Couldn't extract text from this PDF",
+          body: `This usually means the PDF is <strong>image-based</strong> (scanned). The Vault can still save it as-is, and the AI will OCR it each time you apply it to a generation - it'll be slower but it works.<br><br>You can also cancel and try a different PDF, or paste the guidelines text manually.`,
+          okLabel: 'Save as-is',
+          cancelLabel: 'Cancel'
+        });
         if (!proceed) {
           pdfInput.value = '';
           return;
@@ -2378,7 +3077,7 @@
       }
     } catch (err) {
       console.error('PDF upload error:', err);
-      alert("Couldn't read that PDF. Please try a different file or paste the guidelines as text.");
+      toastError("Couldn't read that PDF. Try a different file or paste the guidelines as text.");
       pdfBtn.textContent = originalLabel;
       pdfBtn.disabled = false;
     } finally {
@@ -2475,25 +3174,45 @@ The breakdown's pieces must read naturally as fragments of the narrative itself.
 
   const CODES_SPEC = `TASK / ACTIVITY CODES - CRITICAL INSTRUCTIONS:
 
-If the loaded client billing guidelines specify a code system (UTBMS L-codes/A-codes, modified UTBMS, custom codes, anything), you MUST extract the relevant codes from the guidelines and apply the most appropriate code(s) to each narrative.
+There are two paths for code application depending on what guidelines (if any) are loaded:
 
-Rules for codes:
-1. ONLY apply codes if the guidelines explicitly include or reference a code list. NEVER invent codes.
-2. NEVER apply UTBMS by default unless the guidelines specifically mention UTBMS or include a UTBMS-aligned code list.
-3. Pick the MOST DEFENSIBLE code(s) for the work described. If multiple codes could apply, pick the one most directly aligned with the dominant action.
-4. If the guidelines require both a phase/task code AND an activity code, return both. If only one type is required, return only that type and set the other to null.
-5. If the guidelines mention codes but don't provide a complete enough list to pick confidently, return codes: null (better to omit than to guess wrong).
-6. If the guidelines say nothing about codes, return codes: null.
+PATH A: Client billing guidelines ARE loaded with a code system specified.
+- Extract the code list directly from the guidelines.
+- Pick the MOST DEFENSIBLE code(s) for each narrative from THAT specific list.
+- Set codes_inferred: false.
+- Set codes_source to a short label naming the guidelines (e.g., "Allstate Litigation Guidelines", "Chubb Coverage Guidelines", "Client Custom Codes"). Use the user's saved Vault label if visible.
+
+PATH B: NO client guidelines are loaded, OR the loaded guidelines do not specify codes.
+- Apply STANDARD UTBMS codes (L-series phase/task codes for litigation work, B/C/M/etc. for transactional, plus A-series activity codes A101-A111).
+- Pick the most defensible standard UTBMS code(s) for the dominant action in each narrative.
+- Set codes_inferred: true.
+- Set codes_source: null.
+
+Rules that apply to BOTH paths:
+1. NEVER invent codes outside a recognized system. If guidelines specify L100, L120, L210 only, do not return L150.
+2. Pick the MOST DEFENSIBLE code for the work described. If multiple codes could apply, pick the one most directly aligned with the dominant action verb.
+3. If the work requires both a phase/task code AND an activity code, return both. If only one applies, return that one and set the other to null.
+4. For Path A, if the guidelines mention codes but the listed codes are incomplete or ambiguous for this work, return codes: null (better to omit than guess wrong from a partial list).
 
 Code object shape for each narrative:
-"codes": { "phase_task": "L120", "activity": "A104" }    // both required
-"codes": { "phase_task": "L120", "activity": null }      // only phase/task required
-"codes": { "phase_task": null, "activity": "A104" }      // only activity required
-"codes": null                                            // no codes apply
+"codes": { "phase_task": "L120", "activity": "A104" }    // both populated
+"codes": { "phase_task": "L120", "activity": null }      // only phase/task
+"codes": { "phase_task": null, "activity": "A104" }      // only activity
+"codes": null                                            // no codes apply (Path A only)
 
-Top-level "codes_source" field (for attribution):
-- If you applied codes from the guidelines, return a short label naming the source (e.g., "Allstate Litigation Guidelines", "Chubb Coverage Guidelines", "Client Custom Codes"). Pull the name from the guidelines text or the user's saved Vault label if visible.
-- If no codes were applied, return codes_source: null.`;
+Required top-level fields:
+- "codes_source": string label or null (see paths above)
+- "codes_inferred": true or false (see paths above)
+
+Reference UTBMS L-codes (litigation) for Path B:
+L100 Case Assessment, Development and Administration: L110 Fact Investigation/Development, L120 Analysis/Strategy, L130 Experts/Consultants, L140 Document/File Management, L150 Budgeting, L160 Settlement/Non-Binding ADR, L190 Other Case Assessment.
+L200 Pre-Trial Pleadings and Motions: L210 Pleadings, L220 Preliminary Injunctions/Provisional Remedies, L230 Court Mandated Conferences, L240 Dispositive Motions, L250 Other Written Motions, L260 Class Action Certification.
+L300 Discovery: L310 Written Discovery, L320 Document Production, L330 Depositions, L340 Expert Discovery, L350 Discovery Motions, L390 Other Discovery.
+L400 Trial Preparation and Trial: L410 Fact Witnesses, L420 Expert Witnesses, L430 Written Motions and Submissions, L440 Other Trial Preparation, L450 Trial and Hearing Attendance, L460 Post-Trial Motions, L470 Enforcement.
+L500 Appeal: L510 Appellate Motions, L520 Appellate Briefs, L530 Oral Argument.
+
+Reference UTBMS A-codes (activity) for Path B:
+A101 Plan and Prepare For, A102 Research, A103 Draft/Revise, A104 Review/Analyze, A105 Communicate (in firm), A106 Communicate (with client), A107 Communicate (other outside counsel), A108 Communicate (other external), A109 Appear For/Attend, A110 Manage Data/Files, A111 Other.`;
 
   // ============ GENERATE / COPY-PROMPT BUTTON WIRING ============
   document.querySelectorAll('[data-generate]').forEach(btn => {
@@ -2535,7 +3254,7 @@ Top-level "codes_source" field (for attribution):
       btn.classList.add('copied');
       setTimeout(() => { btn.textContent = originalText; btn.classList.remove('copied'); }, 3000);
     } catch {
-      alert("Could not copy automatically. Here's the start of your prompt:\n\n" + finalPrompt.slice(0, 200) + "...");
+      toastError("Could not copy to clipboard automatically. Try the Copy Prompt button again, or check your browser permissions.");
     }
   }
 
@@ -2544,7 +3263,7 @@ Top-level "codes_source" field (for attribution):
     const task = document.getElementById('std-task').value.trim();
     const context = document.getElementById('std-context').value.trim();
     const time = document.getElementById('std-time').value.trim();
-    if (!task) { alert("Please describe the task you completed."); return; }
+    if (!task) { toastWarn("Describe the task you completed before generating."); return; }
     const role = state.role.standard;
     const guidelines = getGuidelinesFor('standard');
 
@@ -2586,6 +3305,7 @@ Return your response as JSON only, no preamble or code fences:
   "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." },
   "codes": { "phase_task": "...", "activity": "..." } or null,
   "codes_source": "name of guidelines that supplied the codes" or null,
+  "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "compliance_note": "one short sentence on compliance status. If no guidelines, write 'No client guidelines provided.'",
   "coaching_tip": "one short sentence in Molly's voice about why this narrative reads as valuable"
 }`;
@@ -2613,7 +3333,7 @@ Return your response as JSON only, no preamble or code fences:
         <div class="bnc-narrative-text">${escapeHtml(narrative)}</div>
         ${renderAtvrBreakdown(data.breakdown)}
       </div>
-      ${renderCodesAttribution(data.codes_source)}
+      ${renderCodesAttribution(data.codes_source, data.codes_inferred)}
       ${data.compliance_note ? `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>` : ""}
       ${data.coaching_tip ? `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.coaching_tip)}</div>` : ""}
     `;
@@ -2737,7 +3457,7 @@ Return your response as JSON only, no preamble or code fences:
       .map((t, idx) => ({ ...t, originalIndex: idx + 1 }))
       .filter(t => t.blurb && t.blurb.trim());
     if (validTasks.length === 0) {
-      alert("Please add at least one task with a description.");
+      toastWarn("Add at least one task with a description before generating.");
       return;
     }
     const role = state.role.standard;
@@ -2784,6 +3504,7 @@ Return your response as JSON only, no preamble or code fences:
     }
   ],
   "codes_source": "name of guidelines that supplied codes" or null,
+  "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "batch_compliance_summary": "one sentence on overall compliance",
   "batch_coaching_tip": "one short sentence in Molly's voice about a pattern you noticed"
 }`;
@@ -2846,7 +3567,7 @@ Return your response as JSON only, no preamble or code fences:
       });
     });
 
-    html += renderCodesAttribution(data.codes_source);
+    html += renderCodesAttribution(data.codes_source, data.codes_inferred);
     if (data.batch_compliance_summary) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Batch Compliance:</strong> ${escapeHtml(data.batch_compliance_summary)}</div>`;
     if (data.batch_coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.batch_coaching_tip)}</div>`;
     return html;
@@ -2855,8 +3576,8 @@ Return your response as JSON only, no preamble or code fences:
   // ============ STANDARD: BULK (Day / Week / Month) ============
   async function handleStandardBulk(btn, mode) {
     const raw = document.getElementById('bulk-entries').value.trim();
-    if (!raw) { alert("Please paste your time entries into the bulk text box first."); return; }
-    if (raw.length < 20) { alert("That looks too short for a day/week/month export. Try the One Task or Multiple Tasks mode instead."); return; }
+    if (!raw) { toastWarn("Paste your time entries into the box first."); return; }
+    if (raw.length < 20) { toastInfo("That looks short for a day/week/month export. Try One Task or Multiple Tasks mode instead.", "Hmm"); return; }
     const role = state.role.standard;
     const guidelines = getGuidelinesFor('standard');
 
@@ -2912,6 +3633,7 @@ Return your response as JSON only, no preamble or code fences:
     }
   ],
   "codes_source": "name of guidelines that supplied codes" or null,
+  "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "batch_compliance_summary": "one sentence on overall compliance with guidelines (or 'No client guidelines provided.')",
   "batch_coaching_tip": "one short sentence in Molly's voice about a pattern you noticed across these entries"
 }`;
@@ -2990,7 +3712,7 @@ Return your response as JSON only, no preamble or code fences:
       });
     });
 
-    html += renderCodesAttribution(data.codes_source);
+    html += renderCodesAttribution(data.codes_source, data.codes_inferred);
     if (data.batch_compliance_summary) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Batch Compliance:</strong> ${escapeHtml(data.batch_compliance_summary)}</div>`;
     if (data.batch_coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.batch_coaching_tip)}</div>`;
     return html;
@@ -3003,7 +3725,7 @@ Return your response as JSON only, no preamble or code fences:
     const tBefore = document.getElementById('bk-time-before').value.trim();
     const tMain = document.getElementById('bk-time-main').value.trim();
     const tAfter = document.getElementById('bk-time-after').value.trim();
-    if (!task) { alert("Please describe the main task or event."); return; }
+    if (!task) { toastWarn("Describe the main task or event before generating."); return; }
     const role = state.role.bookends;
     const guidelines = getGuidelinesFor('bookends');
 
@@ -3038,6 +3760,7 @@ Return your response as JSON only, no preamble or code fences:
   "main":   { "narrative": "...", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." }, "codes": { "phase_task": "...", "activity": "..." } or null },
   "after":  { "narrative": "...", "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." }, "codes": { "phase_task": "...", "activity": "..." } or null },
   "codes_source": "name of guidelines that supplied codes" or null,
+  "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "compliance_note": "compliance status or 'No client guidelines provided.'",
   "coaching_tip": "one short sentence in Molly's voice on the value of capturing bookends"
 }`;
@@ -3084,7 +3807,7 @@ Return your response as JSON only, no preamble or code fences:
       `;
     });
 
-    html += renderCodesAttribution(data.codes_source);
+    html += renderCodesAttribution(data.codes_source, data.codes_inferred);
     if (data.compliance_note) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>`;
     if (data.coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.coaching_tip)}</div>`;
     return html;
@@ -3096,7 +3819,7 @@ Return your response as JSON only, no preamble or code fences:
     const context = document.getElementById('mp-context').value.trim();
     const time = document.getElementById('mp-time').value.trim();
     const split = document.getElementById('mp-split').value.trim();
-    if (!task) { alert("Please describe the work product or project."); return; }
+    if (!task) { toastWarn("Describe the work product or project before generating."); return; }
     const role = state.role.multiphase;
     const guidelines = getGuidelinesFor('multiphase');
 
@@ -3134,6 +3857,7 @@ Return your response as JSON only, no preamble or code fences:
   "phase3": { "narrative": "...", "phase_time": "4.5", "breakdown": {...}, "codes": { "phase_task": "...", "activity": "..." } or null },
   "phase4": { "narrative": "...", "phase_time": "1.5", "breakdown": {...}, "codes": { "phase_task": "...", "activity": "..." } or null },
   "codes_source": "name of guidelines that supplied codes" or null,
+  "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "total_time": "${time || ''}",
   "compliance_note": "compliance status or 'No client guidelines provided.'",
   "coaching_tip": "one short sentence in Molly's voice on why breaking it up matters"
@@ -3181,7 +3905,7 @@ Return your response as JSON only, no preamble or code fences:
       `;
     });
 
-    html += renderCodesAttribution(data.codes_source);
+    html += renderCodesAttribution(data.codes_source, data.codes_inferred);
     if (data.compliance_note) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>`;
     if (data.coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.coaching_tip)}</div>`;
     return html;
@@ -3223,10 +3947,19 @@ Return your response as JSON only, no preamble or code fences:
     `;
   }
 
-  // Render the codes attribution line at the bottom of an output panel
-  function renderCodesAttribution(codesSource) {
-    if (!codesSource || typeof codesSource !== 'string' || !codesSource.trim()) return '';
-    return `<div class="bnc-code-attribution">Codes applied per <strong>${escapeHtml(codesSource.trim())}</strong>. Verify before billing.</div>`;
+  // Render the codes attribution line at the bottom of an output panel.
+  // Two visual styles depending on where the codes came from:
+  //   - codesSource present + isInferred=false  -> gold check, "Codes applied per X. Verify before billing."
+  //   - isInferred=true (no codesSource)        -> amber warning, "Suggested standard UTBMS codes. Verify against your client's guidelines before billing."
+  //   - neither                                  -> nothing rendered
+  function renderCodesAttribution(codesSource, isInferred) {
+    if (isInferred && !codesSource) {
+      return `<div class="bnc-code-attribution inferred">Suggested standard UTBMS codes. Your client's specific code list may differ - <strong>verify against their guidelines before billing.</strong></div>`;
+    }
+    if (codesSource && typeof codesSource === 'string' && codesSource.trim()) {
+      return `<div class="bnc-code-attribution">Codes applied per <strong>${escapeHtml(codesSource.trim())}</strong>. Verify before billing.</div>`;
+    }
+    return '';
   }
 
   // Helper: did any narrative in the data have codes?
@@ -3417,6 +4150,41 @@ Return your response as JSON only, no preamble or code fences:
         ${renderFn(data)}
       `;
 
+      // Capture this generation in the per-tab history. Build a short snippet
+      // to display in the strip, and a label that identifies what this generation was.
+      try {
+        let snippet = '';
+        let label = '';
+        if (panel === 'standard' && currentStandardMode === 'multi') {
+          const narratives = Array.isArray(data.narratives) ? data.narratives : [];
+          snippet = narratives[0] && narratives[0].narrative ? narratives[0].narrative : '';
+          label = `Multiple Tasks · ${narratives.length} narratives`;
+        } else if (panel === 'standard' && currentStandardMode === 'bulk') {
+          const entries = Array.isArray(data.entries) ? data.entries : [];
+          snippet = entries[0] && entries[0].narrative ? entries[0].narrative : '';
+          label = `Day/Week/Month · ${entries.length} entries`;
+        } else if (panel === 'standard') {
+          snippet = data.narrative || '';
+          label = 'One Task';
+        } else if (panel === 'bookends') {
+          snippet = (data.main && data.main.narrative) || (data.before && data.before.narrative) || '';
+          label = 'Billing Bookends';
+        } else if (panel === 'multiphase') {
+          snippet = (data.phase1 && data.phase1.narrative) || '';
+          label = 'Break It Up · 4 phases';
+        }
+        if (snippet) {
+          addToHistory(panel, {
+            snippet,
+            label,
+            copyText: extractTextForCopy(panel, data)
+          });
+        }
+      } catch (histErr) {
+        // History capture failures should never break the user-visible result
+        console.warn('History capture failed:', histErr);
+      }
+
       // Wire up Copy All
       const copyAll = output.querySelector('[data-copy-all]');
       if (copyAll) {
@@ -3435,7 +4203,7 @@ Return your response as JSON only, no preamble or code fences:
               copyAll.style.color = '';
               copyAll.style.borderColor = '';
             }, 2000);
-          } catch { alert("Could not copy to clipboard automatically."); }
+          } catch { toastError("Could not copy to clipboard automatically."); }
         });
       }
 
@@ -3470,7 +4238,7 @@ Return your response as JSON only, no preamble or code fences:
             await navigator.clipboard.writeText(prompt);
             fbBtn.textContent = '✓ Copied - paste into Claude.ai';
             fbBtn.classList.add('copied');
-          } catch { alert("Could not copy."); }
+          } catch { toastError("Could not copy to clipboard."); }
         });
       }
     } finally {
