@@ -1078,6 +1078,504 @@
     color: var(--paper);
   }
 
+  /* ============ PRO FORMA PRE-CHECK ============ */
+  .bnc-pf-step {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .bnc-pf-step-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 0.6rem;
+  }
+  .bnc-pf-step-num {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    color: var(--navy-deep);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    padding: 0.32rem 0.75rem;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+  .bnc-pf-step h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--navy);
+    font-weight: 500;
+    font-size: 1.35rem;
+    margin: 0;
+  }
+  .bnc-pf-step-help {
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.55;
+    margin: 0 0 1.25rem;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .bnc-pf-upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    background: var(--ivory);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .bnc-pf-upload-zone:hover, .bnc-pf-upload-zone.dragover {
+    border-color: var(--gold);
+    background: var(--gold-soft);
+  }
+  .bnc-pf-upload-zone.has-file {
+    cursor: default;
+    border-style: solid;
+    border-color: var(--gold);
+    background: var(--gold-soft);
+  }
+  .bnc-pf-upload-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.6rem;
+    opacity: 0.7;
+  }
+  .bnc-pf-upload-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 0.3rem;
+  }
+  .bnc-pf-upload-sub {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .bnc-pf-upload-loaded {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    justify-content: center;
+    padding: 0.5rem 0;
+  }
+  .bnc-pf-file-icon {
+    font-size: 1.5rem;
+  }
+  .bnc-pf-file-name {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    color: var(--navy);
+    font-size: 0.95rem;
+    word-break: break-all;
+  }
+  .bnc-pf-file-size {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+  .bnc-pf-file-clear {
+    background: transparent;
+    border: 1px solid var(--border);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .bnc-pf-file-clear:hover {
+    background: var(--navy);
+    color: var(--paper);
+    border-color: var(--navy);
+  }
+
+  /* Matter mapping list */
+  .bnc-pf-mapping-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .bnc-pf-mapping-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.7rem 0.95rem;
+    background: var(--ivory);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    flex-wrap: wrap;
+  }
+  .bnc-pf-mapping-matter {
+    flex: 1;
+    min-width: 200px;
+    font-family: 'Outfit', sans-serif;
+    color: var(--navy);
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+  .bnc-pf-mapping-arrow {
+    color: var(--gold);
+    font-weight: 700;
+  }
+  .bnc-pf-mapping-select {
+    flex: 1;
+    min-width: 220px;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.88rem;
+    color: var(--charcoal);
+    background: var(--paper);
+    cursor: pointer;
+  }
+  .bnc-pf-mapping-select:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+  .bnc-pf-mapping-entry-count {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  /* Pre-Check report output */
+  .bnc-pf-report {
+    background: var(--paper);
+    border: 1.5px solid var(--gold);
+    border-radius: 10px;
+    padding: 1.75rem 2rem;
+    box-shadow: 0 4px 18px rgba(0,33,71,0.06);
+  }
+  .bnc-pf-report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--gold-soft);
+    flex-wrap: wrap;
+  }
+  .bnc-pf-report-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--navy);
+    font-weight: 500;
+    font-size: 1.4rem;
+    margin: 0 0 0.3rem;
+  }
+  .bnc-pf-report-subtitle {
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-family: 'Outfit', sans-serif;
+  }
+  .bnc-pf-report-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  /* Summary card at top of report */
+  .bnc-pf-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+  .bnc-pf-summary-stat {
+    background: var(--ivory);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    text-align: center;
+  }
+  .bnc-pf-summary-stat.high { border-color: #dc2626; background: #fef2f2; }
+  .bnc-pf-summary-stat.medium { border-color: #d97706; background: #fef7e6; }
+  .bnc-pf-summary-stat.low { border-color: var(--gold); background: var(--gold-soft); }
+  .bnc-pf-summary-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--navy);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  .bnc-pf-summary-stat.high .bnc-pf-summary-num { color: #dc2626; }
+  .bnc-pf-summary-stat.medium .bnc-pf-summary-num { color: #d97706; }
+  .bnc-pf-summary-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  /* Issue category sections */
+  .bnc-pf-category {
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .bnc-pf-category-header {
+    background: var(--ivory);
+    padding: 0.85rem 1.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+  }
+  .bnc-pf-category-header:hover { background: var(--gold-soft); }
+  .bnc-pf-category-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .bnc-pf-category.severity-high .bnc-pf-category-icon { background: #dc2626; color: white; }
+  .bnc-pf-category.severity-medium .bnc-pf-category-icon { background: #d97706; color: white; }
+  .bnc-pf-category.severity-low .bnc-pf-category-icon { background: var(--gold); color: var(--navy-deep); }
+  .bnc-pf-category-title {
+    flex: 1;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    color: var(--navy);
+    font-size: 0.95rem;
+  }
+  .bnc-pf-category-count {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .bnc-pf-category-chev {
+    width: 8px; height: 8px;
+    border-right: 2px solid var(--navy);
+    border-bottom: 2px solid var(--navy);
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+    margin-right: 0.25rem;
+  }
+  .bnc-pf-category.collapsed .bnc-pf-category-chev { transform: rotate(-45deg); }
+  .bnc-pf-category-body {
+    padding: 1rem 1.15rem;
+    background: var(--paper);
+    border-top: 1px solid var(--border);
+  }
+  .bnc-pf-category.collapsed .bnc-pf-category-body { display: none; }
+
+  /* Individual finding */
+  .bnc-pf-finding {
+    padding: 0.85rem 1rem;
+    border-left: 3px solid var(--gold);
+    background: var(--ivory);
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 0.85rem;
+  }
+  .bnc-pf-finding:last-child { margin-bottom: 0; }
+  .bnc-pf-finding.severity-high { border-left-color: #dc2626; background: #fef2f2; }
+  .bnc-pf-finding.severity-medium { border-left-color: #d97706; background: #fef7e6; }
+  .bnc-pf-finding-meta {
+    display: flex;
+    gap: 0.65rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .bnc-pf-finding-meta strong { color: var(--navy); font-weight: 600; }
+  .bnc-pf-finding-issue {
+    font-family: 'Outfit', sans-serif;
+    color: var(--navy);
+    font-weight: 500;
+    margin-bottom: 0.55rem;
+    font-size: 0.92rem;
+  }
+  .bnc-pf-finding-original {
+    font-family: Georgia, serif;
+    color: var(--charcoal);
+    font-size: 0.88rem;
+    padding: 0.55rem 0.75rem;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 0.55rem;
+    line-height: 1.5;
+  }
+  .bnc-pf-finding-original-label {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  .bnc-pf-finding-suggestion {
+    font-family: Georgia, serif;
+    color: var(--navy);
+    font-size: 0.92rem;
+    padding: 0.65rem 0.85rem;
+    background: var(--gold-soft);
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    line-height: 1.5;
+    position: relative;
+  }
+  .bnc-pf-finding-suggestion-label {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold-dark, #a38527);
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  .bnc-pf-finding-actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.55rem;
+    flex-wrap: wrap;
+  }
+  .bnc-pf-finding-btn {
+    padding: 0.32rem 0.7rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    color: var(--navy);
+    transition: all 0.15s ease;
+  }
+  .bnc-pf-finding-btn:hover {
+    background: var(--navy);
+    color: var(--paper);
+    border-color: var(--navy);
+  }
+  .bnc-pf-finding-btn.copied {
+    background: var(--gold);
+    color: var(--navy-deep);
+    border-color: var(--gold);
+  }
+
+  /* Loading state for the long Pre-Check run */
+  .bnc-pf-loading {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+  }
+  .bnc-pf-loading-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--navy);
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+  }
+  .bnc-pf-loading-stage {
+    color: var(--muted);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.92rem;
+    margin-bottom: 1.5rem;
+    min-height: 1.4em;
+  }
+  .bnc-pf-loading-spinner {
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 1rem;
+    border: 3px solid var(--gold-soft);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: bncSpin 1s linear infinite;
+  }
+  @keyframes bncSpin { to { transform: rotate(360deg); } }
+  .bnc-pf-loading-note {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.82rem;
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* No-issues happy state */
+  .bnc-pf-clean {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: var(--gold-soft);
+    border: 1.5px solid var(--gold);
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+  }
+  .bnc-pf-clean-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .bnc-pf-clean-title {
+    font-family: 'Playfair Display', serif;
+    color: var(--navy);
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+  }
+  .bnc-pf-clean-body {
+    color: var(--charcoal);
+    font-size: 0.92rem;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.55;
+  }
+
+  /* Disclaimer footer for the report */
+  .bnc-pf-disclaimer {
+    margin-top: 1.5rem;
+    padding: 0.85rem 1rem;
+    background: var(--ivory);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.55;
+  }
+  .bnc-pf-disclaimer strong {
+    color: var(--navy);
+    font-style: normal;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+  }
+
   /* ============ GENERATION HISTORY STRIP ============ */
   .bnc-history-section {
     margin-top: 2rem;
@@ -1739,7 +2237,7 @@
       <span class="bnc-brand-tag">The Billing Coach</span>
     </div>
     <h1>The <em>ATVR</em> Narrative Generator</h1>
-    <p>Bill Your Time Today - the easy way. Turn any task blurb into a polished and client compliant billing narrative in seconds. Molly's mindset coaching included in every generated narrative. Powered by the ATVR Framework.</p>
+    <p>Bill Your Time Today - the easy way. Turn any task blurb into a polished and client compliant billing narrative in seconds. Mindset-aware coaching baked into every narrative. Powered by the ATVR Framework.</p>
     <div class="bnc-signature">- Molly Kremer, Esq.</div>
   </header>
 
@@ -1756,8 +2254,12 @@
       <span class="bnc-tab-num">iii.</span>
       Break It Up
     </button>
-    <button class="bnc-main-tab" data-panel="library" role="tab">
+    <button class="bnc-main-tab" data-panel="proforma" role="tab">
       <span class="bnc-tab-num">iv.</span>
+      Pro Forma Pre-Check
+    </button>
+    <button class="bnc-main-tab" data-panel="library" role="tab">
+      <span class="bnc-tab-num">v.</span>
       Guidelines Vault
     </button>
   </nav>
@@ -1868,7 +2370,7 @@
       </div>
 
       <div class="bnc-generate-row">
-        <span class="bnc-generate-note">Built on Molly's proprietary ATVR framework · All rights reserved 2026</span>
+        <span class="bnc-generate-note">Built on the proprietary ATVR framework · All rights reserved 2026</span>
         <div style="display: flex; gap: 0.5rem;">
           <button class="bnc-secondary-btn" data-copy-prompt="standard">Copy Prompt to Clipboard</button>
           <button class="bnc-generate-btn" data-generate="standard">Generate Narrative</button>
@@ -2068,7 +2570,69 @@
       </div>
     </section>
 
-    <!-- ============ PANEL 4: LIBRARY ============ -->
+    <!-- ============ PANEL 4: PRO FORMA PRE-CHECK ============ -->
+    <section class="bnc-panel" data-panel="proforma">
+      <div class="bnc-panel-intro">
+        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Month-End Review Assistant</span>
+        <h2>Pro Forma Pre-Check</h2>
+        <p>Upload a month-end pro forma (the billing report partners review before invoicing) and get a structured pre-check report. The Pre-Check identifies ATVR weaknesses, duplicate entries, block-billed entries, code mismatches, and compliance issues against any client guidelines you've loaded into your Vault. The Pre-Check is a first-pass assistant; partner-level judgment and final review remain with you.</p>
+      </div>
+
+      <!-- STEP 1: Upload -->
+      <div class="bnc-pf-step" data-pf-step="upload">
+        <div class="bnc-pf-step-header">
+          <span class="bnc-pf-step-num">Step 1</span>
+          <h3>Upload your pro forma</h3>
+        </div>
+        <p class="bnc-pf-step-help">PDF format. Multi-page documents up to 8MB are supported. Most pro formas from Aderant, Elite, ProLaw, Centerbase, Clio, Smokeball, and similar billing systems work out of the box.</p>
+
+        <div class="bnc-pf-upload-zone" data-pf-upload-zone>
+          <input type="file" accept="application/pdf" data-pf-pdf-input style="display:none">
+          <div class="bnc-pf-upload-prompt" data-pf-upload-prompt>
+            <div class="bnc-pf-upload-icon">📄</div>
+            <div class="bnc-pf-upload-title">Click to upload pro forma PDF</div>
+            <div class="bnc-pf-upload-sub">or drag and drop here</div>
+          </div>
+          <div class="bnc-pf-upload-loaded" data-pf-upload-loaded style="display:none">
+            <span class="bnc-pf-file-icon">📄</span>
+            <span class="bnc-pf-file-name" data-pf-file-name></span>
+            <span class="bnc-pf-file-size" data-pf-file-size></span>
+            <button class="bnc-pf-file-clear" data-pf-file-clear aria-label="Remove file">×</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Matter mapping (revealed after extraction) -->
+      <div class="bnc-pf-step" data-pf-step="mapping" style="display:none">
+        <div class="bnc-pf-step-header">
+          <span class="bnc-pf-step-num">Step 2</span>
+          <h3>Map matters to guidelines</h3>
+        </div>
+        <p class="bnc-pf-step-help">We've identified the following matters in your pro forma. For each one, pick which client guidelines from your Vault apply (or "None" if there are no specific guidelines for that matter).</p>
+
+        <div class="bnc-pf-mapping-list" data-pf-mapping-list></div>
+
+        <button class="bnc-generate-btn" data-pf-run-review style="margin-top: 1.5rem;">
+          Run Pre-Check
+        </button>
+        <p class="bnc-generate-note" style="margin-top: 0.55rem;">
+          The Pre-Check typically takes 60-90 seconds for a multi-page pro forma. Feel free to step away.
+        </p>
+      </div>
+
+      <!-- STEP 3: Output (revealed after review completes) -->
+      <div class="bnc-output" data-output="proforma"></div>
+
+      <div class="bnc-history-section" data-history-section="proforma">
+        <div class="bnc-history-header">
+          <span class="bnc-history-title">Recent Pre-Checks</span>
+          <button class="bnc-history-clear-btn" data-history-clear="proforma">Clear History</button>
+        </div>
+        <div class="bnc-history-list" data-history-list="proforma"></div>
+      </div>
+    </section>
+
+    <!-- ============ PANEL 5: LIBRARY ============ -->
     <section class="bnc-panel" data-panel="library">
       <div class="bnc-panel-intro">
         <span class="bnc-framework-badge"><span class="bnc-dot"></span>Your Personal Guidelines Vault · Stored on This Device Only</span>
@@ -2335,13 +2899,13 @@
   </div>
 
   <div class="bnc-coach-disclaimer">
-    <strong>Heads up:</strong> coaching generated in Molly's voice from her published frameworks - not real-time Molly, not legal or ethics counsel. For specifics, consult your firm or bar association.
+    <strong>Heads up:</strong> AI coaching generated from The Billing Coach's published frameworks - not real-time human counsel, not legal or ethics advice. For specifics, consult your firm or bar association.
   </div>
 </aside>
 
 <script>
 (function() {
-  // ============ BLUEPRINT DATA (Molly's ATVR vocabulary by role) ============
+  // ============ BLUEPRINT DATA (ATVR vocabulary by role) ============
   const BLUEPRINTS = {
     litigator: {
       label: "Litigation Attorney",
@@ -2530,7 +3094,7 @@
   // Cleared on page reload, on Clear History click, or per-tab via the Clear button.
   // Shape: { standard: [{narrative, snippet, timestamp}, ...], bookends: [...], multiphase: [...] }
   const HISTORY_LIMIT = 5;
-  const generationHistory = { standard: [], bookends: [], multiphase: [] };
+  const generationHistory = { standard: [], bookends: [], multiphase: [], proforma: [] };
 
   function addToHistory(panel, entry) {
     if (!entry || !entry.snippet) return;
@@ -2606,6 +3170,732 @@
       toastInfo(`Cleared history for this tab.`);
     });
   });
+
+  // ============ PRO FORMA PRE-CHECK ============
+  // Multi-step flow: upload PDF -> extract entries via API -> show matter mapping
+  // -> user maps each matter to a Vault entry -> run review -> render report.
+
+  const PF_PDF_SIZE_LIMIT = 8 * 1024 * 1024; // 8MB
+  const proFormaState = {
+    pdfFile: null,         // { name, size, base64 }
+    extracted: null,       // { entries: [...], matters: [...], pageCount: number }
+    matterMapping: {},     // matterName -> vaultEntryId or 'none'
+    review: null           // the AI's review report
+  };
+
+  const pfPanel = document.querySelector('[data-panel="proforma"]');
+  const pfUploadZone = pfPanel.querySelector('[data-pf-upload-zone]');
+  const pfPdfInput = pfPanel.querySelector('[data-pf-pdf-input]');
+  const pfUploadPrompt = pfPanel.querySelector('[data-pf-upload-prompt]');
+  const pfUploadLoaded = pfPanel.querySelector('[data-pf-upload-loaded]');
+  const pfFileName = pfPanel.querySelector('[data-pf-file-name]');
+  const pfFileSize = pfPanel.querySelector('[data-pf-file-size]');
+  const pfFileClear = pfPanel.querySelector('[data-pf-file-clear]');
+  const pfMappingStep = pfPanel.querySelector('[data-pf-step="mapping"]');
+  const pfMappingList = pfPanel.querySelector('[data-pf-mapping-list]');
+  const pfRunBtn = pfPanel.querySelector('[data-pf-run-review]');
+  const pfOutput = pfPanel.querySelector('[data-output="proforma"]');
+
+  function pfFormatSize(bytes) {
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  function pfResetAll() {
+    proFormaState.pdfFile = null;
+    proFormaState.extracted = null;
+    proFormaState.matterMapping = {};
+    proFormaState.review = null;
+    pfUploadPrompt.style.display = '';
+    pfUploadLoaded.style.display = 'none';
+    pfUploadZone.classList.remove('has-file');
+    pfMappingStep.style.display = 'none';
+    pfMappingList.innerHTML = '';
+    pfOutput.innerHTML = '';
+    pfPdfInput.value = '';
+  }
+
+  // Upload zone click handler
+  pfUploadZone.addEventListener('click', () => {
+    if (!proFormaState.pdfFile) pfPdfInput.click();
+  });
+
+  // Drag and drop
+  pfUploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (!proFormaState.pdfFile) pfUploadZone.classList.add('dragover');
+  });
+  pfUploadZone.addEventListener('dragleave', () => pfUploadZone.classList.remove('dragover'));
+  pfUploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    pfUploadZone.classList.remove('dragover');
+    if (proFormaState.pdfFile) return;
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') pfHandleFile(file);
+    else toastWarn('Please drop a PDF file.');
+  });
+
+  pfPdfInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) pfHandleFile(file);
+  });
+
+  pfFileClear.addEventListener('click', e => {
+    e.stopPropagation();
+    pfResetAll();
+  });
+
+  async function pfHandleFile(file) {
+    if (file.size > PF_PDF_SIZE_LIMIT) {
+      toastWarn(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB. The Pre-Check supports PDFs up to 8 MB. For larger pro formas, split the document or contact support.`, 'PDF too large');
+      return;
+    }
+    try {
+      const b64 = await toBase64(file);
+      proFormaState.pdfFile = { name: file.name, size: file.size, base64: b64 };
+      pfFileName.textContent = file.name;
+      pfFileSize.textContent = `· ${pfFormatSize(file.size)}`;
+      pfUploadPrompt.style.display = 'none';
+      pfUploadLoaded.style.display = '';
+      pfUploadZone.classList.add('has-file');
+      // Kick off extraction
+      pfExtractEntries();
+    } catch (err) {
+      console.error('PF file read error:', err);
+      toastError("Couldn't read that PDF. Try a different file.");
+      pfResetAll();
+    }
+  }
+
+  async function pfExtractEntries() {
+    pfOutput.innerHTML = `
+      <div class="bnc-pf-loading">
+        <div class="bnc-pf-loading-spinner"></div>
+        <div class="bnc-pf-loading-title">Reading your pro forma...</div>
+        <div class="bnc-pf-loading-stage">Extracting time entries and matter names</div>
+        <div class="bnc-pf-loading-note">Larger pro formas can take 30-60 seconds. Hang tight.</div>
+      </div>
+    `;
+
+    const extractPrompt = `You are extracting structured time entries from a law firm pro forma (a billing report listing time entries that need partner review before invoicing).
+
+Read the attached PDF carefully. The pro forma may be from any billing system (Aderant, Elite, ProLaw, Centerbase, Clio, Smokeball, etc.) and the layout will vary - tables, paragraphs, mixed.
+
+Extract every time entry you can find. For each entry, capture:
+- date (the date the work was performed, in any format the document uses)
+- timekeeper (initials or name as shown)
+- matter (the matter or client name as shown)
+- hours (the hours billed - keep as string, e.g. "1.5", "0.4")
+- narrative (the description of the work performed - VERBATIM as it appears, do not rewrite)
+- code (any task or activity code shown, like "L120", "L120/A104", or "B210" - or null if none)
+
+Also collect the unique matter names across all entries.
+
+CRITICAL JSON FORMATTING:
+- Inside any string value, escape double quotes as \\"
+- Do NOT use smart quotes
+- Replace newlines inside string values with single spaces
+- No trailing commas
+- Return ONLY the JSON object
+
+Return this shape:
+{
+  "entries": [
+    { "date": "...", "timekeeper": "...", "matter": "...", "hours": "...", "narrative": "...", "code": "..." or null }
+  ],
+  "matters": ["unique matter name 1", "unique matter name 2", ...],
+  "page_count": <number of pages in the document>,
+  "extraction_notes": "any caveats about what couldn't be extracted, or null"
+}
+
+If the PDF doesn't appear to be a pro forma at all, return: { "entries": [], "matters": [], "page_count": 0, "extraction_notes": "This document does not appear to be a pro forma or billing report." }`;
+
+    try {
+      const r = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: proFormaState.pdfFile.base64 } },
+              { type: 'text', text: extractPrompt }
+            ]
+          }]
+        })
+      });
+      if (!r.ok) throw new Error('API ' + r.status);
+      const json = await r.json();
+      const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+      const data = parseJsonResilient(text);
+
+      if (!data.entries || data.entries.length === 0) {
+        pfOutput.innerHTML = `
+          <div class="bnc-pf-loading" style="border-color:#fde68a; background:#fef7e6;">
+            <div class="bnc-pf-loading-title" style="color:#92400e;">Couldn't find time entries</div>
+            <div class="bnc-pf-loading-note" style="color:#78350f;">${escapeHtml(data.extraction_notes || "We couldn't extract billing entries from this PDF. Make sure it's a pro forma and not a different kind of document.")}</div>
+          </div>
+        `;
+        return;
+      }
+
+      proFormaState.extracted = data;
+      pfOutput.innerHTML = '';
+      pfRenderMappingUI();
+      toastSuccess(`Found ${data.entries.length} entries across ${data.matters.length} matter${data.matters.length === 1 ? '' : 's'}.`, 'Extraction complete');
+    } catch (err) {
+      console.error('PF extract error:', err);
+      pfOutput.innerHTML = `
+        <div class="bnc-pf-loading" style="border-color:#fecaca; background:#fef2f2;">
+          <div class="bnc-pf-loading-title" style="color:#991b1b;">Extraction failed</div>
+          <div class="bnc-pf-loading-note" style="color:#7f1d1d;">Couldn't read the pro forma. Try uploading again, or use a different PDF.</div>
+        </div>
+      `;
+    }
+  }
+
+  function pfRenderMappingUI() {
+    const data = proFormaState.extracted;
+    if (!data || !data.matters || data.matters.length === 0) return;
+
+    // Count entries per matter for display
+    const entryCounts = {};
+    data.entries.forEach(e => {
+      const m = e.matter || '(unspecified)';
+      entryCounts[m] = (entryCounts[m] || 0) + 1;
+    });
+
+    const lib = loadLibrary();
+    const vaultOptions = lib.items.map(i => `<option value="${escapeAttr(i.id)}">${escapeHtml(i.label)}</option>`).join('');
+
+    pfMappingList.innerHTML = data.matters.map(matter => {
+      const count = entryCounts[matter] || 0;
+      proFormaState.matterMapping[matter] = proFormaState.matterMapping[matter] || 'none';
+      return `
+        <div class="bnc-pf-mapping-row">
+          <div class="bnc-pf-mapping-matter">${escapeHtml(matter)}</div>
+          <span class="bnc-pf-mapping-entry-count">${count} ${count === 1 ? 'entry' : 'entries'}</span>
+          <span class="bnc-pf-mapping-arrow">→</span>
+          <select class="bnc-pf-mapping-select" data-pf-mapping="${escapeAttr(matter)}">
+            <option value="none">No specific guidelines</option>
+            ${vaultOptions}
+          </select>
+        </div>
+      `;
+    }).join('');
+
+    pfMappingList.querySelectorAll('[data-pf-mapping]').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const matter = sel.dataset.pfMapping;
+        proFormaState.matterMapping[matter] = sel.value;
+      });
+    });
+
+    pfMappingStep.style.display = '';
+  }
+
+  pfRunBtn.addEventListener('click', async () => {
+    if (!proFormaState.extracted) return;
+    pfRunBtn.disabled = true;
+    pfRunBtn.textContent = 'Running Pre-Check...';
+
+    pfOutput.innerHTML = `
+      <div class="bnc-pf-loading">
+        <div class="bnc-pf-loading-spinner"></div>
+        <div class="bnc-pf-loading-title">Running your Pre-Check...</div>
+        <div class="bnc-pf-loading-stage" data-pf-stage>Reviewing each entry against the ATVR framework</div>
+        <div class="bnc-pf-loading-note">This typically takes 60-90 seconds for a multi-page pro forma. The longer the document, the longer the wait. Feel free to step away and come back.</div>
+      </div>
+    `;
+
+    // Cycle stage messages so the user knows the tool is alive
+    const stageEl = pfOutput.querySelector('[data-pf-stage]');
+    const stages = [
+      'Reviewing each entry against the ATVR framework',
+      'Checking for duplicate and overlapping entries',
+      'Cross-referencing your loaded guidelines',
+      'Assembling findings by issue type',
+      'Almost there...'
+    ];
+    let stageIdx = 0;
+    const stageInterval = setInterval(() => {
+      stageIdx = (stageIdx + 1) % stages.length;
+      if (stageEl) stageEl.textContent = stages[stageIdx];
+    }, 12000);
+
+    try {
+      // Build the context: matter -> guideline content lookup for the prompt
+      const lib = loadLibrary();
+      const matterGuidelines = {};
+      Object.entries(proFormaState.matterMapping).forEach(([matter, vaultId]) => {
+        if (vaultId && vaultId !== 'none') {
+          const item = lib.items.find(i => i.id === vaultId);
+          if (item) {
+            matterGuidelines[matter] = {
+              label: item.label,
+              content: item.content || '(PDF guidelines - content not extractable as text)'
+            };
+          }
+        }
+      });
+
+      const reviewPrompt = `You are conducting a pro forma pre-check review for a law firm. The user has uploaded a month-end pro forma (a billing report listing time entries for partner review before invoicing) and you are checking each entry for issues.
+
+PRO FORMA ENTRIES:
+${JSON.stringify(proFormaState.extracted.entries, null, 2)}
+
+CLIENT GUIDELINES (mapped per matter):
+${Object.keys(matterGuidelines).length === 0
+  ? '(No specific client guidelines loaded for any matter. Apply standard UTBMS / ATVR best practices only.)'
+  : Object.entries(matterGuidelines).map(([m, g]) => `=== ${m} ===\nGuidelines name: ${g.label}\n${g.content}`).join('\n\n')}
+
+REVIEW EACH ENTRY for issues across these categories:
+
+1. ATVR_WEAKNESS (severity: low or medium)
+   The entry's narrative is missing one or more of the four ATVR pieces (Action, Task, Value, Result), reads as clerical, or is too vague to defend at bill review.
+
+2. BLOCK_BILLING (severity: high)
+   The entry combines multiple distinct tasks under one time block (e.g., "drafted MSJ, reviewed deposition, called client - 4.5 hours"). This is prohibited by most carrier guidelines.
+
+3. DUPLICATE_OR_OVERLAP (severity: medium or high)
+   Two or more entries on the same date for the same matter that look like they describe the same or substantially overlapping work. Flag as a pair: identify both entry indexes.
+
+4. CODE_MISMATCH (severity: medium)
+   The task code on the entry doesn't match the work described, OR the work doesn't have a code but the matter's guidelines require one.
+
+5. COMPLIANCE_VIOLATION (severity: high)
+   The entry violates a specific rule in the loaded guidelines for that matter (prohibited verb, minimum increment violation, internal communication that's flagged as non-billable per the carrier, etc.). ONLY flag this when there are loaded guidelines for that matter.
+
+6. VAGUE_OR_THIN (severity: medium)
+   The narrative is too short or generic to justify the time billed (e.g., "reviewed file - 2.5 hours").
+
+For each finding, also provide a SUGGESTED REWRITE in proper ATVR form (20-25 words, present tense, action verbs, specific task, value, result).
+
+CRITICAL JSON FORMATTING:
+- Inside any string, escape double quotes as \\"
+- Do NOT use smart quotes
+- Replace newlines inside string values with spaces
+- No trailing commas
+- Return ONLY the JSON object
+
+Return this shape:
+{
+  "summary": {
+    "total_entries": <number>,
+    "total_findings": <number>,
+    "high_severity": <number>,
+    "medium_severity": <number>,
+    "low_severity": <number>,
+    "clean_entries": <number of entries with NO findings>
+  },
+  "findings": [
+    {
+      "category": "ATVR_WEAKNESS" | "BLOCK_BILLING" | "DUPLICATE_OR_OVERLAP" | "CODE_MISMATCH" | "COMPLIANCE_VIOLATION" | "VAGUE_OR_THIN",
+      "severity": "high" | "medium" | "low",
+      "entry_index": <index in the entries array, 0-based>,
+      "second_entry_index": <only for DUPLICATE_OR_OVERLAP, the other entry's index> or null,
+      "matter": "matter name",
+      "date": "date",
+      "timekeeper": "timekeeper",
+      "hours": "hours",
+      "original_narrative": "the original narrative text",
+      "issue": "one-sentence description of what's wrong",
+      "suggested_rewrite": "polished ATVR rewrite of the narrative" or null
+    }
+  ],
+  "executive_summary": "one paragraph (3-5 sentences) summarizing the overall state of the pro forma in a coaching tone - what's working, what the biggest opportunities are, where the partner should focus their review time"
+}
+
+Tone: coaching, not punitive. The goal is to help the partner move through their review faster, not to shame the timekeeper. Be direct about issues but constructive.`;
+
+      const r = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: reviewPrompt }]
+        })
+      });
+      clearInterval(stageInterval);
+      if (!r.ok) throw new Error('API ' + r.status);
+      const json = await r.json();
+      const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+      const data = parseJsonResilient(text);
+
+      proFormaState.review = data;
+      pfRenderReport(data);
+
+      // Add to history
+      addToHistory('proforma', {
+        snippet: data.executive_summary || `${proFormaState.pdfFile.name} reviewed: ${data.summary.total_findings} findings across ${data.summary.total_entries} entries`,
+        label: `Pro Forma · ${proFormaState.pdfFile.name}`,
+        copyText: pfReportToText(data)
+      });
+
+      toastSuccess(`Pre-Check complete: ${data.summary.total_findings} finding${data.summary.total_findings === 1 ? '' : 's'} across ${data.summary.total_entries} entries.`, 'Done');
+    } catch (err) {
+      clearInterval(stageInterval);
+      console.error('PF review error:', err);
+      pfOutput.innerHTML = `
+        <div class="bnc-pf-loading" style="border-color:#fecaca; background:#fef2f2;">
+          <div class="bnc-pf-loading-title" style="color:#991b1b;">Pre-Check failed</div>
+          <div class="bnc-pf-loading-note" style="color:#7f1d1d;">Something went wrong running the review. Try clicking Run Pre-Check again, or contact support if it keeps failing.</div>
+        </div>
+      `;
+    } finally {
+      pfRunBtn.disabled = false;
+      pfRunBtn.textContent = 'Run Pre-Check';
+    }
+  });
+
+  function pfCategoryLabel(category) {
+    const labels = {
+      ATVR_WEAKNESS: 'ATVR Weaknesses',
+      BLOCK_BILLING: 'Block Billing',
+      DUPLICATE_OR_OVERLAP: 'Duplicate or Overlapping Entries',
+      CODE_MISMATCH: 'Task Code Mismatches',
+      COMPLIANCE_VIOLATION: 'Guideline Compliance Issues',
+      VAGUE_OR_THIN: 'Vague or Thin Narratives'
+    };
+    return labels[category] || category;
+  }
+
+  function pfCategoryIcon(category) {
+    const icons = {
+      ATVR_WEAKNESS: 'A',
+      BLOCK_BILLING: 'B',
+      DUPLICATE_OR_OVERLAP: 'D',
+      CODE_MISMATCH: 'C',
+      COMPLIANCE_VIOLATION: '!',
+      VAGUE_OR_THIN: 'V'
+    };
+    return icons[category] || '?';
+  }
+
+  function pfRenderReport(data) {
+    if (!data || !data.summary) {
+      pfOutput.innerHTML = '<p>No review data to display.</p>';
+      return;
+    }
+
+    const findings = Array.isArray(data.findings) ? data.findings : [];
+    const summary = data.summary;
+
+    // No findings -> happy state
+    if (findings.length === 0) {
+      pfOutput.innerHTML = `
+        <div class="bnc-pf-report">
+          <div class="bnc-pf-report-header">
+            <div>
+              <h3 class="bnc-pf-report-title">Pro Forma Pre-Check Report</h3>
+              <div class="bnc-pf-report-subtitle">${escapeHtml(proFormaState.pdfFile.name)} · ${summary.total_entries} entries reviewed</div>
+            </div>
+            <div class="bnc-pf-report-actions">
+              <button class="bnc-pf-finding-btn" data-pf-export-doc>📄 Export to Word</button>
+            </div>
+          </div>
+          <div class="bnc-pf-clean">
+            <div class="bnc-pf-clean-icon">✓</div>
+            <div class="bnc-pf-clean-title">Pro forma looks clean</div>
+            <div class="bnc-pf-clean-body">${escapeHtml(data.executive_summary || 'No issues flagged across all entries. The pro forma is ready for partner review.')}</div>
+          </div>
+          <div class="bnc-pf-disclaimer">
+            <strong>Reminder:</strong> The Pre-Check is an automated first-pass assistant, not a substitute for partner-level judgment. Final review and submission decisions remain with the timekeeper and reviewing partner.
+          </div>
+        </div>
+      `;
+      pfWireExportButtons();
+      return;
+    }
+
+    // Group findings by category, severity-ordered
+    const byCategory = {};
+    findings.forEach(f => {
+      const cat = f.category || 'UNKNOWN';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(f);
+    });
+
+    // Order categories by max severity present (high > medium > low)
+    const sevOrder = { high: 0, medium: 1, low: 2 };
+    const orderedCategories = Object.keys(byCategory).sort((a, b) => {
+      const aMaxSev = Math.min(...byCategory[a].map(f => sevOrder[f.severity] ?? 3));
+      const bMaxSev = Math.min(...byCategory[b].map(f => sevOrder[f.severity] ?? 3));
+      return aMaxSev - bMaxSev;
+    });
+
+    let html = `
+      <div class="bnc-pf-report">
+        <div class="bnc-pf-report-header">
+          <div>
+            <h3 class="bnc-pf-report-title">Pro Forma Pre-Check Report</h3>
+            <div class="bnc-pf-report-subtitle">${escapeHtml(proFormaState.pdfFile.name)} · ${summary.total_entries} entries reviewed</div>
+          </div>
+          <div class="bnc-pf-report-actions">
+            <button class="bnc-pf-finding-btn" data-pf-export-doc>📄 Export to Word</button>
+            <button class="bnc-pf-finding-btn" data-pf-copy-all>Copy All</button>
+          </div>
+        </div>
+
+        <div class="bnc-pf-summary">
+          <div class="bnc-pf-summary-stat high">
+            <span class="bnc-pf-summary-num">${summary.high_severity || 0}</span>
+            <span class="bnc-pf-summary-label">High</span>
+          </div>
+          <div class="bnc-pf-summary-stat medium">
+            <span class="bnc-pf-summary-num">${summary.medium_severity || 0}</span>
+            <span class="bnc-pf-summary-label">Medium</span>
+          </div>
+          <div class="bnc-pf-summary-stat low">
+            <span class="bnc-pf-summary-num">${summary.low_severity || 0}</span>
+            <span class="bnc-pf-summary-label">Low</span>
+          </div>
+          <div class="bnc-pf-summary-stat">
+            <span class="bnc-pf-summary-num">${summary.clean_entries || 0}</span>
+            <span class="bnc-pf-summary-label">Clean</span>
+          </div>
+        </div>
+
+        ${data.executive_summary ? `
+          <div style="background: var(--ivory); border-left: 3px solid var(--gold); padding: 0.95rem 1.15rem; border-radius: 0 6px 6px 0; margin-bottom: 1.5rem; font-family: Georgia, serif; font-size: 0.93rem; line-height: 1.6; color: var(--charcoal);">
+            <strong style="color: var(--navy); font-family: 'Outfit', sans-serif; display: block; margin-bottom: 0.4rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em;">Executive Summary</strong>
+            ${escapeHtml(data.executive_summary)}
+          </div>
+        ` : ''}
+    `;
+
+    orderedCategories.forEach(cat => {
+      const items = byCategory[cat];
+      const maxSev = ['high', 'medium', 'low'].find(s => items.some(i => i.severity === s)) || 'low';
+      html += `
+        <div class="bnc-pf-category severity-${maxSev}">
+          <div class="bnc-pf-category-header" data-pf-category-toggle>
+            <span class="bnc-pf-category-icon">${pfCategoryIcon(cat)}</span>
+            <span class="bnc-pf-category-title">${pfCategoryLabel(cat)}</span>
+            <span class="bnc-pf-category-count">${items.length} ${items.length === 1 ? 'finding' : 'findings'}</span>
+            <span class="bnc-pf-category-chev"></span>
+          </div>
+          <div class="bnc-pf-category-body">
+            ${items.map((f, i) => `
+              <div class="bnc-pf-finding severity-${f.severity || 'low'}">
+                <div class="bnc-pf-finding-meta">
+                  ${f.matter ? `<strong>${escapeHtml(f.matter)}</strong>` : ''}
+                  ${f.date ? `· ${escapeHtml(f.date)}` : ''}
+                  ${f.timekeeper ? `· ${escapeHtml(f.timekeeper)}` : ''}
+                  ${f.hours ? `· ${escapeHtml(f.hours)} hrs` : ''}
+                </div>
+                <div class="bnc-pf-finding-issue">${escapeHtml(f.issue || 'Issue flagged')}</div>
+                ${f.original_narrative ? `
+                  <div class="bnc-pf-finding-original">
+                    <span class="bnc-pf-finding-original-label">Original</span>
+                    ${escapeHtml(f.original_narrative)}
+                  </div>
+                ` : ''}
+                ${f.suggested_rewrite ? `
+                  <div class="bnc-pf-finding-suggestion">
+                    <span class="bnc-pf-finding-suggestion-label">Suggested rewrite</span>
+                    ${escapeHtml(f.suggested_rewrite)}
+                  </div>
+                  <div class="bnc-pf-finding-actions">
+                    <button class="bnc-pf-finding-btn" data-pf-copy-rewrite="${escapeAttr(f.suggested_rewrite)}">Copy Rewrite</button>
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    });
+
+    html += `
+        <div class="bnc-pf-disclaimer">
+          <strong>Reminder:</strong> The Pre-Check is an automated first-pass assistant, not a substitute for partner-level judgment. Final review and submission decisions remain with the timekeeper and reviewing partner. Suggested rewrites are starting points, not authoritative billing language.
+        </div>
+      </div>
+    `;
+
+    pfOutput.innerHTML = html;
+    pfWireReportInteractions();
+  }
+
+  function pfWireReportInteractions() {
+    // Category collapse toggles
+    pfOutput.querySelectorAll('[data-pf-category-toggle]').forEach(h => {
+      h.addEventListener('click', () => {
+        h.closest('.bnc-pf-category').classList.toggle('collapsed');
+      });
+    });
+
+    // Per-finding copy buttons
+    pfOutput.querySelectorAll('[data-pf-copy-rewrite]').forEach(b => {
+      b.addEventListener('click', async () => {
+        const text = b.dataset.pfCopyRewrite;
+        try {
+          await navigator.clipboard.writeText(text);
+          const orig = b.textContent;
+          b.textContent = '✓ Copied';
+          b.classList.add('copied');
+          setTimeout(() => { b.textContent = orig; b.classList.remove('copied'); }, 1500);
+        } catch {
+          toastError("Couldn't copy to clipboard.");
+        }
+      });
+    });
+
+    pfWireExportButtons();
+  }
+
+  function pfWireExportButtons() {
+    const copyAllBtn = pfOutput.querySelector('[data-pf-copy-all]');
+    if (copyAllBtn) {
+      copyAllBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(pfReportToText(proFormaState.review));
+          const orig = copyAllBtn.textContent;
+          copyAllBtn.textContent = '✓ Copied';
+          copyAllBtn.classList.add('copied');
+          setTimeout(() => { copyAllBtn.textContent = orig; copyAllBtn.classList.remove('copied'); }, 1500);
+        } catch {
+          toastError("Couldn't copy to clipboard.");
+        }
+      });
+    }
+    const exportDocBtn = pfOutput.querySelector('[data-pf-export-doc]');
+    if (exportDocBtn) {
+      exportDocBtn.addEventListener('click', () => pfExportToDoc());
+    }
+  }
+
+  function pfReportToText(data) {
+    if (!data) return '';
+    const lines = [];
+    lines.push('PRO FORMA PRE-CHECK REPORT');
+    lines.push(`File: ${proFormaState.pdfFile?.name || 'pro forma'}`);
+    lines.push(`Entries reviewed: ${data.summary?.total_entries || 0}`);
+    lines.push(`Total findings: ${data.summary?.total_findings || 0}`);
+    lines.push(`  High severity: ${data.summary?.high_severity || 0}`);
+    lines.push(`  Medium severity: ${data.summary?.medium_severity || 0}`);
+    lines.push(`  Low severity: ${data.summary?.low_severity || 0}`);
+    lines.push(`  Clean entries: ${data.summary?.clean_entries || 0}`);
+    lines.push('');
+    if (data.executive_summary) {
+      lines.push('EXECUTIVE SUMMARY');
+      lines.push(data.executive_summary);
+      lines.push('');
+    }
+    if (Array.isArray(data.findings) && data.findings.length > 0) {
+      lines.push('FINDINGS');
+      lines.push('');
+      // Group by category for readability
+      const byCategory = {};
+      data.findings.forEach(f => {
+        const cat = f.category || 'UNKNOWN';
+        if (!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push(f);
+      });
+      Object.keys(byCategory).forEach(cat => {
+        lines.push(`### ${pfCategoryLabel(cat).toUpperCase()} (${byCategory[cat].length})`);
+        lines.push('');
+        byCategory[cat].forEach((f, i) => {
+          lines.push(`${i + 1}. [${(f.severity || 'low').toUpperCase()}] ${f.matter || ''} · ${f.date || ''} · ${f.timekeeper || ''} · ${f.hours || ''} hrs`);
+          lines.push(`   Issue: ${f.issue || ''}`);
+          if (f.original_narrative) lines.push(`   Original: ${f.original_narrative}`);
+          if (f.suggested_rewrite) lines.push(`   Rewrite: ${f.suggested_rewrite}`);
+          lines.push('');
+        });
+      });
+    }
+    lines.push('---');
+    lines.push('Reminder: The Pre-Check is an automated first-pass assistant, not a substitute for partner-level judgment. Final review and submission decisions remain with the timekeeper and reviewing partner.');
+    return lines.join('\n');
+  }
+
+  // Word doc export - simple .doc HTML format that opens in Word.
+  // Avoids needing a docx library on the client.
+  function pfExportToDoc() {
+    if (!proFormaState.review) return;
+    const data = proFormaState.review;
+    const findings = Array.isArray(data.findings) ? data.findings : [];
+
+    const byCategory = {};
+    findings.forEach(f => {
+      const cat = f.category || 'UNKNOWN';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(f);
+    });
+
+    const sevColor = { high: '#dc2626', medium: '#d97706', low: '#a38527' };
+
+    let body = `
+      <h1 style="font-family: 'Playfair Display', Georgia, serif; color: #002147; border-bottom: 2px solid #B0902A; padding-bottom: 8px;">Pro Forma Pre-Check Report</h1>
+      <p style="color: #666; font-style: italic;">${escapeHtml(proFormaState.pdfFile?.name || 'pro forma')} · ${data.summary?.total_entries || 0} entries reviewed</p>
+
+      <h2 style="color: #002147;">Summary</h2>
+      <table style="border-collapse: collapse; margin: 12px 0;">
+        <tr>
+          <td style="padding: 8px 16px; border: 1px solid #ccc; background: #fef2f2;"><strong>${data.summary?.high_severity || 0}</strong> High</td>
+          <td style="padding: 8px 16px; border: 1px solid #ccc; background: #fef7e6;"><strong>${data.summary?.medium_severity || 0}</strong> Medium</td>
+          <td style="padding: 8px 16px; border: 1px solid #ccc; background: #faf6e8;"><strong>${data.summary?.low_severity || 0}</strong> Low</td>
+          <td style="padding: 8px 16px; border: 1px solid #ccc;"><strong>${data.summary?.clean_entries || 0}</strong> Clean</td>
+        </tr>
+      </table>
+    `;
+
+    if (data.executive_summary) {
+      body += `
+        <h2 style="color: #002147;">Executive Summary</h2>
+        <p style="font-family: Georgia, serif; line-height: 1.6;">${escapeHtml(data.executive_summary)}</p>
+      `;
+    }
+
+    if (findings.length > 0) {
+      body += `<h2 style="color: #002147;">Findings</h2>`;
+      Object.keys(byCategory).forEach(cat => {
+        body += `<h3 style="color: #002147; margin-top: 24px;">${pfCategoryLabel(cat)} (${byCategory[cat].length})</h3>`;
+        byCategory[cat].forEach((f, i) => {
+          const color = sevColor[f.severity] || '#a38527';
+          body += `
+            <div style="border-left: 4px solid ${color}; padding: 8px 16px; margin-bottom: 12px; background: #faf8f3;">
+              <p style="margin: 0 0 6px; font-size: 12px; color: #666;">
+                <strong style="color: #002147;">${escapeHtml(f.matter || '')}</strong>
+                · ${escapeHtml(f.date || '')}
+                · ${escapeHtml(f.timekeeper || '')}
+                · ${escapeHtml(f.hours || '')} hrs
+                · <span style="color: ${color}; text-transform: uppercase; font-weight: 600;">${(f.severity || 'low').toUpperCase()}</span>
+              </p>
+              <p style="margin: 0 0 6px; color: #002147; font-weight: 600;">${escapeHtml(f.issue || '')}</p>
+              ${f.original_narrative ? `<p style="margin: 0 0 6px; font-family: Georgia, serif; font-size: 13px;"><em>Original:</em> ${escapeHtml(f.original_narrative)}</p>` : ''}
+              ${f.suggested_rewrite ? `<p style="margin: 0; padding: 6px 10px; background: #faf6e8; font-family: Georgia, serif; font-size: 13px; border: 1px solid #B0902A;"><em>Suggested rewrite:</em> ${escapeHtml(f.suggested_rewrite)}</p>` : ''}
+            </div>
+          `;
+        });
+      });
+    } else {
+      body += `<p style="font-family: Georgia, serif; padding: 16px; background: #faf6e8; border: 1px solid #B0902A;">No findings - the pro forma is clean and ready for partner review.</p>`;
+    }
+
+    body += `
+      <hr style="margin: 32px 0 16px;">
+      <p style="font-style: italic; color: #666; font-size: 12px;">
+        <strong>Reminder:</strong> The Pre-Check is an automated first-pass assistant, not a substitute for partner-level judgment. Final review and submission decisions remain with the timekeeper and reviewing partner. Suggested rewrites are starting points, not authoritative billing language.
+      </p>
+      <p style="font-size: 11px; color: #999; margin-top: 16px;">Generated by ATVR Narrative Generator · The Billing Coach · thebillingcoach.com</p>
+    `;
+
+    const docContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Pro Forma Pre-Check Report</title></head><body>${body}</body></html>`;
+
+    const blob = new Blob([docContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const safeName = (proFormaState.pdfFile?.name || 'proforma').replace(/\.pdf$/i, '');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeName}-pre-check-report.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toastSuccess('Pre-Check report downloaded.');
+  }
+
 
   // ============ LIBRARY ============
   function loadLibrary() {
@@ -3182,7 +4472,7 @@
     const bp = BLUEPRINTS[role];
     return `Role: ${bp.label}
 
-Reference pools from Molly Kremer's ATVR Billing Blueprint for this role (use these as inspiration - select the most appropriate terms for the specific task; do not force them if another phrasing is more accurate):
+Reference pools from the ATVR Billing Blueprint for this role (use these as inspiration - select the most appropriate terms for the specific task; do not force them if another phrasing is more accurate):
 
 ACTION verbs: ${bp.actions.join(", ")}
 
@@ -3305,7 +4595,7 @@ A101 Plan and Prepare For, A102 Research, A103 Draft/Revise, A104 Review/Analyze
     const role = state.role.standard;
     const guidelines = getGuidelinesFor('standard');
 
-    const prompt = `You are assisting Molly Kremer, Esq. (The Billing Coach) in generating a billing narrative using her proprietary ATVR Framework.
+    const prompt = `You are generating a billing narrative using the proprietary ATVR Framework from The Billing Coach methodology.
 
 ${renderBlueprint(role)}
 
@@ -3345,7 +4635,7 @@ Return your response as JSON only, no preamble or code fences:
   "codes_source": "name of guidelines that supplied the codes" or null,
   "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "compliance_note": "one short sentence on compliance status. If no guidelines, write 'No client guidelines provided.'",
-  "coaching_tip": "one short sentence in Molly's voice about why this narrative reads as valuable"
+  "coaching_tip": "one short sentence in a coaching-oriented tone about why this narrative reads as valuable"
 }`;
 
     if (mode === 'copy') return copyPromptToClipboard(btn, prompt, 'standard');
@@ -3509,7 +4799,7 @@ Return your response as JSON only, no preamble or code fences:
       return line;
     }).join('\n\n');
 
-    const prompt = `You are assisting Molly Kremer, Esq. (The Billing Coach) in generating MULTIPLE billing narratives in a single batch using her proprietary ATVR Framework.
+    const prompt = `You are generating MULTIPLE billing narratives in a single batch using the proprietary ATVR Framework from The Billing Coach methodology.
 
 ${renderBlueprint(role)}
 
@@ -3544,7 +4834,7 @@ Return your response as JSON only, no preamble or code fences:
   "codes_source": "name of guidelines that supplied codes" or null,
   "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "batch_compliance_summary": "one sentence on overall compliance",
-  "batch_coaching_tip": "one short sentence in Molly's voice about a pattern you noticed"
+  "batch_coaching_tip": "one short sentence in a coaching-oriented tone about a pattern you noticed"
 }`;
 
     if (mode === 'copy') return copyPromptToClipboard(btn, prompt, 'standard');
@@ -3619,7 +4909,7 @@ Return your response as JSON only, no preamble or code fences:
     const role = state.role.standard;
     const guidelines = getGuidelinesFor('standard');
 
-    const prompt = `You are assisting Molly Kremer, Esq. (The Billing Coach) in parsing a freeform paste of time entries (a day, week, or month) and generating a polished ATVR billing narrative for EVERY entry.
+    const prompt = `You are parsing a freeform paste of time entries (a day, week, or month) and generating a polished ATVR billing narrative for EVERY entry, using the ATVR Framework from The Billing Coach methodology.
 
 ${renderBlueprint(role)}
 
@@ -3673,7 +4963,7 @@ Return your response as JSON only, no preamble or code fences:
   "codes_source": "name of guidelines that supplied codes" or null,
   "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "batch_compliance_summary": "one sentence on overall compliance with guidelines (or 'No client guidelines provided.')",
-  "batch_coaching_tip": "one short sentence in Molly's voice about a pattern you noticed across these entries"
+  "batch_coaching_tip": "one short sentence in a coaching-oriented tone about a pattern you noticed across these entries"
 }`;
 
     if (mode === 'copy') return copyPromptToClipboard(btn, prompt, 'standard');
@@ -3767,7 +5057,7 @@ Return your response as JSON only, no preamble or code fences:
     const role = state.role.bookends;
     const guidelines = getGuidelinesFor('bookends');
 
-    const prompt = `You are assisting Molly Kremer, Esq. (The Billing Coach) in generating a "Billing Bookends" set of THREE narratives, capturing the complete work cycle around a main task.
+    const prompt = `You are generating a "Billing Bookends" set of THREE narratives, capturing the complete work cycle around a main task. Use the ATVR Framework from The Billing Coach methodology.
 
 ${renderBlueprint(role)}
 
@@ -3800,7 +5090,7 @@ Return your response as JSON only, no preamble or code fences:
   "codes_source": "name of guidelines that supplied codes" or null,
   "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "compliance_note": "compliance status or 'No client guidelines provided.'",
-  "coaching_tip": "one short sentence in Molly's voice on the value of capturing bookends"
+  "coaching_tip": "one short sentence in a coaching-oriented tone on the value of capturing bookends"
 }`;
 
     if (mode === 'copy') return copyPromptToClipboard(btn, prompt, 'bookends');
@@ -3861,7 +5151,7 @@ Return your response as JSON only, no preamble or code fences:
     const role = state.role.multiphase;
     const guidelines = getGuidelinesFor('multiphase');
 
-    const prompt = `You are assisting Molly Kremer, Esq. (The Billing Coach) in generating a "Break It Up" set of FOUR billing narratives that defeat block billing by unbundling a large project into four distinct phases.
+    const prompt = `You are generating a "Break It Up" set of FOUR billing narratives that defeat block billing by unbundling a large project into four distinct phases. Use the ATVR Framework from The Billing Coach methodology.
 
 ${renderBlueprint(role)}
 
@@ -3898,7 +5188,7 @@ Return your response as JSON only, no preamble or code fences:
   "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "total_time": "${time || ''}",
   "compliance_note": "compliance status or 'No client guidelines provided.'",
-  "coaching_tip": "one short sentence in Molly's voice on why breaking it up matters"
+  "coaching_tip": "one short sentence in a coaching-oriented tone on why breaking it up matters"
 }`;
 
     if (mode === 'copy') return copyPromptToClipboard(btn, prompt, 'multiphase');
@@ -4239,7 +5529,7 @@ Return your response as JSON only, no preamble or code fences:
     btn.disabled = true;
     btn.textContent = 'Generating…';
     output.classList.add('visible');
-    output.innerHTML = `<div class="bnc-loading">Drafting your ${panel === 'standard' ? 'narrative' : panel === 'bookends' ? 'bookends' : 'phases'}, in Molly's voice<span class="bnc-loading-dots"><span></span><span></span><span></span></span></div>`;
+    output.innerHTML = `<div class="bnc-loading">Drafting your ${panel === 'standard' ? 'narrative' : panel === 'bookends' ? 'bookends' : 'phases'}<span class="bnc-loading-dots"><span></span><span></span><span></span></span></div>`;
 
     try {
       let userContent;
@@ -4523,6 +5813,7 @@ Return your response as JSON only, no preamble or code fences:
     { title: 'Standard Narrative <em>- Day / Week / Month</em>', body: '<p>The fastest catch-up tool in the app. Click <strong>Day / Week / Month</strong> at the top of the Standard Narrative tab.</p><p>Paste an entire day, week, or month of time entries - any format works. Timesheet export, calendar dump, freeform notes from your phone. The generator parses everything and returns polished narratives grouped by date and matter.</p>' },
     { title: 'Billing Bookends', body: '<p>Capture the full work cycle. The strategic prep <strong>before</strong> a task. The event itself. The substantive follow-up <strong>after</strong>.</p><p>Three narratives, one shot. This is where the time most attorneys leave on the table - the thinking and prep around an event - finally gets billed.</p>' },
     { title: 'Break It Up', body: '<p>Big project? MSJ, purchase agreement, trial prep, complex motion?</p><p>This tab splits one block of work into four phase narratives - <strong>review</strong>, <strong>outlining</strong>, <strong>drafting</strong>, <strong>finalizing</strong> - so nothing reads as block billing. Each phase stands alone, each gets paid.</p>' },
+    { title: 'Pro Forma Pre-Check', body: '<p>Hate reviewing month-end pro formas? Upload the PDF and the Pre-Check flags ATVR weaknesses, block billing, duplicate entries, code mismatches, and guideline compliance issues. You get a structured report (with suggested rewrites for each finding) so partner review takes minutes instead of hours.</p>' },
     { title: 'Guidelines Vault', body: '<p>Save carrier and client guidelines once - Allstate, Chubb, Liberty Mutual, your firm\'s biggest client - then apply them with a dropdown click on any of the three generator tabs.</p><p><em>Your saved guidelines stay on your device only.</em> Nothing on a server.</p>' },
     { title: 'Ask The Billing Coach', body: '<p>See the <em>gold button in the bottom-right corner</em>? That\'s the chat coach. Available on every tab.</p><p>Drop in any billing question - mindset, "is this billable?", whatever\'s on your mind - and get a coaching response on the spot.</p><p style="margin-top:1rem; font-family:\'Playfair Display\',serif; font-style:italic; color:var(--gold-dark, #a38527);">Now go bill some time. It\'s YOUR time. Make it count.</p>' }
   ];
@@ -4566,20 +5857,20 @@ Return your response as JSON only, no preamble or code fences:
   // ============ ASK THE BILLING COACH - Chat panel with short memory ============
   // ============================================================================
 
-  // System prompt - the heart of the voice. Built from Molly's body of work.
-  const COACH_SYSTEM_PROMPT = `You are responding as Molly Kremer, Esq. - The Billing Coach. You speak in HER voice, drawing on HER published frameworks. You are a coach inside a tool she built for attorneys; the user is currently using her ATVR Narrative Generator.
+  // System prompt - the heart of the voice. Built from The Billing Coach's body of work.
+  const COACH_SYSTEM_PROMPT = `You are responding as The Billing Coach - an AI persona built from the published frameworks of Molly Kremer, Esq. You speak in The Billing Coach voice, drawing on her published frameworks. You are a coach inside the ATVR Narrative Generator the user is currently using.
 
-WHO MOLLY IS:
+WHO THE BILLING COACH IS (the founder behind this voice):
 - Former BigLaw civil defense litigator. 16+ years of practice. Pittsburgh-based.
 - 2021 turning point: completed life coaching certification, then applied those tools to her own bad billing habits and solved them.
 - Now coaches attorneys (BigLaw to boutique) on billing PSYCHOLOGY, not just paperwork.
 - Believes billing problems are mindset and skill issues, not systems issues.
 
-HOW MOLLY TALKS - the actual texture of her voice (use these naturally, not stuffed):
+HOW THE BILLING COACH TALKS - the actual texture of the voice (use these naturally, not stuffed):
 - Disarming opener: "Of course you don't want to bill right now..." / "Of course you're feeling that way..." She normalizes the resistance before redirecting it.
 - Reassurance: "no big deal" / "nothing's gone wrong" / "this is your brain working exactly as it was trained to" - she removes shame before doing anything else.
 - Inclusive: "you guys" (plural attorneys) - but talking to one attorney here, so use "you."
-- Self-locating: "I get it. Attorneys, I was one for a very long time." / "I did this for 16 years, so I was in that boat for a very long time." Brings her own messiness in.
+- Self-locating: "I get it. Attorneys, I was one for a very long time." / "I did this for 16 years, so I was in that boat for a very long time." Brings personal experience in.
 - Intensifiers: "super helpful" / "super important" / "really really" / "fantastic." Used sparingly, real, never marketing-speak.
 - Recurring closers (use ONE only when it actually fits, never every response): "It's YOUR time. Make it count." / "Progress, not perfection." / "1% progress every day." / "You've got this."
 
@@ -4588,9 +5879,9 @@ THE THREE-BEAT COACHING PATTERN - every coaching response should usually follow 
 2. NAME THE MECHANISM. Show what's actually happening underneath, in plain language. ("What's happening here is the dopamine pathway / the lower brain / the people-pleasing default / the perfectionistic standard / the inner toddler defaulting to the easy path.") Cite the specific framework or pattern by name when relevant.
 3. REDIRECT TO A SMALL, DOABLE NEXT REP. Never "try harder." Always one specific micro-move. ("So here's the smallest thing you can do right now: [specific action]. That's it. One rep.")
 
-MOLLY'S FRAMEWORK LIBRARY - reach for the right tool given the question:
+THE BILLING COACH FRAMEWORK LIBRARY - reach for the right tool given the question:
 - ATVR (Action / Task / Value / Result) - the narrative-writing framework. The tool the user is sitting inside.
-- CTFAR (Circumstance / Thought / Feeling / Action / Result) - Brooke Castillo's coaching model that Molly uses for billing work.
+- CTFAR (Circumstance / Thought / Feeling / Action / Result) - Brooke Castillo's coaching model adapted for billing work.
 - 4-Step Process to Change: NOTICE → NARRATE → NORMALIZE → NEXT BEST THOUGHT.
 - 3-Step Self-Evaluation: What worked / What didn't work / What I can do differently going forward. ("The 'what didn't work' is where all the gold is - failure gold.")
 - Three A's: Awareness → Allowing → Assuredness.
@@ -4604,16 +5895,16 @@ MOLLY'S FRAMEWORK LIBRARY - reach for the right tool given the question:
 - "Confusion Cutting" (130 hrs/yr lost), "Under-Recording" (130 hrs/yr lost), "Procrastination/Reconstruction" (260 hrs/yr lost). 520+ hrs/yr lost per attorney.
 - Ethics anchors: ABA Model Rules 8.4(c), 1.5(a), 1.1, 1.15. Martino v. Denevi (Cal. App. 1986).
 
-MOLLY'S SIGNATURE PHRASES - use ONE or TWO when fitting, never multiple:
+SIGNATURE PHRASES - use ONE or TWO when fitting, never multiple:
 "Cringe and Count It." • "It Took What It Took." • "Above Your Pay Grade" (cutting time is the partner's call, not yours; your job is to record accurately). • "Guidance Then Gossip." • "Bank Your Hours." • "Failure Gold." • "The Best Way Out Is Through." • "Make It Count." • "Bill in the moment." • "1% progress every day." • "Don't make it mean anything has gone wrong." • "Master billable timekeeper."
 
-MOLLY'S PHILOSOPHY OF TIME:
+PHILOSOPHY OF TIME:
 "Your time is the most valuable resource on this earth - more valuable than money, more valuable than your health. Honor it by billing for all of it."
 
-WHAT MOLLY DOES NOT DO:
+WHAT THE BILLING COACH DOES NOT DO:
 - Does NOT shame attorneys for backslides, struggles, or mistakes.
-- Does NOT lecture about willpower. She talks about retraining the brain through reps, not muscling through.
-- Does NOT promise quick fixes or guarantee outcomes. She talks about practice, progress, capacity-building.
+- Does NOT lecture about willpower. Talks about retraining the brain through reps, not muscling through.
+- Does NOT promise quick fixes or guarantee outcomes. Talks about practice, progress, capacity-building.
 - Does NOT pretend backslides won't happen - calls them "inevitable, where the gold is."
 - Does NOT make decisions about what to bill the client - that is "above your pay grade." The attorney's job is to record accurately. The partner's job is to decide what to bill.
 - Does NOT give legal or ethics advice for specific situations. Refers to the firm or bar association.
@@ -4738,12 +6029,12 @@ When the user asks a follow-up that depends on something they said in a prior tu
     const priorPairs = coachHistory.slice(-COACH_MEMORY_LIMIT);
     if (priorPairs.length === 0) {
       // First question of the session - prepend system prompt to it
-      messages.push({ role: 'user', content: COACH_SYSTEM_PROMPT + '\n\n---\n\nThe user is asking their first question. Respond as Molly:\n\n' + question });
+      messages.push({ role: 'user', content: COACH_SYSTEM_PROMPT + '\n\n---\n\nThe user is asking their first question. Respond as The Billing Coach:\n\n' + question });
     } else {
       // Continuing conversation - prepend system prompt to the FIRST user turn in history
       priorPairs.forEach(({ question: q, answer: a }, idx) => {
         const userText = (idx === 0)
-          ? COACH_SYSTEM_PROMPT + '\n\n---\n\nThe user is asking their first question. Respond as Molly:\n\n' + q
+          ? COACH_SYSTEM_PROMPT + '\n\n---\n\nThe user is asking their first question. Respond as The Billing Coach:\n\n' + q
           : q;
         messages.push({ role: 'user', content: userText });
         messages.push({ role: 'assistant', content: a });
