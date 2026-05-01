@@ -4334,17 +4334,33 @@ If the PDF doesn't appear to be a pro forma at all, return:
     }, 12000);
 
     try {
-      // Build the context: matter -> guideline content lookup for the prompt
+      // Build the context: matter -> guideline content lookup for the prompt.
+      // For PDF-only guidelines (no extracted text), we attach the PDF to the
+      // multimodal message and reference it by name in the text prompt.
       const lib = loadLibrary();
       const matterGuidelines = {};
+      const attachedPdfs = []; // { matter, label, pdfName, pdfData } - dedupe by vault id
+      const seenVaultIds = new Set();
       Object.entries(proFormaState.matterMapping).forEach(([matter, vaultId]) => {
         if (vaultId && vaultId !== 'none') {
           const item = lib.items.find(i => i.id === vaultId);
           if (item) {
-            matterGuidelines[matter] = {
-              label: item.label,
-              content: item.content || '(PDF guidelines - content not extractable as text)'
-            };
+            const hasText = item.content && item.content.trim().length > 0;
+            const hasPdf = item.pdf && item.pdf.data;
+            let contentForPrompt;
+            if (hasText) {
+              contentForPrompt = item.content;
+            } else if (hasPdf) {
+              contentForPrompt = `(See attached PDF: "${item.pdf.name}" - the AI will read this PDF directly)`;
+            } else {
+              contentForPrompt = '(No content stored for this guideline)';
+            }
+            matterGuidelines[matter] = { label: item.label, content: contentForPrompt };
+            // Attach PDF only once per Vault entry, even if applied to multiple matters
+            if (hasPdf && !seenVaultIds.has(vaultId)) {
+              seenVaultIds.add(vaultId);
+              attachedPdfs.push({ label: item.label, pdfName: item.pdf.name, pdfData: item.pdf.data });
+            }
           }
         }
       });
@@ -4494,11 +4510,27 @@ Return this shape:
 
 Tone: coaching, not punitive. The goal is to help the timekeeper get paid for work they actually did, by teaching them to write narratives that advocate for the strategic value of their work. Frame issues as advocacy gaps, not as compliance violations. Be direct about what needs to change, but constructive about why - the work is billable; the narrative needs to do its job.`;
 
+      // Build the message content. If PDF guidelines are attached, send a
+      // multimodal message: PDFs first as document blocks, then the prompt text.
+      // The prompt text references the PDFs by their label name.
+      let messageContent;
+      if (attachedPdfs.length > 0) {
+        messageContent = [
+          ...attachedPdfs.map(a => ({
+            type: 'document',
+            source: { type: 'base64', media_type: 'application/pdf', data: a.pdfData }
+          })),
+          { type: 'text', text: reviewPrompt }
+        ];
+      } else {
+        messageContent = reviewPrompt;
+      }
+
       const r = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: reviewPrompt }]
+          messages: [{ role: 'user', content: messageContent }]
         })
       });
       clearInterval(stageInterval);
@@ -5349,9 +5381,25 @@ JSON FORMATTING (non-negotiable):
       if (progEl) progEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
 
-    const guidelineContext = guidelineItem
-      ? `Guidelines applied to all matters: ${guidelineItem.label}\n${guidelineItem.content || '(PDF guidelines - content not extractable as text)'}`
-      : '(No specific guidelines loaded. Apply general ATVR + Billing Coach advocacy framework only.)';
+    // Build guideline context. If the selected guideline has a PDF attached
+    // (no extracted text), we'll pass the PDF document with each chunk and
+    // reference it by name in the prompt.
+    let guidelineContext;
+    let guidelinePdf = null;
+    if (guidelineItem) {
+      const hasText = guidelineItem.content && guidelineItem.content.trim().length > 0;
+      const hasPdf = guidelineItem.pdf && guidelineItem.pdf.data;
+      if (hasText) {
+        guidelineContext = `Guidelines applied to all matters: ${guidelineItem.label}\n${guidelineItem.content}`;
+      } else if (hasPdf) {
+        guidelineContext = `Guidelines applied to all matters: ${guidelineItem.label}\n(See attached PDF: "${guidelineItem.pdf.name}" - the AI will read this PDF directly to determine compliance with carrier or client guidelines.)`;
+        guidelinePdf = { name: guidelineItem.pdf.name, data: guidelineItem.pdf.data };
+      } else {
+        guidelineContext = `Guidelines applied to all matters: ${guidelineItem.label}\n(No content stored for this guideline.)`;
+      }
+    } else {
+      guidelineContext = '(No specific guidelines loaded. Apply general ATVR + Billing Coach advocacy framework only.)';
+    }
 
     // Process chunks with bounded parallelism
     const allFindings = [];
@@ -5362,7 +5410,7 @@ JSON FORMATTING (non-negotiable):
       const itemEl = meOutput.querySelector(`[data-me-prog-item="${chunkIdx}"]`);
       if (itemEl) itemEl.classList.add('processing');
       try {
-        const findings = await meReviewChunk(chunk, guidelineContext);
+        const findings = await meReviewChunk(chunk, guidelineContext, guidelinePdf);
         allFindings.push(...findings);
         if (itemEl) {
           itemEl.classList.remove('processing');
@@ -5454,7 +5502,7 @@ JSON FORMATTING (non-negotiable):
     }
   });
 
-  async function meReviewChunk(chunk, guidelineContext) {
+  async function meReviewChunk(chunk, guidelineContext, guidelinePdf) {
     const reviewPrompt = `Your ONLY job is to return a JSON object with findings for the time entries below. Start with { and end with }.
 
 You are conducting a triage-level review of one matter from a monthly time export. The reviewing attorney is checking their own work before submitting to the firm.
@@ -5551,10 +5599,22 @@ JSON FORMATTING (non-negotiable):
 - Only straight ASCII quotes
 - No trailing commas`;
 
+    // Build message content. If a PDF guideline is attached, send it as a
+    // multimodal message: PDF first as document block, then the prompt text.
+    let messageContent;
+    if (guidelinePdf && guidelinePdf.data) {
+      messageContent = [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: guidelinePdf.data } },
+        { type: 'text', text: reviewPrompt }
+      ];
+    } else {
+      messageContent = reviewPrompt;
+    }
+
     const r = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', content: reviewPrompt }] })
+      body: JSON.stringify({ messages: [{ role: 'user', content: messageContent }] })
     });
     if (!r.ok) throw new Error('Chunk API ' + r.status);
     const json = await r.json();
@@ -6627,9 +6687,10 @@ JSON FORMATTING (non-negotiable):
 
     if (!label) { toastWarn('Please enter a label for this guideline set.'); modalLabel.focus(); return; }
 
-    // For PDF-fallback mode (image PDF, no extractable text), content is allowed empty
-    const isPdfFallback = pdfMode === 'create-pdf-fallback';
-    if (!content && !isPdfFallback) {
+    // For PDF modes (image PDF fallback, or direct PDF), content is allowed empty
+    // because the AI reads the PDF directly at Pre-Check time
+    const isPdfWithoutText = pdfMode === 'create-pdf-fallback' || pdfMode === 'create-pdf-direct';
+    if (!content && !isPdfWithoutText) {
       toastWarn('Please paste the guidelines content.');
       modalContent.focus();
       return;
@@ -6748,78 +6809,55 @@ JSON FORMATTING (non-negotiable):
       return;
     }
 
+    // Check localStorage capacity before reading the file. PDF base64 is ~1.33x the file size.
+    // Browser localStorage is typically 5-10MB total; we warn at 70% and refuse at 90%.
+    const estimatedAddedSize = file.size * 1.4;
+    const currentLibrarySize = (() => {
+      try { return new Blob([localStorage.getItem(LIBRARY_KEY) || '']).size; }
+      catch { return 0; }
+    })();
+    const estimatedTotalAfter = currentLibrarySize + estimatedAddedSize;
+    const HARD_LIMIT = 4.5 * 1024 * 1024; // 4.5 MB - safely under most browser caps
+    const SOFT_LIMIT = 3.5 * 1024 * 1024;
+    if (estimatedTotalAfter > HARD_LIMIT) {
+      toastError(
+        `Adding this PDF would push your Vault storage close to the browser limit. Remove some existing guidelines first, or paste the excerpts as text instead.`,
+        'Vault storage almost full'
+      );
+      pdfInput.value = '';
+      return;
+    }
+
     const originalLabel = pdfBtn.textContent;
     pdfBtn.disabled = true;
-    pdfBtn.textContent = 'Reading PDF…';
+    pdfBtn.textContent = 'Reading PDF...';
 
     try {
       const b64 = await toBase64(file);
       const suggestedLabel = fileNameToLabel(file.name);
 
-      pdfBtn.textContent = 'Extracting text…';
-
-      // Try to extract the text content from the PDF via the API.
-      // We send the PDF to /api/generate with a small extraction prompt.
-      let extractedText = '';
-      let extractionFailed = false;
-      try {
-        const r = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: [{
-              role: 'user',
-              content: [
-                { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
-                { type: 'text', text: 'Extract the full readable text content from this PDF document. Return ONLY the extracted text, with no preamble, no commentary, no markdown formatting, no summary. Preserve paragraph structure with double line breaks. If the PDF is image-based and contains no extractable text, respond with exactly the string: EXTRACTION_FAILED' }
-              ]
-            }]
-          })
-        });
-        if (!r.ok) throw new Error('API error ' + r.status);
-        const json = await r.json();
-        extractedText = ((json.content && json.content[0] && json.content[0].text) || json.text || '').trim();
-        // Heuristic: if response is too short or contains the failure marker, treat as failed
-        if (!extractedText || extractedText === 'EXTRACTION_FAILED' || extractedText.length < 50) {
-          extractionFailed = true;
-        }
-      } catch (apiErr) {
-        console.warn('PDF text extraction error:', apiErr);
-        extractionFailed = true;
-      }
-
       pdfBtn.textContent = originalLabel;
       pdfBtn.disabled = false;
 
-      if (extractionFailed) {
-        const proceed = await confirmDialog({
-          title: "Couldn't extract text from this PDF",
-          body: `This usually means the PDF is <strong>image-based</strong> (scanned). The Vault can still save it as-is, and the AI will OCR it each time you apply it to a generation - it'll be slower but it works.<br><br>You can also cancel and try a different PDF, or paste the guidelines text manually.`,
-          okLabel: 'Save as-is',
-          cancelLabel: 'Cancel'
-        });
-        if (!proceed) {
-          pdfInput.value = '';
-          return;
-        }
-        // Save as PDF-only entry (fallback)
-        openPdfModal({
-          mode: 'create-pdf-fallback',
-          initialLabel: suggestedLabel,
-          pdfName: file.name,
-          pdfData: b64,
-          extractedContent: ''
-        });
-      } else {
-        // Save as text entry (preferred), but also keep the PDF for reference if needed
-        openPdfModal({
-          mode: 'create-pdf-extracted',
-          initialLabel: suggestedLabel,
-          pdfName: file.name,
-          pdfData: b64,
-          extractedContent: extractedText
-        });
+      // Soft warning if we're past 3.5 MB but under hard cap
+      if (estimatedTotalAfter > SOFT_LIMIT) {
+        toastWarn(
+          `Your Vault is getting full. After saving this PDF you'll have used about ${(estimatedTotalAfter / 1024 / 1024).toFixed(1)} MB of an estimated 5 MB browser limit.`,
+          'Vault storage notice'
+        );
       }
+
+      // No more AI extraction step. We save the PDF directly and let the AI read
+      // it natively at Pre-Check time. This makes the upload feel instant rather
+      // than taking 60-180 seconds, and removes the failure modes that come with
+      // long extraction calls (Vercel timeouts, response truncation, etc).
+      openPdfModal({
+        mode: 'create-pdf-direct',
+        initialLabel: suggestedLabel,
+        pdfName: file.name,
+        pdfData: b64,
+        extractedContent: ''
+      });
     } catch (err) {
       console.error('PDF upload error:', err);
       toastError("Couldn't read that PDF. Try a different file or paste the guidelines as text.");
@@ -6840,12 +6878,15 @@ JSON FORMATTING (non-negotiable):
 
     modalMode = 'create-pdf';
     modalEditId = null;
-    modalTitle.textContent = mode === 'create-pdf-fallback'
-      ? `Save PDF: ${pdfName}`
-      : `Save Guidelines: ${pdfName}`;
+    modalTitle.textContent = `Save Guidelines: ${pdfName}`;
     modalLabel.value = initialLabel;
     modalContent.value = extractedContent || '';
-    if (mode === 'create-pdf-fallback') {
+    if (mode === 'create-pdf-direct') {
+      // The AI will read the PDF directly at Pre-Check time. Notes here are optional
+      // for the user's own reference - they don't get sent to the AI.
+      modalContent.placeholder = "Optional: add your own notes about these guidelines (the AI will read the PDF directly when running Pre-Checks - this notes field is just for your reference).";
+      modalContent.style.opacity = '1';
+    } else if (mode === 'create-pdf-fallback') {
       modalContent.placeholder = "(Image-based PDF - no extractable text. The PDF itself will be saved and applied directly.)";
       modalContent.style.opacity = '0.6';
     } else {
