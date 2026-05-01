@@ -1712,6 +1712,278 @@
     font-weight: 600;
   }
 
+  /* ============ MONTH-END NARRATIVE PRE-CHECK ============ */
+  /* Month-End shares most styles with Pro Forma but adds dashboard-style elements */
+
+  /* Per-matter progress board during processing */
+  .bnc-me-progress {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .bnc-me-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+  .bnc-me-progress-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--navy);
+    font-weight: 500;
+    font-size: 1.2rem;
+    margin: 0;
+  }
+  .bnc-me-progress-counter {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .bnc-me-progress-counter strong {
+    color: var(--navy);
+    font-weight: 700;
+  }
+  .bnc-me-progress-bar {
+    height: 8px;
+    background: var(--ivory);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  .bnc-me-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-soft) 0%, var(--gold) 100%);
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .bnc-me-progress-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.5rem;
+  }
+  .bnc-me-progress-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.7rem;
+    background: var(--ivory);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    color: var(--charcoal);
+  }
+  .bnc-me-progress-item.processing {
+    border-color: var(--gold);
+    background: var(--gold-soft);
+  }
+  .bnc-me-progress-item.done {
+    border-color: rgba(34,197,94,0.4);
+    background: rgba(34,197,94,0.06);
+  }
+  .bnc-me-progress-item.error {
+    border-color: rgba(192,57,43,0.4);
+    background: rgba(192,57,43,0.06);
+  }
+  .bnc-me-progress-item-status {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .bnc-me-progress-item.processing .bnc-me-progress-item-status {
+    background: var(--gold);
+    animation: bncSpinPulse 1.5s ease-in-out infinite;
+  }
+  .bnc-me-progress-item.done .bnc-me-progress-item-status {
+    background: #22c55e;
+  }
+  .bnc-me-progress-item.error .bnc-me-progress-item-status {
+    background: #c0392b;
+  }
+  @keyframes bncSpinPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .bnc-me-progress-item-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .bnc-me-progress-item-count {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* Patterns dashboard - top of report */
+  .bnc-me-patterns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 720px) {
+    .bnc-me-patterns { grid-template-columns: 1fr; }
+  }
+  .bnc-me-pattern-card {
+    background: var(--ivory);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.15rem;
+  }
+  .bnc-me-pattern-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold-dark, #a38527);
+    margin-bottom: 0.65rem;
+  }
+  .bnc-me-pattern-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-top: 1px dashed var(--border);
+    font-family: Georgia, serif;
+    font-size: 0.88rem;
+  }
+  .bnc-me-pattern-row:first-of-type { border-top: none; padding-top: 0.2rem; }
+  .bnc-me-pattern-row-name {
+    color: var(--navy);
+    font-weight: 600;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 0.5rem;
+  }
+  .bnc-me-pattern-row-meta {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .bnc-me-pattern-row-meta strong {
+    color: var(--navy);
+  }
+
+  /* Compact triage finding cards (lighter than per-matter findings) */
+  .bnc-me-finding {
+    padding: 0.7rem 0.95rem;
+    border-left: 3px solid var(--gold);
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-left-width: 3px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 0.5rem;
+  }
+  .bnc-me-finding.severity-high { border-left-color: #dc2626; background: #fef2f2; }
+  .bnc-me-finding.severity-medium { border-left-color: #d97706; background: #fef7e6; }
+  .bnc-me-finding-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+  .bnc-me-finding-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .bnc-me-finding-header {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.76rem;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+  }
+  .bnc-me-finding-header strong { color: var(--navy); font-weight: 600; }
+  .bnc-me-finding-issue {
+    font-family: 'Outfit', sans-serif;
+    color: var(--navy);
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+  }
+  .bnc-me-finding-original {
+    font-family: Georgia, serif;
+    color: var(--muted);
+    font-size: 0.83rem;
+    font-style: italic;
+    margin-bottom: 0.4rem;
+    line-height: 1.5;
+  }
+  .bnc-me-finding-rewrite {
+    font-family: Georgia, serif;
+    color: var(--navy);
+    font-size: 0.88rem;
+    padding: 0.55rem 0.75rem;
+    background: var(--gold-soft);
+    border-left: 2px solid var(--gold);
+    border-radius: 0 4px 4px 0;
+    line-height: 1.5;
+    margin-bottom: 0.4rem;
+  }
+  .bnc-me-finding-actions {
+    display: flex;
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+  .bnc-me-cat-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.55rem;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--gold-soft);
+    color: var(--gold-dark, #a38527);
+    border: 1px solid var(--gold);
+  }
+  .bnc-me-cat-tag.severity-high { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+  .bnc-me-cat-tag.severity-medium { background: #fef7e6; color: #92400e; border-color: #fde68a; }
+
+  /* Filter strip above the findings list */
+  .bnc-me-filters {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    padding: 0.85rem 0;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .bnc-me-filter-btn {
+    padding: 0.32rem 0.85rem;
+    border: 1px solid var(--border);
+    background: var(--paper);
+    border-radius: 14px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.74rem;
+    cursor: pointer;
+    color: var(--charcoal);
+    transition: all 0.15s ease;
+  }
+  .bnc-me-filter-btn:hover {
+    border-color: var(--gold);
+    background: var(--gold-soft);
+  }
+  .bnc-me-filter-btn.active {
+    background: var(--navy);
+    color: var(--paper);
+    border-color: var(--navy);
+  }
+
   /* ============ GENERATION HISTORY STRIP ============ */
   .bnc-history-section {
     margin-top: 2rem;
@@ -2435,8 +2707,12 @@
       <span class="bnc-tab-num">iv.</span>
       Pro Forma Pre-Check
     </button>
-    <button class="bnc-main-tab" data-panel="library" role="tab">
+    <button class="bnc-main-tab" data-panel="monthend" role="tab">
       <span class="bnc-tab-num">v.</span>
+      Month-End Pre-Check
+    </button>
+    <button class="bnc-main-tab" data-panel="library" role="tab">
+      <span class="bnc-tab-num">vi.</span>
       Guidelines Vault
     </button>
   </nav>
@@ -2815,7 +3091,74 @@
       </div>
     </section>
 
-    <!-- ============ PANEL 5: LIBRARY ============ -->
+    <!-- ============ PANEL 5: MONTH-END NARRATIVE PRE-CHECK ============ -->
+    <section class="bnc-panel" data-panel="monthend">
+      <div class="bnc-panel-intro">
+        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Triage Tool for Whole-Month Reviews</span>
+        <h2>Month-End Narrative Pre-Check</h2>
+        <p>Upload your full monthly time export from your billing system - hundreds of entries across many matters - and get a fast triage report. Use this when you're reviewing your own time across the whole month before submitting to the firm. For deeper per-matter review, use the Pro Forma Pre-Check tab. Like all Pre-Checks, this is a first-pass assistant; final review remains with you.</p>
+      </div>
+
+      <!-- STEP 1: Upload -->
+      <div class="bnc-pf-step" data-me-step="upload">
+        <div class="bnc-pf-step-header">
+          <span class="bnc-pf-step-num">Step 1</span>
+          <h3>Upload your monthly time export</h3>
+        </div>
+        <p class="bnc-pf-step-help">PDF format. Up to 12MB supported. Designed for monthly exports with 50-400+ entries across many matters. The Pre-Check processes matters in parallel so larger pro formas finish in roughly the same time as smaller ones.</p>
+
+        <div class="bnc-pf-upload-zone" data-me-upload-zone>
+          <input type="file" accept="application/pdf" data-me-pdf-input style="display:none">
+          <div class="bnc-pf-upload-prompt" data-me-upload-prompt>
+            <div class="bnc-pf-upload-icon">📄</div>
+            <div class="bnc-pf-upload-title">Click to upload monthly time export PDF</div>
+            <div class="bnc-pf-upload-sub">or drag and drop here</div>
+          </div>
+          <div class="bnc-pf-upload-loaded" data-me-upload-loaded style="display:none">
+            <span class="bnc-pf-file-icon">📄</span>
+            <span class="bnc-pf-file-name" data-me-file-name></span>
+            <span class="bnc-pf-file-size" data-me-file-size></span>
+            <button class="bnc-pf-file-clear" data-me-file-clear aria-label="Remove file">×</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Guidelines selection (single guideline applies to all matters) -->
+      <div class="bnc-pf-step" data-me-step="guidelines" style="display:none">
+        <div class="bnc-pf-step-header">
+          <span class="bnc-pf-step-num">Step 2</span>
+          <h3>Choose guidelines</h3>
+        </div>
+        <p class="bnc-pf-step-help">Pick one set of guidelines to apply across all matters in this Pre-Check. For a fast monthly triage, this is usually your firm's standard outside counsel guidelines or the most common carrier framework you bill against.</p>
+
+        <select class="bnc-pf-mapping-select" data-me-guideline-select style="max-width: 500px;">
+          <option value="none">No specific guidelines (apply general ATVR + advocacy framework only)</option>
+        </select>
+
+        <div style="display: flex; gap: 0.65rem; align-items: center; margin-top: 1.5rem; flex-wrap: wrap;">
+          <button class="bnc-generate-btn" data-me-run-review>
+            Run Month-End Pre-Check
+          </button>
+          <button class="bnc-secondary-btn" data-me-cancel>Cancel / Start Over</button>
+        </div>
+        <p class="bnc-generate-note" style="margin-top: 0.55rem;">
+          Larger pro formas (200+ entries) typically finish in 60-120 seconds because matters process in parallel. You'll see live progress.
+        </p>
+      </div>
+
+      <!-- STEP 3: Output -->
+      <div class="bnc-output" data-output="monthend"></div>
+
+      <div class="bnc-history-section" data-history-section="monthend">
+        <div class="bnc-history-header">
+          <span class="bnc-history-title">Recent Month-End Pre-Checks</span>
+          <button class="bnc-history-clear-btn" data-history-clear="monthend">Clear History</button>
+        </div>
+        <div class="bnc-history-list" data-history-list="monthend"></div>
+      </div>
+    </section>
+
+    <!-- ============ PANEL 6: LIBRARY ============ -->
     <section class="bnc-panel" data-panel="library">
       <div class="bnc-panel-intro">
         <span class="bnc-framework-badge"><span class="bnc-dot"></span>Your Personal Guidelines Vault · Stored on This Device Only</span>
@@ -3277,7 +3620,7 @@
   // Cleared on page reload, on Clear History click, or per-tab via the Clear button.
   // Shape: { standard: [{narrative, snippet, timestamp}, ...], bookends: [...], multiphase: [...] }
   const HISTORY_LIMIT = 5;
-  const generationHistory = { standard: [], bookends: [], multiphase: [], proforma: [] };
+  const generationHistory = { standard: [], bookends: [], multiphase: [], proforma: [], monthend: [] };
 
   function addToHistory(panel, entry) {
     if (!entry || !entry.snippet) return;
@@ -3313,7 +3656,7 @@
     }
     section.classList.add('visible');
     // Show Download button only on Pro Forma (where reports are long enough to warrant saving)
-    const showDownload = panel === 'proforma';
+    const showDownload = panel === 'proforma' || panel === 'monthend';
     list.innerHTML = items.map((item, i) => {
       const fullCopyText = item.copyText || item.snippet || '';
       const downloadFilename = item.downloadFilename || `pre-check-${i + 1}.txt`;
@@ -3381,6 +3724,8 @@
           // Falls back to plain-text if structured data is missing (old history entries).
           if (item && item.reviewData && panel === 'proforma') {
             pfExportToDoc(item.reviewData, item.pdfFileName || 'pro forma');
+          } else if (item && item.reviewData && panel === 'monthend') {
+            meExportToDoc(item.reviewData, item.pdfFileName || 'monthly-pro-forma');
           } else {
             const text = btn.dataset.historyText;
             const filename = btn.dataset.historyFilename || 'pre-check.txt';
@@ -4471,6 +4816,1011 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
     toastSuccess('Pre-Check report downloaded.');
   }
 
+
+  // ============ MONTH-END NARRATIVE PRE-CHECK ============
+  // Triage tool for whole-month reviews. Architecture:
+  //   1. Upload PDF -> extract entries grouped by matter
+  //   2. User picks ONE guideline (or none) to apply to all matters
+  //   3. Process matters in PARALLEL: each matter's entries become a chunk sent
+  //      as a separate API call. Up to ME_PARALLELISM concurrent calls.
+  //   4. Show live progress as each matter completes.
+  //   5. Final lightweight pass: cross-matter pattern analysis + executive summary.
+  //   6. Render dashboard-style triage report.
+
+  const ME_PDF_SIZE_LIMIT = 12 * 1024 * 1024; // 12MB - larger than per-matter
+  const ME_PARALLELISM = 4; // concurrent API calls during chunk processing
+  const ME_MAX_ENTRIES_PER_CHUNK = 25; // sub-chunk a matter if it exceeds this
+
+  const monthEndState = {
+    pdfFile: null,            // { name, size, base64 }
+    extracted: null,          // { entries, matters_grouped, matter_names, page_count }
+    selectedGuidelineId: 'none', // Vault entry ID or 'none'
+    review: null              // merged review report
+  };
+
+  const mePanel = document.querySelector('section.bnc-panel[data-panel="monthend"]');
+  // Cache element references once at startup
+  const meUploadZone = mePanel.querySelector('[data-me-upload-zone]');
+  const mePdfInput = mePanel.querySelector('[data-me-pdf-input]');
+  const meUploadPrompt = mePanel.querySelector('[data-me-upload-prompt]');
+  const meUploadLoaded = mePanel.querySelector('[data-me-upload-loaded]');
+  const meFileName = mePanel.querySelector('[data-me-file-name]');
+  const meFileSize = mePanel.querySelector('[data-me-file-size]');
+  const meFileClear = mePanel.querySelector('[data-me-file-clear]');
+  const meGuidelinesStep = mePanel.querySelector('[data-me-step="guidelines"]');
+  const meGuidelineSelect = mePanel.querySelector('[data-me-guideline-select]');
+  const meRunBtn = mePanel.querySelector('[data-me-run-review]');
+  const meCancelBtn = mePanel.querySelector('[data-me-cancel]');
+  const meOutput = mePanel.querySelector('[data-output="monthend"]');
+
+  function meFormatSize(bytes) {
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  function meResetAll() {
+    monthEndState.pdfFile = null;
+    monthEndState.extracted = null;
+    monthEndState.selectedGuidelineId = 'none';
+    monthEndState.review = null;
+    meUploadPrompt.style.display = '';
+    meUploadLoaded.style.display = 'none';
+    meUploadZone.classList.remove('has-file');
+    meGuidelinesStep.style.display = 'none';
+    meOutput.innerHTML = '';
+    mePdfInput.value = '';
+  }
+
+  meUploadZone.addEventListener('click', () => {
+    if (!monthEndState.pdfFile) mePdfInput.click();
+  });
+  meUploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (!monthEndState.pdfFile) meUploadZone.classList.add('dragover');
+  });
+  meUploadZone.addEventListener('dragleave', () => meUploadZone.classList.remove('dragover'));
+  meUploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    meUploadZone.classList.remove('dragover');
+    if (monthEndState.pdfFile) return;
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') meHandleFile(file);
+    else toastWarn('Please drop a PDF file.');
+  });
+  mePdfInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) meHandleFile(file);
+  });
+  meFileClear.addEventListener('click', e => {
+    e.stopPropagation();
+    meResetAll();
+  });
+
+  async function meHandleFile(file) {
+    if (file.size > ME_PDF_SIZE_LIMIT) {
+      toastWarn(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB. Month-End Pre-Check supports PDFs up to 12 MB. For larger files, split by matter or contact support.`, 'PDF too large');
+      return;
+    }
+    try {
+      const b64 = await toBase64(file);
+      monthEndState.pdfFile = { name: file.name, size: file.size, base64: b64 };
+      meFileName.textContent = file.name;
+      meFileSize.textContent = `· ${meFormatSize(file.size)}`;
+      meUploadPrompt.style.display = 'none';
+      meUploadLoaded.style.display = '';
+      meUploadZone.classList.add('has-file');
+      meExtractEntries();
+    } catch (err) {
+      console.error('ME file read error:', err);
+      toastError("Couldn't read that PDF. Try a different file.");
+      meResetAll();
+    }
+  }
+
+  // === EXTRACTION ===
+  // Same shape as Pro Forma extraction but the prompt asks for matters_grouped
+  // structure so we can dispatch chunks per-matter directly.
+  async function meExtractEntries() {
+    meOutput.innerHTML = `
+      <div class="bnc-pf-loading">
+        <div class="bnc-pf-loading-spinner"></div>
+        <div class="bnc-pf-loading-title">Reading your monthly time export...</div>
+        <div class="bnc-pf-loading-stage" data-me-extract-stage>Opening the document and identifying matters</div>
+        <div class="bnc-pf-loading-note">This usually takes 30-90 seconds for a 200+ entry pro forma. Larger files take longer to read; the parallel review afterward is fast.</div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      const loadingEl = meOutput.querySelector('.bnc-pf-loading');
+      if (loadingEl) loadingEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+
+    toastInfo('Reading your monthly time export - this takes 30-90 seconds depending on size.', 'Working on it');
+
+    const extractStages = [
+      'Opening the document and identifying matters',
+      'Extracting time entries...',
+      'Grouping entries by matter...',
+      'Identifying timekeepers and codes...',
+      'Almost there...'
+    ];
+    let extractStageIdx = 0;
+    const extractStageInterval = setInterval(() => {
+      extractStageIdx = (extractStageIdx + 1) % extractStages.length;
+      const el = meOutput.querySelector('[data-me-extract-stage]');
+      if (el) el.textContent = extractStages[extractStageIdx];
+    }, 9000);
+
+    const extractPrompt = `Your ONLY job in this response is to return a single JSON object. Do not include any preamble, explanation, commentary, or markdown formatting. Your entire response must start with the character { and end with the character }.
+
+Task: extract structured time entries from the attached monthly time export PDF.
+
+This is a MONTHLY pro forma covering many matters and potentially hundreds of entries. Extract every entry you can find. For each entry, capture:
+- date (the date the work was performed, in any format the document uses)
+- timekeeper (initials or name as shown)
+- matter (the matter or client name as shown)
+- hours (the hours billed - keep as string, e.g. "1.5", "0.4")
+- narrative (the description of the work performed - VERBATIM as it appears, do not rewrite)
+- code (any task or activity code shown, like "L120", "L120/A104", or "B210" - or null if none)
+
+Return:
+{
+  "entries": [ /* every time entry */ ],
+  "matter_names": ["unique matter name 1", "unique matter name 2"],
+  "page_count": <number>,
+  "extraction_notes": "any caveats or null"
+}
+
+JSON FORMATTING (non-negotiable):
+- Pure JSON. No preamble, no postscript.
+- Inside any string, escape every double quote as \\"
+- Only straight ASCII quotes
+- Replace newlines inside strings with single spaces
+- No trailing commas`;
+
+    try {
+      const r = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: monthEndState.pdfFile.base64 } },
+              { type: 'text', text: extractPrompt }
+            ]
+          }]
+        })
+      });
+      if (!r.ok) throw new Error('API ' + r.status);
+      const json = await r.json();
+      const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+
+      let data;
+      try {
+        data = parseJsonResilient(text);
+      } catch (firstErr) {
+        clearInterval(extractStageInterval);
+        console.warn('ME extract: initial parse failed, retrying. Error:', firstErr.message);
+        const stageEl = meOutput.querySelector('[data-me-extract-stage]');
+        if (stageEl) stageEl.textContent = 'Cleaning up the response and retrying...';
+
+        const retryPrompt = extractPrompt + `\n\nIMPORTANT: Your previous response could not be parsed as JSON. Common mistakes:\n- Do NOT include any text before { or after }\n- Do NOT use markdown fences\n- Use only straight ASCII quotes`;
+        const r2 = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [{
+              role: 'user',
+              content: [
+                { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: monthEndState.pdfFile.base64 } },
+                { type: 'text', text: retryPrompt }
+              ]
+            }]
+          })
+        });
+        if (!r2.ok) throw new Error('Retry API ' + r2.status);
+        const json2 = await r2.json();
+        const text2 = (json2.content && json2.content[0] && json2.content[0].text) || json2.text || '';
+        data = parseJsonResilient(text2);
+      }
+
+      if (!data.entries || data.entries.length === 0) {
+        clearInterval(extractStageInterval);
+        meOutput.innerHTML = `
+          <div class="bnc-pf-loading" style="border-color:#fde68a; background:#fef7e6;">
+            <div class="bnc-pf-loading-title" style="color:#92400e;">Couldn't find time entries</div>
+            <div class="bnc-pf-loading-note" style="color:#78350f;">${escapeHtml(data.extraction_notes || "We couldn't extract billing entries from this PDF.")}</div>
+          </div>
+        `;
+        return;
+      }
+
+      // Group entries by matter for parallel processing
+      const grouped = {};
+      data.entries.forEach((e, idx) => {
+        e._original_idx = idx; // preserve so findings can reference back
+        const m = e.matter || '(unspecified)';
+        if (!grouped[m]) grouped[m] = [];
+        grouped[m].push(e);
+      });
+      data.matters_grouped = grouped;
+      monthEndState.extracted = data;
+
+      clearInterval(extractStageInterval);
+      meOutput.innerHTML = '';
+      meRenderGuidelinesStep();
+      const matterCount = Object.keys(grouped).length;
+      toastSuccess(`Found ${data.entries.length} entries across ${matterCount} matter${matterCount === 1 ? '' : 's'}.`, 'Extraction complete');
+      setTimeout(() => {
+        if (meGuidelinesStep) meGuidelinesStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
+    } catch (err) {
+      clearInterval(extractStageInterval);
+      console.error('ME extract error:', err);
+      meOutput.innerHTML = `
+        <div class="bnc-pf-loading" style="border-color:#fecaca; background:#fef2f2;">
+          <div class="bnc-pf-loading-title" style="color:#991b1b;">Extraction failed</div>
+          <div class="bnc-pf-loading-note" style="color:#7f1d1d;">Couldn't read the monthly export. Try uploading again, or split into smaller chunks.</div>
+        </div>
+      `;
+    }
+  }
+
+  // === GUIDELINES STEP ===
+  function meRenderGuidelinesStep() {
+    const lib = loadLibrary();
+    // Refresh dropdown options - one for each Vault entry plus "none"
+    const opts = [`<option value="none">No specific guidelines (apply general ATVR + advocacy framework only)</option>`];
+    lib.items.forEach(item => {
+      opts.push(`<option value="${escapeAttr(item.id)}">${escapeHtml(item.label)}</option>`);
+    });
+    meGuidelineSelect.innerHTML = opts.join('');
+    meGuidelinesStep.style.display = '';
+  }
+
+  meGuidelineSelect.addEventListener('change', () => {
+    monthEndState.selectedGuidelineId = meGuidelineSelect.value;
+  });
+
+  if (meCancelBtn) {
+    meCancelBtn.addEventListener('click', async () => {
+      const ok = await confirmDialog({
+        title: 'Cancel and start over?',
+        body: 'Your uploaded PDF and guideline selection will be discarded. You can upload a new monthly export to start fresh.',
+        confirmLabel: 'Yes, Start Over',
+        cancelLabel: 'Keep Working'
+      });
+      if (ok) {
+        meResetAll();
+        setTimeout(() => {
+          if (meUploadZone) meUploadZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    });
+  }
+
+  // === REVIEW: parallel chunked processing ===
+  meRunBtn.addEventListener('click', async () => {
+    if (!monthEndState.extracted) return;
+    meRunBtn.disabled = true;
+    meRunBtn.textContent = 'Running Pre-Check...';
+
+    const lib = loadLibrary();
+    const guidelineItem = monthEndState.selectedGuidelineId !== 'none'
+      ? lib.items.find(i => i.id === monthEndState.selectedGuidelineId)
+      : null;
+
+    // Build chunks: one per matter, sub-chunk if a matter has too many entries
+    const chunks = [];
+    Object.entries(monthEndState.extracted.matters_grouped).forEach(([matterName, matterEntries]) => {
+      if (matterEntries.length <= ME_MAX_ENTRIES_PER_CHUNK) {
+        chunks.push({ matter: matterName, entries: matterEntries, partIdx: null });
+      } else {
+        // Sub-chunk
+        for (let i = 0; i < matterEntries.length; i += ME_MAX_ENTRIES_PER_CHUNK) {
+          const slice = matterEntries.slice(i, i + ME_MAX_ENTRIES_PER_CHUNK);
+          chunks.push({
+            matter: matterName,
+            entries: slice,
+            partIdx: Math.floor(i / ME_MAX_ENTRIES_PER_CHUNK) + 1,
+            totalParts: Math.ceil(matterEntries.length / ME_MAX_ENTRIES_PER_CHUNK)
+          });
+        }
+      }
+    });
+
+    // Render progress board
+    meOutput.innerHTML = `
+      <div class="bnc-me-progress">
+        <div class="bnc-me-progress-header">
+          <h3 class="bnc-me-progress-title">Processing your month-end review</h3>
+          <span class="bnc-me-progress-counter">
+            <strong data-me-prog-done>0</strong> of <strong>${chunks.length}</strong> matter${chunks.length === 1 ? '' : 's'} complete
+          </span>
+        </div>
+        <div class="bnc-me-progress-bar">
+          <div class="bnc-me-progress-fill" data-me-prog-fill></div>
+        </div>
+        <div class="bnc-me-progress-list" data-me-prog-list>
+          ${chunks.map((c, i) => `
+            <div class="bnc-me-progress-item" data-me-prog-item="${i}">
+              <span class="bnc-me-progress-item-status"></span>
+              <span class="bnc-me-progress-item-name">${escapeHtml(c.matter)}${c.partIdx ? ` (part ${c.partIdx}/${c.totalParts})` : ''}</span>
+              <span class="bnc-me-progress-item-count">${c.entries.length}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    setTimeout(() => {
+      const progEl = meOutput.querySelector('.bnc-me-progress');
+      if (progEl) progEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+
+    const guidelineContext = guidelineItem
+      ? `Guidelines applied to all matters: ${guidelineItem.label}\n${guidelineItem.content || '(PDF guidelines - content not extractable as text)'}`
+      : '(No specific guidelines loaded. Apply general ATVR + Billing Coach advocacy framework only.)';
+
+    // Process chunks with bounded parallelism
+    const allFindings = [];
+    let doneCount = 0;
+    const startTime = Date.now();
+
+    async function processChunk(chunk, chunkIdx) {
+      const itemEl = meOutput.querySelector(`[data-me-prog-item="${chunkIdx}"]`);
+      if (itemEl) itemEl.classList.add('processing');
+      try {
+        const findings = await meReviewChunk(chunk, guidelineContext);
+        allFindings.push(...findings);
+        if (itemEl) {
+          itemEl.classList.remove('processing');
+          itemEl.classList.add('done');
+        }
+      } catch (err) {
+        console.error(`ME chunk ${chunkIdx} (${chunk.matter}) failed:`, err);
+        if (itemEl) {
+          itemEl.classList.remove('processing');
+          itemEl.classList.add('error');
+        }
+        // Don't fail the whole run - just skip this matter and continue
+      }
+      doneCount += 1;
+      const doneEl = meOutput.querySelector('[data-me-prog-done]');
+      if (doneEl) doneEl.textContent = String(doneCount);
+      const fillEl = meOutput.querySelector('[data-me-prog-fill]');
+      if (fillEl) fillEl.style.width = `${(doneCount / chunks.length * 100).toFixed(1)}%`;
+    }
+
+    // Bounded parallelism: keep ME_PARALLELISM in flight at once
+    let nextChunkIdx = 0;
+    const inFlight = [];
+    while (nextChunkIdx < chunks.length || inFlight.length > 0) {
+      while (inFlight.length < ME_PARALLELISM && nextChunkIdx < chunks.length) {
+        const idx = nextChunkIdx++;
+        const p = processChunk(chunks[idx], idx).then(() => {
+          const i = inFlight.indexOf(p);
+          if (i !== -1) inFlight.splice(i, 1);
+        });
+        inFlight.push(p);
+      }
+      if (inFlight.length > 0) await Promise.race(inFlight);
+    }
+
+    const elapsedSec = Math.round((Date.now() - startTime) / 1000);
+
+    // Final lightweight pass: cross-matter analysis (executive summary + global patterns)
+    try {
+      const summaryEl = meOutput.querySelector('[data-me-prog-list]');
+      if (summaryEl) {
+        summaryEl.insertAdjacentHTML('beforebegin', `
+          <div class="bnc-pf-loading-stage" style="text-align:center; margin: 0.65rem 0; color: var(--muted); font-family: 'Outfit', sans-serif; font-size: 0.85rem;">
+            All matters reviewed. Synthesizing executive summary and patterns...
+          </div>
+        `);
+      }
+      const summaryAndPatterns = await meCrossMatterPass(allFindings, monthEndState.extracted);
+
+      const reviewData = {
+        findings: allFindings,
+        executive_summary: summaryAndPatterns.executive_summary,
+        patterns_by_timekeeper: summaryAndPatterns.patterns_by_timekeeper || [],
+        patterns_by_matter: summaryAndPatterns.patterns_by_matter || [],
+        summary: meBuildSummaryStats(allFindings, monthEndState.extracted),
+        elapsed_seconds: elapsedSec
+      };
+      monthEndState.review = reviewData;
+      meRenderReport(reviewData);
+
+      // Save to history
+      const baseFilename = (monthEndState.pdfFile.name || 'monthly-pro-forma').replace(/\.pdf$/i, '');
+      addToHistory('monthend', {
+        snippet: reviewData.executive_summary || `${monthEndState.pdfFile.name} reviewed: ${allFindings.length} findings across ${reviewData.summary.total_entries} entries`,
+        label: `Month-End · ${monthEndState.pdfFile.name}`,
+        copyText: meReportToText(reviewData),
+        downloadFilename: `${baseFilename}-month-end-pre-check.doc`,
+        reviewData: reviewData,
+        pdfFileName: monthEndState.pdfFile.name
+      });
+
+      toastSuccess(`Pre-Check complete: ${allFindings.length} finding${allFindings.length === 1 ? '' : 's'} across ${reviewData.summary.total_entries} entries.`, 'Done');
+    } catch (err) {
+      console.error('ME cross-matter pass failed:', err);
+      // Render the report anyway, but without exec summary / patterns
+      const reviewData = {
+        findings: allFindings,
+        executive_summary: 'Cross-matter summary could not be generated. Findings below are still complete.',
+        patterns_by_timekeeper: [],
+        patterns_by_matter: [],
+        summary: meBuildSummaryStats(allFindings, monthEndState.extracted),
+        elapsed_seconds: elapsedSec
+      };
+      monthEndState.review = reviewData;
+      meRenderReport(reviewData);
+    } finally {
+      meRunBtn.disabled = false;
+      meRunBtn.textContent = 'Run Month-End Pre-Check';
+    }
+  });
+
+  async function meReviewChunk(chunk, guidelineContext) {
+    const reviewPrompt = `Your ONLY job is to return a JSON object with findings for the time entries below. Start with { and end with }.
+
+You are conducting a triage-level review of one matter from a monthly time export. The reviewing attorney is checking their own work before submitting to the firm.
+
+CORE COACHING PRINCIPLE:
+The work happened. The work has value. The narrative needs to advocate for the value. Communications about strategy, internal collaborations, supervisory work, file transfers, research, and thinking time are ALL billable when properly framed as advocacy. The Pre-Check teaches the timekeeper to bill them the right way.
+
+The ONLY non-billable cases are:
+- Genuinely clerical work the timekeeper actually performed (true filing, organization, copying with no analysis)
+- Narratives so thin the AI cannot determine what work was done
+
+In both exception cases, the rewrite asks the timekeeper to clarify rather than fabricating value.
+
+MATTER: ${chunk.matter}${chunk.partIdx ? ` (part ${chunk.partIdx} of ${chunk.totalParts})` : ''}
+
+ENTRIES (zero-indexed in this chunk):
+${JSON.stringify(chunk.entries.map(e => ({
+  date: e.date, timekeeper: e.timekeeper, matter: e.matter,
+  hours: e.hours, narrative: e.narrative, code: e.code,
+  _original_idx: e._original_idx
+})), null, 2)}
+
+GUIDELINES:
+${guidelineContext}
+
+REVIEW EACH ENTRY using this reasoning order. Stop at the first matching condition for each entry. An entry can have at most one finding.
+
+STEP 1 - Too thin to determine work? (e.g., "Worked on case", "Reviewed file" with no further detail, "Conference call with client" with no subject)
+-> VAGUE_OR_THIN (medium). suggested_rewrite = "TIMEKEEPER TO CLARIFY: [specific question about what was done]."
+
+STEP 2 - Genuinely clerical with no strategic dimension visible? (e.g., "Organized file documents", "Filed motion", "Made copies")
+-> VAGUE_OR_THIN (medium). suggested_rewrite = "TIMEKEEPER TO CLARIFY: This narrative reads as clerical work. If review/analysis was performed alongside, please specify so the entry can be rewritten as advocacy. If purely clerical, consider writing off."
+
+STEP 3 - Block billing (multiple distinct tasks under one block)?
+-> BLOCK_BILLING (high). For triage mode, do NOT produce full unbundled_narratives. Instead, suggested_rewrite = "Unbundle into [N] separate entries: [brief comma-separated list of the distinct tasks]. Use the Per-Matter Pro Forma Pre-Check or Break It Up tab for full advocacy rewrites." Set unbundled_narratives to null.
+
+STEP 4 - Substantively billable but action-described instead of value-described? (intra-firm communications, emails, thinking time, supervision, file transfers, research, etc.)
+-> ATVR_WEAKNESS (low or medium). Produce an advocacy-rewritten suggested_rewrite (20-25 words) using strategic verbs (strategize, evaluate, analyze, formulate, develop, synthesize, assess - NOT confer, discuss, talk, meet, call, email). Connect work to client outcome.
+
+STEP 5 - Task code wrong for the work?
+-> CODE_MISMATCH (medium). suggested_rewrite explains the corrected code briefly.
+
+STEP 6 - Spelling errors?
+- If the entry has another finding above: silently fix the spelling within that rewrite. Don't generate a separate finding.
+- If otherwise clean: SPELLING (low). spelling_corrections array; suggested_rewrite is the original with spelling corrected.
+- Do NOT flag proper nouns, legal terms of art, or common abbreviations.
+
+STEP 7 - Phone/meeting/internal call >= 0.3 hrs without prep/follow-up bookend in the same chunk?
+-> POSSIBLY_MISSING_BOOKENDS (low). suggested_rewrite is a short coaching prompt about adding bookends.
+- SUPPRESS if a companion entry on the same date in this chunk captures prep or follow-up.
+
+STEP 8 - Duplicate or overlapping with another entry IN THIS CHUNK on the same date for this matter?
+-> DUPLICATE_OR_OVERLAP (medium or high). suggested_rewrite = "Consolidate with the other entry, or differentiate by clarifying the distinct scope of each."
+- Only flag if the work genuinely overlaps. Different roles (partner reviewing, associate drafting) on related work is NOT a duplicate.
+
+EVERY finding must have either suggested_rewrite or unbundled_narratives populated. Block billing in triage mode uses suggested_rewrite (not unbundled_narratives).
+
+JSON shape (return ONLY this object):
+{
+  "findings": [
+    {
+      "category": "ATVR_WEAKNESS" | "BLOCK_BILLING" | "DUPLICATE_OR_OVERLAP" | "CODE_MISMATCH" | "VAGUE_OR_THIN" | "SPELLING" | "POSSIBLY_MISSING_BOOKENDS",
+      "severity": "high" | "medium" | "low",
+      "entry_index": <use the _original_idx value from the entry>,
+      "matter": "${chunk.matter}",
+      "date": "...",
+      "timekeeper": "...",
+      "hours": "...",
+      "original_narrative": "...",
+      "issue": "one-sentence description",
+      "suggested_rewrite": "..." or null,
+      "unbundled_narratives": null,
+      "spelling_corrections": [{"original":"...","corrected":"..."}] or null
+    }
+  ]
+}
+
+JSON FORMATTING (non-negotiable):
+- Pure JSON. No preamble.
+- Inside any string, escape every double quote as \\"
+- Only straight ASCII quotes
+- No trailing commas`;
+
+    const r = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: reviewPrompt }] })
+    });
+    if (!r.ok) throw new Error('Chunk API ' + r.status);
+    const json = await r.json();
+    const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+    const data = parseJsonResilient(text);
+    return Array.isArray(data.findings) ? data.findings : [];
+  }
+
+  async function meCrossMatterPass(allFindings, extracted) {
+    // Build a compact summary the AI can synthesize from
+    const findingsByMatter = {};
+    const findingsByTimekeeper = {};
+    allFindings.forEach(f => {
+      const m = f.matter || '(unspecified)';
+      const tk = f.timekeeper || '(unknown)';
+      findingsByMatter[m] = (findingsByMatter[m] || 0) + 1;
+      findingsByTimekeeper[tk] = (findingsByTimekeeper[tk] || 0) + 1;
+    });
+    const entriesByTimekeeper = {};
+    const entriesByMatter = {};
+    extracted.entries.forEach(e => {
+      const tk = e.timekeeper || '(unknown)';
+      const m = e.matter || '(unspecified)';
+      entriesByTimekeeper[tk] = (entriesByTimekeeper[tk] || 0) + 1;
+      entriesByMatter[m] = (entriesByMatter[m] || 0) + 1;
+    });
+
+    const compactFindings = allFindings.map(f => ({
+      matter: f.matter, timekeeper: f.timekeeper, category: f.category,
+      severity: f.severity, issue: f.issue
+    }));
+
+    const summaryPrompt = `Your ONLY job is to return a JSON object summarizing patterns in a month-end pro forma review. Start with { end with }.
+
+CONTEXT:
+Total entries: ${extracted.entries.length}
+Total matters: ${Object.keys(entriesByMatter).length}
+Total findings: ${allFindings.length}
+
+ENTRIES BY TIMEKEEPER: ${JSON.stringify(entriesByTimekeeper)}
+ENTRIES BY MATTER: ${JSON.stringify(entriesByMatter)}
+FINDINGS COUNT BY TIMEKEEPER: ${JSON.stringify(findingsByTimekeeper)}
+FINDINGS COUNT BY MATTER: ${JSON.stringify(findingsByMatter)}
+
+ALL FINDINGS (compact form):
+${JSON.stringify(compactFindings, null, 2)}
+
+Produce:
+1. An executive_summary paragraph (4-6 sentences) framed in coaching tone. Focus on patterns: which timekeepers/matters need the most attention, what advocacy gaps stand out, what's working well. The work is billable; the narratives need to advocate for the value.
+
+2. patterns_by_timekeeper: top 3-5 timekeepers with the most concerning patterns. For each: name, finding_count, total_entries, brief_observation (one sentence describing the pattern).
+
+3. patterns_by_matter: top 3-5 matters with the most concerning patterns. Same shape.
+
+JSON shape (return ONLY this):
+{
+  "executive_summary": "...",
+  "patterns_by_timekeeper": [
+    { "timekeeper": "...", "finding_count": <num>, "total_entries": <num>, "brief_observation": "..." }
+  ],
+  "patterns_by_matter": [
+    { "matter": "...", "finding_count": <num>, "total_entries": <num>, "brief_observation": "..." }
+  ]
+}
+
+JSON FORMATTING (non-negotiable):
+- Pure JSON. No preamble.
+- Escape double quotes as \\"
+- Only straight ASCII quotes
+- No trailing commas`;
+
+    const r = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: summaryPrompt }] })
+    });
+    if (!r.ok) throw new Error('Summary API ' + r.status);
+    const json = await r.json();
+    const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+    return parseJsonResilient(text);
+  }
+
+  function meBuildSummaryStats(findings, extracted) {
+    const sev = { high: 0, medium: 0, low: 0 };
+    const flaggedIdx = new Set();
+    findings.forEach(f => {
+      sev[f.severity || 'low'] = (sev[f.severity || 'low'] || 0) + 1;
+      flaggedIdx.add(f.entry_index);
+    });
+    return {
+      total_entries: extracted.entries.length,
+      total_findings: findings.length,
+      high_severity: sev.high,
+      medium_severity: sev.medium,
+      low_severity: sev.low,
+      clean_entries: extracted.entries.length - flaggedIdx.size,
+      total_matters: Object.keys(extracted.matters_grouped).length
+    };
+  }
+
+  // === RENDER REPORT ===
+  function meRenderReport(data) {
+    if (!data) { meOutput.innerHTML = '<p>No review data.</p>'; return; }
+    const findings = Array.isArray(data.findings) ? data.findings : [];
+    const summary = data.summary || {};
+
+    let html = `
+      <div class="bnc-pf-report">
+        <div class="bnc-pf-report-header">
+          <div>
+            <h3 class="bnc-pf-report-title">Month-End Pre-Check Report</h3>
+            <div class="bnc-pf-report-subtitle">${escapeHtml(monthEndState.pdfFile.name)} · ${summary.total_entries || 0} entries · ${summary.total_matters || 0} matters · processed in ${data.elapsed_seconds || '?'}s</div>
+          </div>
+          <div class="bnc-pf-report-actions">
+            <button class="bnc-pf-finding-btn" data-me-export-doc>📄 Export to Word</button>
+            <button class="bnc-pf-finding-btn" data-me-copy-all>Copy All</button>
+            <button class="bnc-pf-finding-btn" data-me-start-new>↻ Start New</button>
+          </div>
+        </div>
+
+        <div class="bnc-pf-summary">
+          <div class="bnc-pf-summary-stat high">
+            <span class="bnc-pf-summary-num">${summary.high_severity || 0}</span>
+            <span class="bnc-pf-summary-label">High</span>
+          </div>
+          <div class="bnc-pf-summary-stat medium">
+            <span class="bnc-pf-summary-num">${summary.medium_severity || 0}</span>
+            <span class="bnc-pf-summary-label">Medium</span>
+          </div>
+          <div class="bnc-pf-summary-stat low">
+            <span class="bnc-pf-summary-num">${summary.low_severity || 0}</span>
+            <span class="bnc-pf-summary-label">Low</span>
+          </div>
+          <div class="bnc-pf-summary-stat">
+            <span class="bnc-pf-summary-num">${summary.clean_entries || 0}</span>
+            <span class="bnc-pf-summary-label">Clean</span>
+          </div>
+        </div>
+
+        ${data.executive_summary ? `
+          <div style="background: var(--ivory); border-left: 3px solid var(--gold); padding: 0.95rem 1.15rem; border-radius: 0 6px 6px 0; margin-bottom: 1.5rem; font-family: Georgia, serif; font-size: 0.93rem; line-height: 1.6; color: var(--charcoal);">
+            <strong style="color: var(--navy); font-family: 'Outfit', sans-serif; display: block; margin-bottom: 0.4rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em;">Executive Summary</strong>
+            ${escapeHtml(data.executive_summary)}
+          </div>
+        ` : ''}
+
+        ${(data.patterns_by_timekeeper && data.patterns_by_timekeeper.length > 0) || (data.patterns_by_matter && data.patterns_by_matter.length > 0) ? `
+          <div class="bnc-me-patterns">
+            ${data.patterns_by_timekeeper && data.patterns_by_timekeeper.length > 0 ? `
+              <div class="bnc-me-pattern-card">
+                <div class="bnc-me-pattern-title">Patterns by Timekeeper</div>
+                ${data.patterns_by_timekeeper.map(p => `
+                  <div class="bnc-me-pattern-row">
+                    <span class="bnc-me-pattern-row-name">${escapeHtml(p.timekeeper || '?')}</span>
+                    <span class="bnc-me-pattern-row-meta"><strong>${p.finding_count || 0}</strong> of ${p.total_entries || 0}</span>
+                  </div>
+                  ${p.brief_observation ? `<div style="font-family: 'Playfair Display', serif; font-style: italic; color: var(--muted); font-size: 0.78rem; margin: 0.15rem 0 0.5rem; line-height: 1.4;">${escapeHtml(p.brief_observation)}</div>` : ''}
+                `).join('')}
+              </div>
+            ` : ''}
+            ${data.patterns_by_matter && data.patterns_by_matter.length > 0 ? `
+              <div class="bnc-me-pattern-card">
+                <div class="bnc-me-pattern-title">Patterns by Matter</div>
+                ${data.patterns_by_matter.map(p => `
+                  <div class="bnc-me-pattern-row">
+                    <span class="bnc-me-pattern-row-name">${escapeHtml(p.matter || '?')}</span>
+                    <span class="bnc-me-pattern-row-meta"><strong>${p.finding_count || 0}</strong> of ${p.total_entries || 0}</span>
+                  </div>
+                  ${p.brief_observation ? `<div style="font-family: 'Playfair Display', serif; font-style: italic; color: var(--muted); font-size: 0.78rem; margin: 0.15rem 0 0.5rem; line-height: 1.4;">${escapeHtml(p.brief_observation)}</div>` : ''}
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+
+        ${findings.length === 0 ? `
+          <div class="bnc-pf-clean">
+            <div class="bnc-pf-clean-icon">✓</div>
+            <div class="bnc-pf-clean-title">No findings</div>
+            <div class="bnc-pf-clean-body">No issues flagged across your monthly entries. Your narratives are advocating for the value of your work.</div>
+          </div>
+        ` : `
+          <div class="bnc-me-filters" data-me-filter-bar>
+            <button class="bnc-me-filter-btn active" data-me-filter="all">All findings (${findings.length})</button>
+            <button class="bnc-me-filter-btn" data-me-filter="high">High (${summary.high_severity || 0})</button>
+            <button class="bnc-me-filter-btn" data-me-filter="medium">Medium (${summary.medium_severity || 0})</button>
+            <button class="bnc-me-filter-btn" data-me-filter="low">Low (${summary.low_severity || 0})</button>
+          </div>
+          <div data-me-findings-list>
+            ${findings.sort((a, b) => {
+              const sevOrder = { high: 0, medium: 1, low: 2 };
+              return (sevOrder[a.severity] ?? 3) - (sevOrder[b.severity] ?? 3);
+            }).map(f => meRenderFindingCard(f)).join('')}
+          </div>
+        `}
+
+        <div class="bnc-pf-disclaimer">
+          <strong>Reminder:</strong> The Month-End Pre-Check is a fast triage tool, not a substitute for partner-level review. For deep per-matter review with full advocacy rewrites and unbundled narratives, use the Pro Forma Pre-Check tab. Final review and submission decisions remain with the timekeeper and reviewing partner.
+        </div>
+      </div>
+    `;
+
+    meOutput.innerHTML = html;
+    meWireReportInteractions();
+  }
+
+  function meRenderFindingCard(f) {
+    const sevClass = `severity-${f.severity || 'low'}`;
+    return `
+      <div class="bnc-me-finding ${sevClass}" data-me-finding-sev="${f.severity || 'low'}">
+        <div class="bnc-me-finding-row">
+          <div class="bnc-me-finding-meta">
+            <div class="bnc-me-finding-header">
+              <span class="bnc-me-cat-tag ${sevClass}">${escapeHtml(meCategoryLabel(f.category))}</span>
+              <strong>${escapeHtml(f.matter || '')}</strong>
+              · ${escapeHtml(f.date || '')}
+              · ${escapeHtml(f.timekeeper || '')}
+              · ${escapeHtml(f.hours || '')} hrs
+            </div>
+            <div class="bnc-me-finding-issue">${escapeHtml(f.issue || 'Issue flagged')}</div>
+            ${f.original_narrative ? `<div class="bnc-me-finding-original">"${escapeHtml(f.original_narrative)}"</div>` : ''}
+            ${f.suggested_rewrite ? `<div class="bnc-me-finding-rewrite">${escapeHtml(f.suggested_rewrite)}</div>` : ''}
+            ${(Array.isArray(f.spelling_corrections) && f.spelling_corrections.length > 0) ? `
+              <div style="display:inline-flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                ${f.spelling_corrections.map(c => `
+                  <span class="bnc-pf-spelling-chip" style="font-size: 0.72rem;">
+                    <span class="bnc-pf-spelling-original">${escapeHtml(c.original || '')}</span>
+                    <span class="bnc-pf-spelling-arrow">→</span>
+                    <span class="bnc-pf-spelling-corrected">${escapeHtml(c.corrected || '')}</span>
+                  </span>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+          <div class="bnc-me-finding-actions">
+            ${f.suggested_rewrite ? `<button class="bnc-pf-finding-btn" data-pf-copy-rewrite="${escapeAttr(f.suggested_rewrite)}">Copy</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function meCategoryLabel(category) {
+    const labels = {
+      ATVR_WEAKNESS: 'ATVR',
+      BLOCK_BILLING: 'Block Billing',
+      DUPLICATE_OR_OVERLAP: 'Duplicate',
+      CODE_MISMATCH: 'Code',
+      COMPLIANCE_VIOLATION: 'Compliance',
+      VAGUE_OR_THIN: 'Vague',
+      SPELLING: 'Spelling',
+      POSSIBLY_MISSING_BOOKENDS: 'Bookends'
+    };
+    return labels[category] || category;
+  }
+
+  function meWireReportInteractions() {
+    // Filter buttons
+    meOutput.querySelectorAll('[data-me-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.dataset.meFilter;
+        meOutput.querySelectorAll('[data-me-filter]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        meOutput.querySelectorAll('[data-me-finding-sev]').forEach(card => {
+          if (filter === 'all' || card.dataset.meFindingSev === filter) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Per-finding copy buttons (reuse pf class)
+    meOutput.querySelectorAll('[data-pf-copy-rewrite]').forEach(b => {
+      b.addEventListener('click', async () => {
+        const text = b.dataset.pfCopyRewrite;
+        try {
+          await navigator.clipboard.writeText(text);
+          const orig = b.textContent;
+          b.textContent = '✓ Copied';
+          b.classList.add('copied');
+          setTimeout(() => { b.textContent = orig; b.classList.remove('copied'); }, 1500);
+        } catch { toastError("Couldn't copy."); }
+      });
+    });
+
+    const copyAllBtn = meOutput.querySelector('[data-me-copy-all]');
+    if (copyAllBtn) {
+      copyAllBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(meReportToText(monthEndState.review));
+          const orig = copyAllBtn.textContent;
+          copyAllBtn.textContent = '✓ Copied';
+          copyAllBtn.classList.add('copied');
+          setTimeout(() => { copyAllBtn.textContent = orig; copyAllBtn.classList.remove('copied'); }, 1500);
+        } catch { toastError("Couldn't copy."); }
+      });
+    }
+
+    const exportDocBtn = meOutput.querySelector('[data-me-export-doc]');
+    if (exportDocBtn) {
+      exportDocBtn.addEventListener('click', () => meExportToDoc());
+    }
+
+    const startNewBtn = meOutput.querySelector('[data-me-start-new]');
+    if (startNewBtn) {
+      startNewBtn.addEventListener('click', async () => {
+        const ok = await confirmDialog({
+          title: 'Start a new Month-End Pre-Check?',
+          body: 'The current report will be cleared from view. It remains in your Recent Month-End Pre-Checks history below.',
+          confirmLabel: 'Start New',
+          cancelLabel: 'Keep Viewing'
+        });
+        if (ok) {
+          meResetAll();
+          setTimeout(() => {
+            if (meUploadZone) meUploadZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 100);
+        }
+      });
+    }
+  }
+
+  function meReportToText(data) {
+    if (!data) return '';
+    const lines = [];
+    lines.push('MONTH-END PRE-CHECK REPORT');
+    lines.push(`File: ${monthEndState.pdfFile?.name || 'monthly pro forma'}`);
+    lines.push(`Entries reviewed: ${data.summary?.total_entries || 0}`);
+    lines.push(`Matters: ${data.summary?.total_matters || 0}`);
+    lines.push(`Total findings: ${data.summary?.total_findings || 0}`);
+    lines.push(`  High: ${data.summary?.high_severity || 0}`);
+    lines.push(`  Medium: ${data.summary?.medium_severity || 0}`);
+    lines.push(`  Low: ${data.summary?.low_severity || 0}`);
+    lines.push(`  Clean: ${data.summary?.clean_entries || 0}`);
+    lines.push('');
+    if (data.executive_summary) {
+      lines.push('EXECUTIVE SUMMARY');
+      lines.push(data.executive_summary);
+      lines.push('');
+    }
+    if (data.patterns_by_timekeeper && data.patterns_by_timekeeper.length > 0) {
+      lines.push('PATTERNS BY TIMEKEEPER');
+      data.patterns_by_timekeeper.forEach(p => {
+        lines.push(`  ${p.timekeeper}: ${p.finding_count} of ${p.total_entries} entries flagged`);
+        if (p.brief_observation) lines.push(`    ${p.brief_observation}`);
+      });
+      lines.push('');
+    }
+    if (data.patterns_by_matter && data.patterns_by_matter.length > 0) {
+      lines.push('PATTERNS BY MATTER');
+      data.patterns_by_matter.forEach(p => {
+        lines.push(`  ${p.matter}: ${p.finding_count} of ${p.total_entries} entries flagged`);
+        if (p.brief_observation) lines.push(`    ${p.brief_observation}`);
+      });
+      lines.push('');
+    }
+    if (Array.isArray(data.findings) && data.findings.length > 0) {
+      lines.push('FINDINGS (sorted by severity)');
+      lines.push('');
+      const sorted = [...data.findings].sort((a, b) => {
+        const sevOrder = { high: 0, medium: 1, low: 2 };
+        return (sevOrder[a.severity] ?? 3) - (sevOrder[b.severity] ?? 3);
+      });
+      sorted.forEach((f, i) => {
+        lines.push(`${i + 1}. [${(f.severity || 'low').toUpperCase()}] ${meCategoryLabel(f.category)} | ${f.matter || ''} · ${f.date || ''} · ${f.timekeeper || ''} · ${f.hours || ''} hrs`);
+        lines.push(`   Issue: ${f.issue || ''}`);
+        if (f.original_narrative) lines.push(`   Original: "${f.original_narrative}"`);
+        if (Array.isArray(f.spelling_corrections) && f.spelling_corrections.length > 0) {
+          const corrections = f.spelling_corrections.map(c => `${c.original} -> ${c.corrected}`).join(', ');
+          lines.push(`   Spelling: ${corrections}`);
+        }
+        if (f.suggested_rewrite) lines.push(`   Rewrite: ${f.suggested_rewrite}`);
+        lines.push('');
+      });
+    }
+    lines.push('---');
+    lines.push('Reminder: The Month-End Pre-Check is a fast triage tool. For deep per-matter review with full advocacy rewrites and unbundled narratives, use the Pro Forma Pre-Check tab. Final review and submission decisions remain with the timekeeper and reviewing partner.');
+    return lines.join('\n');
+  }
+
+  // Word doc export - mirrors pfExportToDoc structure
+  function meExportToDoc(reviewDataOverride, pdfNameOverride) {
+    const data = reviewDataOverride || monthEndState.review;
+    if (!data) return;
+    const pdfName = pdfNameOverride || monthEndState.pdfFile?.name || 'monthly pro forma';
+    const findings = Array.isArray(data.findings) ? data.findings : [];
+    const summary = data.summary || {};
+    const sevColor = { high: '#dc2626', medium: '#d97706', low: '#a38527' };
+
+    let body = `
+      <h1 style="font-family: 'Playfair Display', Georgia, serif; color: #002147; border-bottom: 2px solid #B0902A; padding-bottom: 8px;">Month-End Pre-Check Report</h1>
+      <p style="color: #666; font-style: italic;">${escapeHtml(pdfName)} · ${summary.total_entries || 0} entries · ${summary.total_matters || 0} matters</p>
+      <h2 style="color: #002147;">Summary</h2>
+      <table style="border-collapse: collapse; margin: 12px 0;">
+        <tr>
+          <td style="padding: 8px 16px; border: 1px solid #ccc; background: #fef2f2;"><strong>${summary.high_severity || 0}</strong> High</td>
+          <td style="padding: 8px 16px; border: 1px solid #ccc; background: #fef7e6;"><strong>${summary.medium_severity || 0}</strong> Medium</td>
+          <td style="padding: 8px 16px; border: 1px solid #ccc; background: #faf6e8;"><strong>${summary.low_severity || 0}</strong> Low</td>
+          <td style="padding: 8px 16px; border: 1px solid #ccc;"><strong>${summary.clean_entries || 0}</strong> Clean</td>
+        </tr>
+      </table>
+    `;
+
+    if (data.executive_summary) {
+      body += `<h2 style="color: #002147;">Executive Summary</h2>
+        <p style="font-family: Georgia, serif; line-height: 1.6;">${escapeHtml(data.executive_summary)}</p>`;
+    }
+
+    if (data.patterns_by_timekeeper && data.patterns_by_timekeeper.length > 0) {
+      body += `<h2 style="color: #002147;">Patterns by Timekeeper</h2>`;
+      data.patterns_by_timekeeper.forEach(p => {
+        body += `<p style="font-family: Georgia, serif; margin: 6px 0;"><strong>${escapeHtml(p.timekeeper || '?')}</strong> - ${p.finding_count || 0} of ${p.total_entries || 0} entries flagged.${p.brief_observation ? ` <em>${escapeHtml(p.brief_observation)}</em>` : ''}</p>`;
+      });
+    }
+
+    if (data.patterns_by_matter && data.patterns_by_matter.length > 0) {
+      body += `<h2 style="color: #002147;">Patterns by Matter</h2>`;
+      data.patterns_by_matter.forEach(p => {
+        body += `<p style="font-family: Georgia, serif; margin: 6px 0;"><strong>${escapeHtml(p.matter || '?')}</strong> - ${p.finding_count || 0} of ${p.total_entries || 0} entries flagged.${p.brief_observation ? ` <em>${escapeHtml(p.brief_observation)}</em>` : ''}</p>`;
+      });
+    }
+
+    if (findings.length > 0) {
+      body += `<h2 style="color: #002147;">Findings</h2>`;
+      const sorted = [...findings].sort((a, b) => {
+        const sevOrder = { high: 0, medium: 1, low: 2 };
+        return (sevOrder[a.severity] ?? 3) - (sevOrder[b.severity] ?? 3);
+      });
+      sorted.forEach(f => {
+        const color = sevColor[f.severity] || '#a38527';
+        body += `
+          <div style="border-left: 4px solid ${color}; padding: 8px 16px; margin-bottom: 12px; background: #faf8f3;">
+            <p style="margin: 0 0 6px; font-size: 12px; color: #666;">
+              <strong style="color: ${color}; text-transform: uppercase;">${escapeHtml(meCategoryLabel(f.category))}</strong> ·
+              <strong style="color: #002147;">${escapeHtml(f.matter || '')}</strong> · ${escapeHtml(f.date || '')} · ${escapeHtml(f.timekeeper || '')} · ${escapeHtml(f.hours || '')} hrs · <span style="color: ${color}; text-transform: uppercase;">${(f.severity || 'low').toUpperCase()}</span>
+            </p>
+            <p style="margin: 0 0 6px; color: #002147; font-weight: 600;">${escapeHtml(f.issue || '')}</p>
+            ${f.original_narrative ? `<p style="margin: 0 0 6px; font-family: Georgia, serif; font-size: 13px;"><em>Original:</em> ${escapeHtml(f.original_narrative)}</p>` : ''}
+            ${f.suggested_rewrite ? `<p style="margin: 0; padding: 6px 10px; background: #faf6e8; font-family: Georgia, serif; font-size: 13px; border: 1px solid #B0902A;"><em>Rewrite:</em> ${escapeHtml(f.suggested_rewrite)}</p>` : ''}
+          </div>
+        `;
+      });
+    } else {
+      body += `<p style="font-family: Georgia, serif; padding: 16px; background: #faf6e8; border: 1px solid #B0902A;">No findings - your monthly entries are advocating for the value of your work.</p>`;
+    }
+
+    body += `
+      <hr style="margin: 32px 0 16px;">
+      <p style="font-style: italic; color: #666; font-size: 12px;">
+        <strong>Reminder:</strong> The Month-End Pre-Check is a fast triage tool. For deep per-matter review with full advocacy rewrites and unbundled narratives, use the Pro Forma Pre-Check tab. Final review and submission decisions remain with the timekeeper and reviewing partner.
+      </p>
+      <p style="font-size: 11px; color: #999; margin-top: 16px;">Generated by ATVR Narrative Generator · The Billing Coach · thebillingcoach.com</p>
+    `;
+
+    const docContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Month-End Pre-Check Report</title></head><body>${body}</body></html>`;
+
+    const blob = new Blob([docContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const safeName = pdfName.replace(/\.pdf$/i, '');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeName}-month-end-pre-check.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toastSuccess('Month-End report downloaded.');
+  }
 
   // ============ LIBRARY ============
   function loadLibrary() {
