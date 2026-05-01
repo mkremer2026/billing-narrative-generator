@@ -3318,18 +3318,26 @@
     // Wire up download buttons (Pro Forma only)
     list.querySelectorAll('[data-history-download]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const text = btn.dataset.historyText;
-        const filename = btn.dataset.historyFilename || 'pre-check.txt';
         try {
-          const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+          const i = parseInt(btn.dataset.historyDownload, 10);
+          const item = (generationHistory[panel] || [])[i];
+          // If we have structured review data, generate a formatted Word doc.
+          // Falls back to plain-text if structured data is missing (old history entries).
+          if (item && item.reviewData && panel === 'proforma') {
+            pfExportToDoc(item.reviewData, item.pdfFileName || 'pro forma');
+          } else {
+            const text = btn.dataset.historyText;
+            const filename = btn.dataset.historyFilename || 'pre-check.txt';
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
           const orig = btn.textContent;
           btn.textContent = '✓ Saved';
           btn.classList.add('copied');
@@ -3706,39 +3714,72 @@ ${Object.keys(matterGuidelines).length === 0
   ? '(No specific client guidelines loaded for any matter. Apply standard UTBMS / ATVR best practices only.)'
   : Object.entries(matterGuidelines).map(([m, g]) => `=== ${m} ===\nGuidelines name: ${g.label}\n${g.content}`).join('\n\n')}
 
-REVIEW EACH ENTRY for issues across these categories:
+REVIEW EACH ENTRY using the following coaching-aligned reasoning order. This reasoning order reflects The Billing Coach's philosophy: most "non-billable" work IS billable when the narrative advocates for the strategic value, not the action. The rewrite's job is to help the timekeeper get paid for work they actually did - not to validate write-offs that should never have been suggested.
 
-1. ATVR_WEAKNESS (severity: low or medium)
-   The entry's narrative is missing one or more of the four ATVR pieces (Action, Task, Value, Result), reads as clerical, or is too vague to defend at bill review.
+CORE COACHING PRINCIPLE:
+The work happened. The work has value. The narrative needs to advocate for the value. Communications about strategy, internal collaborations, supervisory work, file transfers, research, and thinking time are ALL billable when properly framed as advocacy for the client's interests. Carrier guidelines that flag these categories are not "do not bill" rules - they are "do not bill THIS WAY" warnings. The Pre-Check's job is to teach the timekeeper to bill them the right way.
 
-2. BLOCK_BILLING (severity: high)
-   The entry combines multiple distinct tasks under one time block (e.g., "drafted MSJ, reviewed deposition, called client - 4.5 hours"). This is prohibited by most carrier guidelines.
+The ONLY exceptions are:
+(a) Genuinely clerical work the timekeeper actually performed with no strategic dimension (true filing, true file organization, copying, scanning, scheduling without analysis)
+(b) Narratives so thin the AI cannot determine what work was done
 
-   *** SPECIAL HANDLING FOR BLOCK BILLING ***
-   For block-billed entries, do NOT just produce a single suggested_rewrite. Instead, populate the "unbundled_narratives" array with 2-4 separate ATVR narratives - one per distinct task you can identify in the original block.
+In both exception cases, the AI does NOT fabricate value. The rewrite asks the timekeeper to clarify.
 
-   Each unbundled narrative must:
-   - Be a polished ATVR narrative (20-25 words, present tense, action verbs, specific task + value + result)
-   - Have its own suggested hours allocation that, summed across all unbundled narratives, approximately equals the original total hours for the block
-   - Cover ONE discrete task from the original block, not multiple
+For each entry, evaluate in this order. Stop at the first matching condition:
 
-   For block-billed entries, set suggested_rewrite to null (since unbundled_narratives is the rewrite).
+STEP 1 - Is the entry too thin to determine what work was done?
+Examples: "Worked on case", "Reviewed file" with no further detail, "Conference call with client" with no subject, "File management".
+Action: Flag as VAGUE_OR_THIN (medium severity). The suggested_rewrite is "TIMEKEEPER TO CLARIFY: [specific question about what was done, e.g. 'Please specify what review or analysis was performed during this 1.6 hours so the entry can be rewritten in advocacy form']."
 
-   Hours allocation: estimate proportionally based on the work described. If you can't tell from the description, distribute roughly evenly. The user is told these are estimates and will verify against their actual time.
+STEP 2 - Does the original narrative describe genuinely clerical work with no strategic dimension visible in the wording?
+Examples: "Organized file documents", "Scanned discovery responses", "Filed motion with court", "Made copies of brief".
+Action: Flag as VAGUE_OR_THIN (medium severity). The suggested_rewrite is "TIMEKEEPER TO CLARIFY: This narrative reads as clerical work, which is generally non-billable. If review, analysis, or coordination was performed alongside this task, please specify that work so the entry can be rewritten as advocacy. If the time was purely clerical, consider writing it off or delegating to non-billable staff."
 
-3. DUPLICATE_OR_OVERLAP (severity: medium or high)
-   Two or more entries on the same date for the same matter that look like they describe the same or substantially overlapping work. Flag as a pair: identify both entry indexes.
+STEP 3 - Is the entry block-billed (multiple distinct tasks combined under one time block)?
+Examples: "Drafted answer, reviewed records, called adjuster, outlined discovery plan - 3.8 hours".
+Action: Flag as BLOCK_BILLING (high severity). Populate unbundled_narratives with 2-4 separate advocacy narratives - one per distinct task. Each unbundled narrative is a polished narrative (20-25 words) that frames the work as strategic advocacy. Allocate hours proportionally; the user is told these are estimates. Set suggested_rewrite to null.
 
-4. CODE_MISMATCH (severity: medium)
-   The task code on the entry doesn't match the work described, OR the work doesn't have a code but the matter's guidelines require one.
+STEP 4 - Are there duplicate or overlapping entries on the same date for the same matter?
+Action: Flag both entries as DUPLICATE_OR_OVERLAP (high severity). The suggested_rewrite for each is "Consolidate with the [other date/index] entry into a single entry that captures the combined scope of work; do not bill both as written."
 
-5. COMPLIANCE_VIOLATION (severity: high)
-   The entry violates a specific rule in the loaded guidelines for that matter (prohibited verb, minimum increment violation, internal communication that's flagged as non-billable per the carrier, etc.). ONLY flag this when there are loaded guidelines for that matter.
+STEP 5 - Is the work substantively billable but the narrative describes the action rather than the value? This is the most common case and includes ALL of the following situations:
+   - Internal/intra-firm communications (calls, emails, meetings between firm members)
+   - Email correspondence with clients, opposing counsel, experts, or third parties
+   - Thinking/strategy time (analysis, evaluation, formulation)
+   - Supervisory work, training, delegation, file transfers
+   - Research distribution and team coordination
+   - Filing, finalizing, or coordinating tasks that have a strategic component
 
-6. VAGUE_OR_THIN (severity: medium)
-   The narrative is too short or generic to justify the time billed (e.g., "reviewed file - 2.5 hours").
+Action: Flag as ATVR_WEAKNESS (low or medium severity depending on how thin the action-orientation is). Produce an advocacy-rewritten suggested_rewrite (20-25 words) that:
+   - Replaces action verbs with strategic verbs (strategize, evaluate, analyze, formulate, develop, synthesize, assess - NOT confer, discuss, talk, meet, call, email)
+   - Replaces "email" with "correspondence" where applicable
+   - Connects the work to a specific client outcome, case advancement, risk prevention, or strategic positioning
+   - Identifies WHAT legal value was created, not WHO was involved
+   - Uses present tense, action-first construction
 
-For non-block-billing findings, provide a SUGGESTED REWRITE in proper ATVR form (20-25 words, present tense, action verbs, specific task, value, result). Block-billing findings use unbundled_narratives instead - see special handling above.
+Examples of advocacy rewrites:
+
+Before: "Internal call with associate Jameson regarding case strategy and division of upcoming discovery tasks."
+After: "Strategize with litigation team re division of upcoming discovery tasks to position case advantageously for scheduling order and ensure efficient resource allocation."
+
+Before: "Internal email exchange with paralegal Hayes regarding service of motion and confirmation of filing receipt."
+After: "Coordinate with litigation team re service of motion for summary judgment to preserve dispositive motion deadlines and confirm proper docketing."
+
+Before: "Conference call with client."
+After: "TIMEKEEPER TO CLARIFY: Please specify the subject matter of the client conference, decisions reached, or strategic guidance provided so this entry can be rewritten in advocacy form." (Step 1 applies because the original is too thin to advocate for.)
+
+Before: "Review medical records produced by plaintiff in response to interrogatories."
+After: "Review and analyze medical records produced by plaintiff in response to interrogatories to evaluate claimed injuries, identify treatment gaps, and assess damages exposure for defense strategy."
+
+STEP 6 - Is the task code wrong for the work described?
+Action: Flag as CODE_MISMATCH (medium severity). The suggested_rewrite is the corrected code with brief explanation, OR an advocacy-rewritten narrative if the narrative also needs work.
+
+DO NOT use a separate "COMPLIANCE_VIOLATION" category. The vast majority of what previously triggered that category is actually ATVR_WEAKNESS - the work IS billable, the narrative just needs to advocate for the value. Apply Step 5 to those entries instead. Only use COMPLIANCE_VIOLATION (high severity) for genuinely non-billable items: personal time billed to a matter, double-billing across timekeepers, time exceeding actual hours worked, billing on a closed matter. These are integrity issues, not narrative issues.
+
+CRITICAL RULES FOR ALL REWRITES:
+- The rewrite must be grounded in what the original narrative actually says. Do NOT fabricate strategic content the timekeeper did not indicate.
+- If the original narrative does not give you enough material to write a credible advocacy rewrite, the rewrite must be a "TIMEKEEPER TO CLARIFY" prompt rather than an invented narrative.
+- Every finding MUST have either a populated suggested_rewrite or a populated unbundled_narratives array. There are no findings without rewrite guidance.
 
 CRITICAL JSON FORMATTING:
 - Inside any string, escape double quotes as \\"
@@ -3769,17 +3810,17 @@ Return this shape:
       "hours": "hours",
       "original_narrative": "the original narrative text",
       "issue": "one-sentence description of what's wrong",
-      "suggested_rewrite": "polished ATVR rewrite of the narrative" or null,
+      "suggested_rewrite": "advocacy-rewritten narrative OR TIMEKEEPER TO CLARIFY prompt OR consolidation guidance" or null (only null when unbundled_narratives is populated),
       "unbundled_narratives": [
         { "narrative": "...", "suggested_hours": "1.5" },
         { "narrative": "...", "suggested_hours": "1.0" }
       ] or null
     }
   ],
-  "executive_summary": "one paragraph (3-5 sentences) summarizing the overall state of the pro forma in a coaching tone - what's working, what the biggest opportunities are, where the partner should focus their review time"
+  "executive_summary": "one paragraph (3-5 sentences) summarizing the overall state of the pro forma in a coaching tone - what's working, what the biggest opportunities are, where the partner should focus their review time. Frame issues as advocacy gaps, not as compliance violations. The work is billable; the narratives need to advocate for the value."
 }
 
-Tone: coaching, not punitive. The goal is to help the partner move through their review faster, not to shame the timekeeper. Be direct about issues but constructive.`;
+Tone: coaching, not punitive. The goal is to help the timekeeper get paid for work they actually did, by teaching them to write narratives that advocate for the strategic value of their work. Frame issues as advocacy gaps, not as compliance violations. Be direct about what needs to change, but constructive about why - the work is billable; the narrative needs to do its job.`;
 
       const r = await fetch('/api/generate', {
         method: 'POST',
@@ -3803,7 +3844,10 @@ Tone: coaching, not punitive. The goal is to help the partner move through their
         snippet: data.executive_summary || `${proFormaState.pdfFile.name} reviewed: ${data.summary.total_findings} findings across ${data.summary.total_entries} entries`,
         label: `Pro Forma · ${proFormaState.pdfFile.name}`,
         copyText: pfReportToText(data),
-        downloadFilename: `${baseFilename}-pre-check-report.txt`
+        downloadFilename: `${baseFilename}-pre-check-report.doc`,
+        // Save the structured data so the history Download button can produce a formatted Word doc
+        reviewData: data,
+        pdfFileName: proFormaState.pdfFile.name
       });
 
       toastSuccess(`Pre-Check complete: ${data.summary.total_findings} finding${data.summary.total_findings === 1 ? '' : 's'} across ${data.summary.total_entries} entries.`, 'Done');
@@ -4117,9 +4161,11 @@ Tone: coaching, not punitive. The goal is to help the partner move through their
 
   // Word doc export - simple .doc HTML format that opens in Word.
   // Avoids needing a docx library on the client.
-  function pfExportToDoc() {
-    if (!proFormaState.review) return;
-    const data = proFormaState.review;
+  function pfExportToDoc(reviewDataOverride, pdfNameOverride) {
+    // Use override args if passed (history path), else use live state (live report path)
+    const data = reviewDataOverride || proFormaState.review;
+    if (!data) return;
+    const pdfName = pdfNameOverride || proFormaState.pdfFile?.name || 'pro forma';
     const findings = Array.isArray(data.findings) ? data.findings : [];
 
     const byCategory = {};
@@ -4133,7 +4179,7 @@ Tone: coaching, not punitive. The goal is to help the partner move through their
 
     let body = `
       <h1 style="font-family: 'Playfair Display', Georgia, serif; color: #002147; border-bottom: 2px solid #B0902A; padding-bottom: 8px;">Pro Forma Pre-Check Report</h1>
-      <p style="color: #666; font-style: italic;">${escapeHtml(proFormaState.pdfFile?.name || 'pro forma')} · ${data.summary?.total_entries || 0} entries reviewed</p>
+      <p style="color: #666; font-style: italic;">${escapeHtml(pdfName)} · ${data.summary?.total_entries || 0} entries reviewed</p>
 
       <h2 style="color: #002147;">Summary</h2>
       <table style="border-collapse: collapse; margin: 12px 0;">
@@ -4208,7 +4254,7 @@ Tone: coaching, not punitive. The goal is to help the partner move through their
 
     const blob = new Blob([docContent], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
-    const safeName = (proFormaState.pdfFile?.name || 'proforma').replace(/\.pdf$/i, '');
+    const safeName = pdfName.replace(/\.pdf$/i, '');
     const a = document.createElement('a');
     a.href = url;
     a.download = `${safeName}-pre-check-report.doc`;
