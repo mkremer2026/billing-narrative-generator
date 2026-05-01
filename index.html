@@ -5298,7 +5298,18 @@ STEP 2 - Genuinely clerical with no strategic dimension visible? (e.g., "Organiz
 -> VAGUE_OR_THIN (medium). suggested_rewrite = "TIMEKEEPER TO CLARIFY: This narrative reads as clerical work. If review/analysis was performed alongside, please specify so the entry can be rewritten as advocacy. If purely clerical, consider writing off."
 
 STEP 3 - Block billing (multiple distinct tasks under one block)?
--> BLOCK_BILLING (high). For triage mode, do NOT produce full unbundled_narratives. Instead, suggested_rewrite = "Unbundle into [N] separate entries: [brief comma-separated list of the distinct tasks]. Use the Per-Matter Pro Forma Pre-Check or Break It Up tab for full advocacy rewrites." Set unbundled_narratives to null.
+-> BLOCK_BILLING (high). Populate the unbundled_narratives array with 2-4 separate ATVR-style advocacy narratives - one per distinct task identified in the original block.
+
+Each unbundled narrative must:
+- Be a polished advocacy narrative (20-25 words, present tense, strategic verbs, specific task + value/result)
+- Have its own suggested_hours allocation; the sum across all unbundled narratives should approximately equal the original total hours
+- Cover ONE discrete task from the original block, not multiple
+- Use strategic verbs (strategize, evaluate, analyze, formulate, develop) NOT action verbs (confer, discuss, talk, meet, call, email)
+- Connect the work to a specific client outcome, case advancement, or strategic positioning where the original gives material to do so
+
+Hours allocation guidance: estimate proportionally based on the work described. If the description doesn't suggest a clear split, distribute roughly evenly. The user is told these are estimates and verifies against their actual time records.
+
+For block-billed entries, set suggested_rewrite to null (since unbundled_narratives IS the rewrite).
 
 STEP 4 - Substantively billable but action-described instead of value-described? (intra-firm communications, emails, thinking time, supervision, file transfers, research, etc.)
 -> ATVR_WEAKNESS (low or medium). Produce an advocacy-rewritten suggested_rewrite (20-25 words) using strategic verbs (strategize, evaluate, analyze, formulate, develop, synthesize, assess - NOT confer, discuss, talk, meet, call, email). Connect work to client outcome.
@@ -5319,7 +5330,7 @@ STEP 8 - Duplicate or overlapping with another entry IN THIS CHUNK on the same d
 -> DUPLICATE_OR_OVERLAP (medium or high). suggested_rewrite = "Consolidate with the other entry, or differentiate by clarifying the distinct scope of each."
 - Only flag if the work genuinely overlaps. Different roles (partner reviewing, associate drafting) on related work is NOT a duplicate.
 
-EVERY finding must have either suggested_rewrite or unbundled_narratives populated. Block billing in triage mode uses suggested_rewrite (not unbundled_narratives).
+EVERY finding must have either suggested_rewrite or unbundled_narratives populated. Block-billed entries use unbundled_narratives (not suggested_rewrite). All other categories use suggested_rewrite.
 
 JSON shape (return ONLY this object):
 {
@@ -5334,8 +5345,10 @@ JSON shape (return ONLY this object):
       "hours": "...",
       "original_narrative": "...",
       "issue": "one-sentence description",
-      "suggested_rewrite": "..." or null,
-      "unbundled_narratives": null,
+      "suggested_rewrite": "..." or null (null only when unbundled_narratives is populated),
+      "unbundled_narratives": [
+        { "narrative": "polished advocacy narrative", "suggested_hours": "1.5" }
+      ] or null,
       "spelling_corrections": [{"original":"...","corrected":"..."}] or null
     }
   ]
@@ -5548,7 +5561,7 @@ JSON FORMATTING (non-negotiable):
         `}
 
         <div class="bnc-pf-disclaimer">
-          <strong>Reminder:</strong> The Month-End Pre-Check is a fast triage tool, not a substitute for partner-level review. For deep per-matter review with full advocacy rewrites and unbundled narratives, use the Pro Forma Pre-Check tab. Final review and submission decisions remain with the timekeeper and reviewing partner.
+          <strong>Reminder:</strong> The Month-End Pre-Check is a triage tool for whole-month review, not a substitute for partner-level review. For deeper per-matter review with carrier-specific guideline analysis, use the Pro Forma Pre-Check tab. Final review and submission decisions remain with the timekeeper and reviewing partner.
         </div>
       </div>
     `;
@@ -5559,6 +5572,7 @@ JSON FORMATTING (non-negotiable):
 
   function meRenderFindingCard(f) {
     const sevClass = `severity-${f.severity || 'low'}`;
+    const hasUnbundled = Array.isArray(f.unbundled_narratives) && f.unbundled_narratives.length > 0;
     return `
       <div class="bnc-me-finding ${sevClass}" data-me-finding-sev="${f.severity || 'low'}">
         <div class="bnc-me-finding-row">
@@ -5572,6 +5586,30 @@ JSON FORMATTING (non-negotiable):
             </div>
             <div class="bnc-me-finding-issue">${escapeHtml(f.issue || 'Issue flagged')}</div>
             ${f.original_narrative ? `<div class="bnc-me-finding-original">"${escapeHtml(f.original_narrative)}"</div>` : ''}
+            ${hasUnbundled ? `
+              <div class="bnc-pf-unbundled" style="margin-top: 0.5rem;">
+                <div class="bnc-pf-unbundled-header">Unbundled narratives (${f.unbundled_narratives.length})</div>
+                <div class="bnc-pf-unbundled-list">
+                  ${f.unbundled_narratives.map((u, ui) => `
+                    <div class="bnc-pf-unbundled-card">
+                      <span class="bnc-pf-unbundled-num">${ui + 1}.</span>
+                      <div class="bnc-pf-unbundled-body">
+                        <div class="bnc-pf-unbundled-narrative">${escapeHtml(u.narrative || '')}</div>
+                        <div class="bnc-pf-unbundled-meta">
+                          <strong>${escapeHtml(u.suggested_hours || '?')} hrs</strong> suggested
+                        </div>
+                      </div>
+                      <div class="bnc-pf-unbundled-actions">
+                        <button class="bnc-pf-finding-btn" data-pf-copy-rewrite="${escapeAttr(u.narrative || '')}">Copy</button>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="bnc-pf-unbundled-disclaimer">
+                  Hours are estimates. Verify against your actual time before billing - the AI infers splits from the description, not from your records.
+                </div>
+              </div>
+            ` : ''}
             ${f.suggested_rewrite ? `<div class="bnc-me-finding-rewrite">${escapeHtml(f.suggested_rewrite)}</div>` : ''}
             ${(Array.isArray(f.spelling_corrections) && f.spelling_corrections.length > 0) ? `
               <div style="display:inline-flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.25rem;">
@@ -5724,12 +5762,19 @@ JSON FORMATTING (non-negotiable):
           const corrections = f.spelling_corrections.map(c => `${c.original} -> ${c.corrected}`).join(', ');
           lines.push(`   Spelling: ${corrections}`);
         }
+        if (Array.isArray(f.unbundled_narratives) && f.unbundled_narratives.length > 0) {
+          lines.push(`   Unbundled rewrite (${f.unbundled_narratives.length} narratives):`);
+          f.unbundled_narratives.forEach((u, ui) => {
+            lines.push(`     ${ui + 1}. [${u.suggested_hours || '?'} hrs] ${u.narrative || ''}`);
+          });
+          lines.push(`   Note: Hours are estimates - verify against your actual time before billing.`);
+        }
         if (f.suggested_rewrite) lines.push(`   Rewrite: ${f.suggested_rewrite}`);
         lines.push('');
       });
     }
     lines.push('---');
-    lines.push('Reminder: The Month-End Pre-Check is a fast triage tool. For deep per-matter review with full advocacy rewrites and unbundled narratives, use the Pro Forma Pre-Check tab. Final review and submission decisions remain with the timekeeper and reviewing partner.');
+    lines.push('Reminder: The Month-End Pre-Check is a triage tool for whole-month review. For deeper per-matter review with carrier-specific guideline analysis, use the Pro Forma Pre-Check tab. Final review and submission decisions remain with the timekeeper and reviewing partner.');
     return lines.join('\n');
   }
 
@@ -5791,6 +5836,31 @@ JSON FORMATTING (non-negotiable):
             </p>
             <p style="margin: 0 0 6px; color: #002147; font-weight: 600;">${escapeHtml(f.issue || '')}</p>
             ${f.original_narrative ? `<p style="margin: 0 0 6px; font-family: Georgia, serif; font-size: 13px;"><em>Original:</em> ${escapeHtml(f.original_narrative)}</p>` : ''}
+            ${(Array.isArray(f.unbundled_narratives) && f.unbundled_narratives.length > 0) ? `
+              <div style="margin: 8px 0; padding: 10px 14px; border: 1px solid #B0902A; background: #fffdf6; border-radius: 3px;">
+                <p style="margin: 0 0 8px; font-size: 11px; color: #a38527; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;">Unbundled rewrite (${f.unbundled_narratives.length} narratives)</p>
+                <table style="border-collapse: collapse; width: 100%;">
+                  ${f.unbundled_narratives.map((u, ui) => `
+                    <tr>
+                      <td style="vertical-align: top; padding: 5px 6px 5px 0; width: 22px; font-family: Georgia, serif; font-style: italic; color: #a38527; font-size: 12px;">${ui + 1}.</td>
+                      <td style="vertical-align: top; padding: 5px 0; font-family: Georgia, serif; color: #002147; font-size: 13px; line-height: 1.45;">
+                        <span style="font-weight: 600; color: #a38527; font-family: 'Outfit', Arial, sans-serif; font-size: 11px; margin-right: 6px;">[${escapeHtml(u.suggested_hours || '?')} hrs]</span>
+                        ${escapeHtml(u.narrative || '')}
+                      </td>
+                    </tr>
+                  `).join('')}
+                </table>
+                <p style="margin: 8px 0 0; font-family: Georgia, serif; font-style: italic; font-size: 11px; color: #777;">Hours are estimates. Verify against your actual time before billing.</p>
+              </div>
+            ` : ''}
+            ${(Array.isArray(f.spelling_corrections) && f.spelling_corrections.length > 0) ? `
+              <div style="margin: 8px 0; padding: 8px 12px; background: #faf8f3; border: 1px dashed #B0902A; border-radius: 3px;">
+                <p style="margin: 0 0 6px; font-size: 11px; color: #a38527; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;">Spelling corrections</p>
+                <p style="margin: 0; font-family: Georgia, serif; font-size: 12.5px; color: #002147;">
+                  ${f.spelling_corrections.map(c => `<span style="color:#c0392b; text-decoration:line-through;">${escapeHtml(c.original || '')}</span> &rarr; <strong>${escapeHtml(c.corrected || '')}</strong>`).join(' &nbsp;·&nbsp; ')}
+                </p>
+              </div>
+            ` : ''}
             ${f.suggested_rewrite ? `<p style="margin: 0; padding: 6px 10px; background: #faf6e8; font-family: Georgia, serif; font-size: 13px; border: 1px solid #B0902A;"><em>Rewrite:</em> ${escapeHtml(f.suggested_rewrite)}</p>` : ''}
           </div>
         `;
@@ -5802,7 +5872,7 @@ JSON FORMATTING (non-negotiable):
     body += `
       <hr style="margin: 32px 0 16px;">
       <p style="font-style: italic; color: #666; font-size: 12px;">
-        <strong>Reminder:</strong> The Month-End Pre-Check is a fast triage tool. For deep per-matter review with full advocacy rewrites and unbundled narratives, use the Pro Forma Pre-Check tab. Final review and submission decisions remain with the timekeeper and reviewing partner.
+        <strong>Reminder:</strong> The Month-End Pre-Check is a triage tool for whole-month review. For deeper per-matter review with carrier-specific guideline analysis, use the Pro Forma Pre-Check tab. Final review and submission decisions remain with the timekeeper and reviewing partner.
       </p>
       <p style="font-size: 11px; color: #999; margin-top: 16px;">Generated by ATVR Narrative Generator · The Billing Coach · thebillingcoach.com</p>
     `;
