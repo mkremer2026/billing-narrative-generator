@@ -1542,6 +1542,56 @@
     border-top: 1px dashed rgba(203,161,53,0.3);
   }
 
+  /* Spelling corrections - shown as chips inside a finding */
+  .bnc-pf-spelling {
+    margin-top: 0.55rem;
+    padding: 0.6rem 0.85rem;
+    background: var(--paper);
+    border: 1px dashed var(--gold);
+    border-radius: 4px;
+  }
+  .bnc-pf-spelling-label {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold-dark, #a38527);
+    margin-bottom: 0.45rem;
+  }
+  .bnc-pf-spelling-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .bnc-pf-spelling-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    background: var(--ivory);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: Georgia, serif;
+    font-size: 0.82rem;
+    line-height: 1;
+  }
+  .bnc-pf-spelling-original {
+    color: #c0392b;
+    text-decoration: line-through;
+    text-decoration-color: rgba(192, 57, 43, 0.55);
+  }
+  .bnc-pf-spelling-arrow {
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 0.78rem;
+  }
+  .bnc-pf-spelling-corrected {
+    color: var(--navy);
+    font-weight: 600;
+  }
+
   .bnc-pf-finding-actions {
     display: flex;
     gap: 0.4rem;
@@ -3833,12 +3883,36 @@ After: "Review and analyze medical records produced by plaintiff in response to 
 STEP 6 - Is the task code wrong for the work described?
 Action: Flag as CODE_MISMATCH (medium severity). The suggested_rewrite is the corrected code with brief explanation, OR an advocacy-rewritten narrative if the narrative also needs work.
 
+STEP 7 - Are there obvious spelling errors in the original narrative?
+Spelling detection rules:
+- Flag obvious typos in common English words (e.g., "telephne" -> "telephone", "depostion" -> "deposition", "intterogatory" -> "interrogatory", "negotaite" -> "negotiate", "summery judgement" -> "summary judgment").
+- Do NOT flag proper nouns: client names, matter names, party names, opposing counsel surnames, judge names, court names, expert names. You cannot reliably distinguish a typo from a real name.
+- Do NOT flag legal terms of art that look unusual but are correct: "voire dire", "res ipsa loquitur", "stare decisis", "Erie doctrine", "in limine", etc.
+- Do NOT flag British vs American spellings: "favour" / "favor", "centre" / "center", etc. Both are acceptable.
+- Do NOT flag intentional abbreviations or shorthand commonly used in billing: "MSJ", "OC" (opposing counsel), "TC" (telephone conference).
+
+Two-mode handling for spelling:
+(a) If the entry ALSO has another finding (ATVR_WEAKNESS, BLOCK_BILLING, etc.) that produces a suggested_rewrite, silently fix the spelling within that rewrite. Do NOT generate a separate SPELLING finding for that entry. The rewrite presents corrected spelling as part of the polished narrative.
+(b) If the entry is OTHERWISE clean (no other finding) but has a typo, flag as SPELLING (low severity). Populate the spelling_corrections array with the misspellings found and their corrections. The suggested_rewrite is the original narrative with the spellings corrected; nothing else changed.
+
+STEP 8 - Is the entry a phone call, meeting, or internal communication of 0.3+ hours that may be missing Billing Bookends?
+Bookends are: (before) preparation time - reviewing relevant documents, outlining agenda, drafting talking points; (task) the call/meeting/communication itself; (after) follow-up time - drafting memo to file, sending follow-up emails, updating case strategy notes.
+
+Detection rules:
+- Only fire this flag for entries describing a call, meeting, telephone conference, internal communication, or similar live exchange.
+- Only fire when the entry's hours are 0.3 OR HIGHER. Below 0.3, separate bookend entries usually aren't worth capturing.
+- SUPPRESS this flag if there is a companion entry on the same date for the same matter that captures preparation OR follow-up time. Look for entries that mention preparing for the call, reviewing materials in advance, drafting follow-up correspondence, updating notes, or memorializing decisions from the call.
+- Do NOT fire this flag for entries that already block-bill prep + call + follow-up (those get BLOCK_BILLING instead).
+
+Action: Flag as POSSIBLY_MISSING_BOOKENDS (low severity). The suggested_rewrite is a coaching prompt: "Consider whether preparation time (reviewing documents, outlining talking points) and follow-up time (memorializing decisions, drafting follow-up correspondence) were also captured for this [call/meeting]. If prep and follow-up time exist but were not billed, add separate bookend entries to capture the full scope of work."
+
 DO NOT use a separate "COMPLIANCE_VIOLATION" category. The vast majority of what previously triggered that category is actually ATVR_WEAKNESS - the work IS billable, the narrative just needs to advocate for the value. Apply Step 5 to those entries instead. Only use COMPLIANCE_VIOLATION (high severity) for genuinely non-billable items: personal time billed to a matter, double-billing across timekeepers, time exceeding actual hours worked, billing on a closed matter. These are integrity issues, not narrative issues.
 
 CRITICAL RULES FOR ALL REWRITES:
 - The rewrite must be grounded in what the original narrative actually says. Do NOT fabricate strategic content the timekeeper did not indicate.
 - If the original narrative does not give you enough material to write a credible advocacy rewrite, the rewrite must be a "TIMEKEEPER TO CLARIFY" prompt rather than an invented narrative.
 - Every finding MUST have either a populated suggested_rewrite or a populated unbundled_narratives array. There are no findings without rewrite guidance.
+- If you find spelling errors AND another issue in the same entry, fix the spelling silently inside the rewrite for the other finding. Do NOT generate a separate SPELLING finding when the entry already has another rewrite that addresses the typo.
 
 CRITICAL JSON FORMATTING:
 - Inside any string, escape double quotes as \\"
@@ -3859,7 +3933,7 @@ Return this shape:
   },
   "findings": [
     {
-      "category": "ATVR_WEAKNESS" | "BLOCK_BILLING" | "DUPLICATE_OR_OVERLAP" | "CODE_MISMATCH" | "COMPLIANCE_VIOLATION" | "VAGUE_OR_THIN",
+      "category": "ATVR_WEAKNESS" | "BLOCK_BILLING" | "DUPLICATE_OR_OVERLAP" | "CODE_MISMATCH" | "COMPLIANCE_VIOLATION" | "VAGUE_OR_THIN" | "SPELLING" | "POSSIBLY_MISSING_BOOKENDS",
       "severity": "high" | "medium" | "low",
       "entry_index": <index in the entries array, 0-based>,
       "second_entry_index": <only for DUPLICATE_OR_OVERLAP, the other entry's index> or null,
@@ -3869,10 +3943,13 @@ Return this shape:
       "hours": "hours",
       "original_narrative": "the original narrative text",
       "issue": "one-sentence description of what's wrong",
-      "suggested_rewrite": "advocacy-rewritten narrative OR TIMEKEEPER TO CLARIFY prompt OR consolidation guidance" or null (only null when unbundled_narratives is populated),
+      "suggested_rewrite": "advocacy-rewritten narrative OR TIMEKEEPER TO CLARIFY prompt OR consolidation guidance OR bookends coaching prompt" or null (only null when unbundled_narratives is populated),
       "unbundled_narratives": [
         { "narrative": "...", "suggested_hours": "1.5" },
         { "narrative": "...", "suggested_hours": "1.0" }
+      ] or null,
+      "spelling_corrections": [
+        { "original": "telephne", "corrected": "telephone" }
       ] or null
     }
   ],
@@ -3951,7 +4028,9 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
       DUPLICATE_OR_OVERLAP: 'Duplicate or Overlapping Entries',
       CODE_MISMATCH: 'Task Code Mismatches',
       COMPLIANCE_VIOLATION: 'Guideline Compliance Issues',
-      VAGUE_OR_THIN: 'Vague or Thin Narratives'
+      VAGUE_OR_THIN: 'Vague or Thin Narratives',
+      SPELLING: 'Spelling Corrections',
+      POSSIBLY_MISSING_BOOKENDS: 'Possibly Missing Billing Bookends'
     };
     return labels[category] || category;
   }
@@ -3963,7 +4042,9 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
       DUPLICATE_OR_OVERLAP: 'D',
       CODE_MISMATCH: 'C',
       COMPLIANCE_VIOLATION: '!',
-      VAGUE_OR_THIN: 'V'
+      VAGUE_OR_THIN: 'V',
+      SPELLING: 'S',
+      POSSIBLY_MISSING_BOOKENDS: '⤺'
     };
     return icons[category] || '?';
   }
@@ -4113,6 +4194,20 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
                     </div>
                   </div>
                 ` : ''}
+                ${(Array.isArray(f.spelling_corrections) && f.spelling_corrections.length > 0) ? `
+                  <div class="bnc-pf-spelling">
+                    <span class="bnc-pf-spelling-label">Spelling corrections</span>
+                    <div class="bnc-pf-spelling-list">
+                      ${f.spelling_corrections.map(c => `
+                        <span class="bnc-pf-spelling-chip">
+                          <span class="bnc-pf-spelling-original">${escapeHtml(c.original || '')}</span>
+                          <span class="bnc-pf-spelling-arrow">→</span>
+                          <span class="bnc-pf-spelling-corrected">${escapeHtml(c.corrected || '')}</span>
+                        </span>
+                      `).join('')}
+                    </div>
+                  </div>
+                ` : ''}
                 ${f.suggested_rewrite ? `
                   <div class="bnc-pf-finding-suggestion">
                     <span class="bnc-pf-finding-suggestion-label">Suggested rewrite</span>
@@ -4248,6 +4343,10 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
             });
             lines.push(`   Note: Hours are estimates - verify against your actual time before billing.`);
           }
+          if (Array.isArray(f.spelling_corrections) && f.spelling_corrections.length > 0) {
+            const corrections = f.spelling_corrections.map(c => `${c.original || ''} -> ${c.corrected || ''}`).join(', ');
+            lines.push(`   Spelling: ${corrections}`);
+          }
           if (f.suggested_rewrite) lines.push(`   Rewrite: ${f.suggested_rewrite}`);
           lines.push('');
         });
@@ -4330,6 +4429,14 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
                     `).join('')}
                   </table>
                   <p style="margin: 8px 0 0; font-family: Georgia, serif; font-style: italic; font-size: 11px; color: #777;">Hours are estimates. Verify against your actual time before billing.</p>
+                </div>
+              ` : ''}
+              ${(Array.isArray(f.spelling_corrections) && f.spelling_corrections.length > 0) ? `
+                <div style="margin: 8px 0; padding: 8px 12px; background: #faf8f3; border: 1px dashed #B0902A; border-radius: 3px;">
+                  <p style="margin: 0 0 6px; font-size: 11px; color: #a38527; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;">Spelling corrections</p>
+                  <p style="margin: 0; font-family: Georgia, serif; font-size: 12.5px; color: #002147;">
+                    ${f.spelling_corrections.map(c => `<span style="color:#c0392b; text-decoration:line-through;">${escapeHtml(c.original || '')}</span> &rarr; <strong>${escapeHtml(c.corrected || '')}</strong>`).join(' &nbsp;·&nbsp; ')}
+                  </p>
                 </div>
               ` : ''}
               ${f.suggested_rewrite ? `<p style="margin: 0; padding: 6px 10px; background: #faf6e8; font-family: Georgia, serif; font-size: 13px; border: 1px solid #B0902A;"><em>Suggested rewrite:</em> ${escapeHtml(f.suggested_rewrite)}</p>` : ''}
