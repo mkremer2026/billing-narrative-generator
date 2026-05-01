@@ -1954,14 +1954,41 @@
   .bnc-me-cat-tag.severity-high { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
   .bnc-me-cat-tag.severity-medium { background: #fef7e6; color: #92400e; border-color: #fde68a; }
 
-  /* Filter strip above the findings list */
-  .bnc-me-filters {
+  /* ============ MONTH-END STAGE 2: FILTER BAR + BULK ACTIONS + CLICKABLE PATTERNS ============ */
+
+  /* Upgraded filter bar with multiple filter groups */
+  .bnc-me-filter-bar {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(6px);
+  }
+  .bnc-me-filter-group {
+    display: flex;
+    align-items: center;
     gap: 0.4rem;
     flex-wrap: wrap;
-    padding: 0.85rem 0;
-    margin-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border);
+  }
+  .bnc-me-filter-actions {
+    margin-left: auto;
+  }
+  .bnc-me-filter-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold-dark, #a38527);
+    margin-right: 0.2rem;
   }
   .bnc-me-filter-btn {
     padding: 0.32rem 0.85rem;
@@ -1982,6 +2009,170 @@
     background: var(--navy);
     color: var(--paper);
     border-color: var(--navy);
+  }
+  .bnc-me-filter-select {
+    padding: 0.34rem 0.65rem;
+    border: 1px solid var(--border);
+    background: var(--paper);
+    border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    color: var(--navy);
+    cursor: pointer;
+    max-width: 280px;
+  }
+  .bnc-me-filter-select:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+  .bnc-me-filter-summary {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-left: 0.5rem;
+  }
+
+  /* Empty state when filters yield no findings */
+  .bnc-me-no-results {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: var(--ivory);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+  .bnc-me-no-results p {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--muted);
+    margin: 0 0 0.85rem;
+    font-size: 0.95rem;
+  }
+
+  /* Bulk actions card - groups identical vague narratives for one-click rewrites */
+  .bnc-me-bulk {
+    background: linear-gradient(135deg, var(--gold-soft) 0%, var(--ivory) 100%);
+    border: 1.5px solid var(--gold);
+    border-radius: 10px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1.5rem;
+  }
+  .bnc-me-bulk-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.85rem;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+  .bnc-me-bulk-header strong {
+    color: var(--navy);
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+  }
+  .bnc-me-bulk-icon {
+    font-size: 1.1rem;
+    margin-right: 0.4rem;
+  }
+  .bnc-me-bulk-sub {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .bnc-me-bulk-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .bnc-me-bulk-card {
+    background: var(--paper);
+    border: 1px solid rgba(203,161,53,0.4);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+  }
+  .bnc-me-bulk-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+  }
+  .bnc-me-bulk-card-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .bnc-me-bulk-original {
+    font-family: Georgia, serif;
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.4;
+  }
+  .bnc-me-bulk-count {
+    color: var(--gold-dark, #a38527);
+    font-weight: 600;
+    font-style: normal;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem;
+    margin-left: 0.3rem;
+  }
+  .bnc-me-bulk-rewrite {
+    font-family: Georgia, serif;
+    color: var(--navy);
+    font-size: 0.88rem;
+    padding: 0.5rem 0.7rem;
+    background: var(--gold-soft);
+    border-left: 2px solid var(--gold);
+    border-radius: 0 4px 4px 0;
+    line-height: 1.5;
+  }
+  .bnc-me-bulk-card-actions {
+    display: flex;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  /* Clickable pattern rows - hover to indicate they filter */
+  .bnc-me-pattern-clickable {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    margin: 0 -0.4rem;
+    transition: background 0.15s ease;
+  }
+  .bnc-me-pattern-clickable:hover {
+    background: var(--gold-soft);
+  }
+  .bnc-me-pattern-hint {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    margin-top: -0.3rem;
+  }
+  .bnc-me-pattern-obs {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.78rem;
+    margin: 0.15rem 0 0.4rem;
+    line-height: 1.4;
+  }
+
+  /* Legacy class kept for backward compat - older renders */
+  .bnc-me-filters {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    padding: 0.85rem 0;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
   }
 
   /* ============ GENERATION HISTORY STRIP ============ */
@@ -5515,24 +5706,30 @@ JSON FORMATTING (non-negotiable):
             ${data.patterns_by_timekeeper && data.patterns_by_timekeeper.length > 0 ? `
               <div class="bnc-me-pattern-card">
                 <div class="bnc-me-pattern-title">Patterns by Timekeeper</div>
+                <div class="bnc-me-pattern-hint">Click any row to filter findings</div>
                 ${data.patterns_by_timekeeper.map(p => `
-                  <div class="bnc-me-pattern-row">
-                    <span class="bnc-me-pattern-row-name">${escapeHtml(p.timekeeper || '?')}</span>
-                    <span class="bnc-me-pattern-row-meta"><strong>${p.finding_count || 0}</strong> of ${p.total_entries || 0}</span>
+                  <div class="bnc-me-pattern-clickable" data-me-pattern-tk="${escapeAttr(p.timekeeper || '')}">
+                    <div class="bnc-me-pattern-row">
+                      <span class="bnc-me-pattern-row-name">${escapeHtml(p.timekeeper || '?')}</span>
+                      <span class="bnc-me-pattern-row-meta"><strong>${p.finding_count || 0}</strong> of ${p.total_entries || 0}</span>
+                    </div>
+                    ${p.brief_observation ? `<div class="bnc-me-pattern-obs">${escapeHtml(p.brief_observation)}</div>` : ''}
                   </div>
-                  ${p.brief_observation ? `<div style="font-family: 'Playfair Display', serif; font-style: italic; color: var(--muted); font-size: 0.78rem; margin: 0.15rem 0 0.5rem; line-height: 1.4;">${escapeHtml(p.brief_observation)}</div>` : ''}
                 `).join('')}
               </div>
             ` : ''}
             ${data.patterns_by_matter && data.patterns_by_matter.length > 0 ? `
               <div class="bnc-me-pattern-card">
                 <div class="bnc-me-pattern-title">Patterns by Matter</div>
+                <div class="bnc-me-pattern-hint">Click any row to filter findings</div>
                 ${data.patterns_by_matter.map(p => `
-                  <div class="bnc-me-pattern-row">
-                    <span class="bnc-me-pattern-row-name">${escapeHtml(p.matter || '?')}</span>
-                    <span class="bnc-me-pattern-row-meta"><strong>${p.finding_count || 0}</strong> of ${p.total_entries || 0}</span>
+                  <div class="bnc-me-pattern-clickable" data-me-pattern-matter="${escapeAttr(p.matter || '')}">
+                    <div class="bnc-me-pattern-row">
+                      <span class="bnc-me-pattern-row-name">${escapeHtml(p.matter || '?')}</span>
+                      <span class="bnc-me-pattern-row-meta"><strong>${p.finding_count || 0}</strong> of ${p.total_entries || 0}</span>
+                    </div>
+                    ${p.brief_observation ? `<div class="bnc-me-pattern-obs">${escapeHtml(p.brief_observation)}</div>` : ''}
                   </div>
-                  ${p.brief_observation ? `<div style="font-family: 'Playfair Display', serif; font-style: italic; color: var(--muted); font-size: 0.78rem; margin: 0.15rem 0 0.5rem; line-height: 1.4;">${escapeHtml(p.brief_observation)}</div>` : ''}
                 `).join('')}
               </div>
             ` : ''}
@@ -5546,17 +5743,44 @@ JSON FORMATTING (non-negotiable):
             <div class="bnc-pf-clean-body">No issues flagged across your monthly entries. Your narratives are advocating for the value of your work.</div>
           </div>
         ` : `
-          <div class="bnc-me-filters" data-me-filter-bar>
-            <button class="bnc-me-filter-btn active" data-me-filter="all">All findings (${findings.length})</button>
-            <button class="bnc-me-filter-btn" data-me-filter="high">High (${summary.high_severity || 0})</button>
-            <button class="bnc-me-filter-btn" data-me-filter="medium">Medium (${summary.medium_severity || 0})</button>
-            <button class="bnc-me-filter-btn" data-me-filter="low">Low (${summary.low_severity || 0})</button>
+          <div id="me-findings-anchor"></div>
+
+          ${meRenderBulkActions(findings)}
+
+          <div class="bnc-me-filter-bar" data-me-filter-bar>
+            <div class="bnc-me-filter-group">
+              <span class="bnc-me-filter-label">Severity</span>
+              <button class="bnc-me-filter-btn active" data-me-filter-sev="all">All (${findings.length})</button>
+              <button class="bnc-me-filter-btn" data-me-filter-sev="high">High (${summary.high_severity || 0})</button>
+              <button class="bnc-me-filter-btn" data-me-filter-sev="medium">Medium (${summary.medium_severity || 0})</button>
+              <button class="bnc-me-filter-btn" data-me-filter-sev="low">Low (${summary.low_severity || 0})</button>
+            </div>
+            <div class="bnc-me-filter-group">
+              <label class="bnc-me-filter-label" for="me-tk-select">Timekeeper</label>
+              <select class="bnc-me-filter-select" id="me-tk-select" data-me-filter-tk>
+                ${meBuildFilterOptions(findings, 'timekeeper')}
+              </select>
+            </div>
+            <div class="bnc-me-filter-group">
+              <label class="bnc-me-filter-label" for="me-matter-select">Matter</label>
+              <select class="bnc-me-filter-select" id="me-matter-select" data-me-filter-matter>
+                ${meBuildFilterOptions(findings, 'matter')}
+              </select>
+            </div>
+            <div class="bnc-me-filter-group bnc-me-filter-actions">
+              <button class="bnc-me-filter-btn" data-me-filter-clear style="display:none;">Clear filters</button>
+              <span class="bnc-me-filter-summary" data-me-filter-summary></span>
+            </div>
           </div>
           <div data-me-findings-list>
             ${findings.sort((a, b) => {
               const sevOrder = { high: 0, medium: 1, low: 2 };
               return (sevOrder[a.severity] ?? 3) - (sevOrder[b.severity] ?? 3);
             }).map(f => meRenderFindingCard(f)).join('')}
+          </div>
+          <div class="bnc-me-no-results" data-me-no-results style="display:none;">
+            <p>No findings match the current filters.</p>
+            <button class="bnc-me-filter-btn" data-me-filter-clear-empty>Clear filters</button>
           </div>
         `}
 
@@ -5574,7 +5798,12 @@ JSON FORMATTING (non-negotiable):
     const sevClass = `severity-${f.severity || 'low'}`;
     const hasUnbundled = Array.isArray(f.unbundled_narratives) && f.unbundled_narratives.length > 0;
     return `
-      <div class="bnc-me-finding ${sevClass}" data-me-finding-sev="${f.severity || 'low'}">
+      <div class="bnc-me-finding ${sevClass}"
+        data-me-finding-sev="${f.severity || 'low'}"
+        data-me-finding-tk="${escapeAttr(f.timekeeper || '')}"
+        data-me-finding-matter="${escapeAttr(f.matter || '')}"
+        data-me-finding-cat="${escapeAttr(f.category || '')}"
+        data-me-finding-narrative-key="${escapeAttr(meNormalizeNarrative(f.original_narrative))}">
         <div class="bnc-me-finding-row">
           <div class="bnc-me-finding-meta">
             <div class="bnc-me-finding-header">
@@ -5631,6 +5860,85 @@ JSON FORMATTING (non-negotiable):
     `;
   }
 
+  // Normalize a narrative for fingerprint comparison - lowercase, strip punctuation,
+  // collapse whitespace. Used to group identical vague/clerical entries for bulk actions.
+  function meNormalizeNarrative(text) {
+    if (!text) return '';
+    return String(text).toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // Build dropdown <option> tags for the filter dropdowns - sorted by finding count desc,
+  // shows count next to each name so users can prioritize.
+  function meBuildFilterOptions(findings, key) {
+    const counts = {};
+    findings.forEach(f => {
+      const v = f[key] || '(unknown)';
+      counts[v] = (counts[v] || 0) + 1;
+    });
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    let html = `<option value="all">All ${key === 'timekeeper' ? 'timekeepers' : 'matters'} (${findings.length})</option>`;
+    sorted.forEach(([name, count]) => {
+      html += `<option value="${escapeAttr(name)}">${escapeHtml(name)} (${count})</option>`;
+    });
+    return html;
+  }
+
+  // Bulk actions section: identifies repeated identical narratives across findings.
+  // For example, if 6 entries say "Reviewed file" they likely all need the same
+  // TIMEKEEPER TO CLARIFY rewrite. Surfaces those clusters at the top with one-click
+  // copy of the rewrite that applies to all of them.
+  function meRenderBulkActions(findings) {
+    // Group findings by normalized narrative key. Only consider VAGUE_OR_THIN
+    // findings - that's the category where bulk actions make sense.
+    const groups = {};
+    findings.forEach(f => {
+      if (f.category !== 'VAGUE_OR_THIN') return;
+      const key = meNormalizeNarrative(f.original_narrative);
+      if (!key) return;
+      if (!groups[key]) groups[key] = { entries: [], rewrite: f.suggested_rewrite, sample: f.original_narrative };
+      groups[key].entries.push(f);
+    });
+
+    // Filter to clusters of 3+ identical narratives - smaller clusters aren't
+    // worth surfacing as a bulk action.
+    const clusters = Object.values(groups).filter(g => g.entries.length >= 3);
+    if (clusters.length === 0) return '';
+
+    // Sort by cluster size descending
+    clusters.sort((a, b) => b.entries.length - a.entries.length);
+
+    return `
+      <div class="bnc-me-bulk">
+        <div class="bnc-me-bulk-header">
+          <div>
+            <span class="bnc-me-bulk-icon">⚡</span>
+            <strong>Bulk action opportunities</strong>
+          </div>
+          <span class="bnc-me-bulk-sub">${clusters.length} narrative${clusters.length === 1 ? '' : 's'} repeated across multiple entries - one rewrite handles them all</span>
+        </div>
+        <div class="bnc-me-bulk-list">
+          ${clusters.map((c, i) => `
+            <div class="bnc-me-bulk-card">
+              <div class="bnc-me-bulk-card-row">
+                <div class="bnc-me-bulk-card-meta">
+                  <div class="bnc-me-bulk-original">"${escapeHtml(c.sample)}" <span class="bnc-me-bulk-count">- ${c.entries.length} entries</span></div>
+                  ${c.rewrite ? `<div class="bnc-me-bulk-rewrite">${escapeHtml(c.rewrite)}</div>` : ''}
+                </div>
+                <div class="bnc-me-bulk-card-actions">
+                  ${c.rewrite ? `<button class="bnc-pf-finding-btn" data-pf-copy-rewrite="${escapeAttr(c.rewrite)}">Copy rewrite</button>` : ''}
+                  <button class="bnc-pf-finding-btn" data-me-bulk-show="${escapeAttr(meNormalizeNarrative(c.sample))}">Show all ${c.entries.length}</button>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   function meCategoryLabel(category) {
     const labels = {
       ATVR_WEAKNESS: 'ATVR',
@@ -5646,21 +5954,145 @@ JSON FORMATTING (non-negotiable):
   }
 
   function meWireReportInteractions() {
-    // Filter buttons
-    meOutput.querySelectorAll('[data-me-filter]').forEach(btn => {
+    // === Combined filter state ===
+    // Filters compose - a card is shown only if it passes ALL active filters.
+    const filterState = { sev: 'all', tk: 'all', matter: 'all', narrative: null };
+
+    function applyFilters() {
+      const cards = meOutput.querySelectorAll('[data-me-finding-sev]');
+      let visible = 0;
+      cards.forEach(card => {
+        const sevMatch = filterState.sev === 'all' || card.dataset.meFindingSev === filterState.sev;
+        const tkMatch = filterState.tk === 'all' || card.dataset.meFindingTk === filterState.tk;
+        const matterMatch = filterState.matter === 'all' || card.dataset.meFindingMatter === filterState.matter;
+        const narrativeMatch = !filterState.narrative || card.dataset.meFindingNarrativeKey === filterState.narrative;
+        if (sevMatch && tkMatch && matterMatch && narrativeMatch) {
+          card.style.display = '';
+          visible++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      // Show/hide the empty state
+      const noResults = meOutput.querySelector('[data-me-no-results]');
+      const list = meOutput.querySelector('[data-me-findings-list]');
+      if (noResults && list) {
+        if (visible === 0) {
+          noResults.style.display = '';
+          list.style.display = 'none';
+        } else {
+          noResults.style.display = 'none';
+          list.style.display = '';
+        }
+      }
+
+      // Show/hide the "Clear filters" button when any filter is active
+      const hasActiveFilter = filterState.sev !== 'all' || filterState.tk !== 'all' || filterState.matter !== 'all' || filterState.narrative;
+      const clearBtn = meOutput.querySelector('[data-me-filter-clear]');
+      if (clearBtn) clearBtn.style.display = hasActiveFilter ? '' : 'none';
+
+      // Update the visible-count summary text
+      const summaryEl = meOutput.querySelector('[data-me-filter-summary]');
+      if (summaryEl) {
+        const total = cards.length;
+        if (hasActiveFilter && visible !== total) {
+          summaryEl.textContent = `Showing ${visible} of ${total}`;
+        } else {
+          summaryEl.textContent = '';
+        }
+      }
+    }
+
+    function resetFilters() {
+      filterState.sev = 'all';
+      filterState.tk = 'all';
+      filterState.matter = 'all';
+      filterState.narrative = null;
+      // Reset UI controls
+      meOutput.querySelectorAll('[data-me-filter-sev]').forEach(b => {
+        b.classList.toggle('active', b.dataset.meFilterSev === 'all');
+      });
+      const tkSel = meOutput.querySelector('[data-me-filter-tk]');
+      if (tkSel) tkSel.value = 'all';
+      const matterSel = meOutput.querySelector('[data-me-filter-matter]');
+      if (matterSel) matterSel.value = 'all';
+      applyFilters();
+    }
+
+    // Severity filter buttons
+    meOutput.querySelectorAll('[data-me-filter-sev]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const filter = btn.dataset.meFilter;
-        meOutput.querySelectorAll('[data-me-filter]').forEach(b => b.classList.remove('active'));
+        const filter = btn.dataset.meFilterSev;
+        meOutput.querySelectorAll('[data-me-filter-sev]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        meOutput.querySelectorAll('[data-me-finding-sev]').forEach(card => {
-          if (filter === 'all' || card.dataset.meFindingSev === filter) {
-            card.style.display = '';
-          } else {
-            card.style.display = 'none';
-          }
-        });
+        filterState.sev = filter;
+        applyFilters();
       });
     });
+
+    // Timekeeper dropdown
+    const tkSel = meOutput.querySelector('[data-me-filter-tk]');
+    if (tkSel) {
+      tkSel.addEventListener('change', () => {
+        filterState.tk = tkSel.value;
+        applyFilters();
+        scrollToFindings();
+      });
+    }
+
+    // Matter dropdown
+    const matterSel = meOutput.querySelector('[data-me-filter-matter]');
+    if (matterSel) {
+      matterSel.addEventListener('change', () => {
+        filterState.matter = matterSel.value;
+        applyFilters();
+        scrollToFindings();
+      });
+    }
+
+    // Clear filters
+    meOutput.querySelectorAll('[data-me-filter-clear], [data-me-filter-clear-empty]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        resetFilters();
+      });
+    });
+
+    // Click on a Patterns by Timekeeper row to filter to that timekeeper
+    meOutput.querySelectorAll('[data-me-pattern-tk]').forEach(row => {
+      row.addEventListener('click', () => {
+        const tk = row.dataset.mePatternTk;
+        filterState.tk = tk;
+        if (tkSel) tkSel.value = tk;
+        applyFilters();
+        scrollToFindings();
+      });
+    });
+
+    // Click on a Patterns by Matter row to filter to that matter
+    meOutput.querySelectorAll('[data-me-pattern-matter]').forEach(row => {
+      row.addEventListener('click', () => {
+        const matter = row.dataset.mePatternMatter;
+        filterState.matter = matter;
+        if (matterSel) matterSel.value = matter;
+        applyFilters();
+        scrollToFindings();
+      });
+    });
+
+    // Bulk action: click "Show all N" to filter to that narrative cluster
+    meOutput.querySelectorAll('[data-me-bulk-show]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterState.narrative = btn.dataset.meBulkShow;
+        applyFilters();
+        scrollToFindings();
+      });
+    });
+
+    function scrollToFindings() {
+      const anchor = meOutput.querySelector('#me-findings-anchor');
+      if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
     // Per-finding copy buttons (reuse pf class)
     meOutput.querySelectorAll('[data-pf-copy-rewrite]').forEach(b => {
