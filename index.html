@@ -2499,6 +2499,7 @@
       <div class="bnc-generate-row">
         <span class="bnc-generate-note">Built on the proprietary ATVR framework · All rights reserved 2026</span>
         <div style="display: flex; gap: 0.5rem;">
+          <button class="bnc-secondary-btn" data-clear-form="standard">Clear Form</button>
           <button class="bnc-secondary-btn" data-copy-prompt="standard">Copy Prompt to Clipboard</button>
           <button class="bnc-generate-btn" data-generate="standard">Generate Narrative</button>
         </div>
@@ -2589,6 +2590,7 @@
       <div class="bnc-generate-row">
         <span class="bnc-generate-note">Three separate entries · present tense throughout · strategic language</span>
         <div style="display: flex; gap: 0.5rem;">
+          <button class="bnc-secondary-btn" data-clear-form="bookends">Clear Form</button>
           <button class="bnc-secondary-btn" data-copy-prompt="bookends">Copy Prompt to Clipboard</button>
           <button class="bnc-generate-btn" data-generate="bookends">Generate Bookends</button>
         </div>
@@ -2681,6 +2683,7 @@
       <div class="bnc-generate-row">
         <span class="bnc-generate-note">Four separate narratives · each stands alone · block billing defeated</span>
         <div style="display: flex; gap: 0.5rem;">
+          <button class="bnc-secondary-btn" data-clear-form="multiphase">Clear Form</button>
           <button class="bnc-secondary-btn" data-copy-prompt="multiphase">Copy Prompt to Clipboard</button>
           <button class="bnc-generate-btn" data-generate="multiphase">Break It Up</button>
         </div>
@@ -2739,9 +2742,12 @@
 
         <div class="bnc-pf-mapping-list" data-pf-mapping-list></div>
 
-        <button class="bnc-generate-btn" data-pf-run-review style="margin-top: 1.5rem;">
-          Run Pre-Check
-        </button>
+        <div style="display: flex; gap: 0.65rem; align-items: center; margin-top: 1.5rem; flex-wrap: wrap;">
+          <button class="bnc-generate-btn" data-pf-run-review>
+            Run Pre-Check
+          </button>
+          <button class="bnc-secondary-btn" data-pf-cancel-mapping>Cancel / Start Over</button>
+        </div>
         <p class="bnc-generate-note" style="margin-top: 0.55rem;">
           The Pre-Check typically takes 60-90 seconds for a multi-page pro forma. Feel free to step away.
         </p>
@@ -3382,11 +3388,64 @@
   const pfMappingStep = pfPanel.querySelector('[data-pf-step="mapping"]');
   const pfMappingList = pfPanel.querySelector('[data-pf-mapping-list]');
   const pfRunBtn = pfPanel.querySelector('[data-pf-run-review]');
+  const pfCancelMappingBtn = pfPanel.querySelector('[data-pf-cancel-mapping]');
   const pfOutput = pfPanel.querySelector('[data-output="proforma"]');
 
   function pfFormatSize(bytes) {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  // Clear all form inputs on a generator panel without touching the recent generations history.
+  // Called by the "Clear Form" button on Standard, Bookends, and Break It Up tabs.
+  function clearForm(panel) {
+    const section = document.querySelector(`section.bnc-panel[data-panel="${panel}"]`);
+    if (!section) return;
+
+    // 1. Clear all data-persist text inputs and textareas in this panel.
+    //    Fire an input event so localStorage gets cleaned up too.
+    section.querySelectorAll('[data-persist]').forEach(el => {
+      el.value = '';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    // 2. Multi mode: clear the queued task list back to a single empty task.
+    //    Only Standard panel has multi mode, but the check is panel-specific.
+    if (panel === 'standard' && Array.isArray(multiTasks)) {
+      multiTasks = [{ id: Date.now().toString(), task: '', context: '', time: '' }];
+      saveMultiTasks();
+      if (typeof renderMultiList === 'function') renderMultiList();
+    }
+
+    // 3. Clear the guidelines area: textarea, file attachment, library dropdown, applied pill.
+    const guidelinesContainer = section.querySelector(`[data-guidelines="${panel}"]`);
+    if (guidelinesContainer) {
+      const textArea = guidelinesContainer.querySelector('[data-guidelines-text]');
+      const fileName = guidelinesContainer.querySelector('[data-file-name]');
+      const fileClear = guidelinesContainer.querySelector('[data-file-clear]');
+      const fileInput = guidelinesContainer.querySelector('[data-file-input]');
+      if (textArea) {
+        textArea.value = '';
+        textArea.placeholder = '';
+      }
+      if (fileName) fileName.textContent = 'No file attached';
+      if (fileClear) fileClear.style.display = 'none';
+      if (fileInput) fileInput.value = '';
+      guidelinesContainer.classList.remove('active');
+    }
+    if (state && state.guidelinesFile) state.guidelinesFile[panel] = null;
+    const librarySel = document.querySelector(`[data-library-select="${panel}"]`);
+    if (librarySel) librarySel.value = '';
+    hideAppliedPill(panel);
+
+    // 4. Clear the output area where the generated narrative was displayed.
+    const outputArea = section.querySelector(`[data-output="${panel}"]`);
+    if (outputArea) outputArea.innerHTML = '';
+
+    // 5. Scroll back to the top of the panel so the user is positioned at a clean form.
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    toastInfo('Form cleared. Ready for a new entry.');
   }
 
   function pfResetAll() {
@@ -3866,6 +3925,25 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
     }
   });
 
+  // Cancel button at the matter mapping step - resets the entire Pro Forma flow
+  if (pfCancelMappingBtn) {
+    pfCancelMappingBtn.addEventListener('click', async () => {
+      const ok = await confirmDialog({
+        title: 'Cancel and start over?',
+        body: 'Your uploaded PDF and matter mapping will be discarded. You can upload a new pro forma to start fresh.',
+        confirmLabel: 'Yes, Start Over',
+        cancelLabel: 'Keep Working'
+      });
+      if (ok) {
+        pfResetAll();
+        setTimeout(() => {
+          const uploadZone = pfPanel.querySelector('[data-pf-upload-zone]');
+          if (uploadZone) uploadZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    });
+  }
+
   function pfCategoryLabel(category) {
     const labels = {
       ATVR_WEAKNESS: 'ATVR Weaknesses',
@@ -3910,6 +3988,7 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
             </div>
             <div class="bnc-pf-report-actions">
               <button class="bnc-pf-finding-btn" data-pf-export-doc>📄 Export to Word</button>
+              <button class="bnc-pf-finding-btn" data-pf-start-new>↻ Start New Pre-Check</button>
             </div>
           </div>
           <div class="bnc-pf-clean">
@@ -3952,6 +4031,7 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
           <div class="bnc-pf-report-actions">
             <button class="bnc-pf-finding-btn" data-pf-export-doc>📄 Export to Word</button>
             <button class="bnc-pf-finding-btn" data-pf-copy-all>Copy All</button>
+            <button class="bnc-pf-finding-btn" data-pf-start-new>↻ Start New Pre-Check</button>
           </div>
         </div>
 
@@ -4105,6 +4185,25 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
     const exportDocBtn = pfOutput.querySelector('[data-pf-export-doc]');
     if (exportDocBtn) {
       exportDocBtn.addEventListener('click', () => pfExportToDoc());
+    }
+    const startNewBtn = pfOutput.querySelector('[data-pf-start-new]');
+    if (startNewBtn) {
+      startNewBtn.addEventListener('click', async () => {
+        const ok = await confirmDialog({
+          title: 'Start a new Pre-Check?',
+          body: 'The current report will be cleared from view. The Pre-Check will remain in your Recent Pre-Checks history below where you can View, Copy, or Download it later.',
+          confirmLabel: 'Start New',
+          cancelLabel: 'Keep Viewing'
+        });
+        if (ok) {
+          pfResetAll();
+          // Scroll back to the upload zone so the user is positioned to start
+          setTimeout(() => {
+            const uploadZone = pfPanel.querySelector('[data-pf-upload-zone]');
+            if (uploadZone) uploadZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 100);
+        }
+      });
     }
   }
 
@@ -4935,6 +5034,20 @@ A101 Plan and Prepare For, A102 Research, A103 Draft/Revise, A104 Review/Analyze
       }
       else if (panel === 'bookends') handleBookends(btn, 'copy');
       else if (panel === 'multiphase') handleMultiphase(btn, 'copy');
+    });
+  });
+
+  // Wire up Clear Form buttons (Standard / Bookends / Break It Up)
+  document.querySelectorAll('[data-clear-form]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const panel = btn.dataset.clearForm;
+      const ok = await confirmDialog({
+        title: 'Clear this form?',
+        body: 'All input fields, attached guidelines, and the current generated narrative will be reset. Recent generations history is preserved.',
+        confirmLabel: 'Clear Form',
+        cancelLabel: 'Keep Working'
+      });
+      if (ok) clearForm(panel);
     });
   });
 
