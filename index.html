@@ -8855,19 +8855,41 @@ Return your response as JSON only, no preamble or code fences:
   function parseJsonResilient(text) {
     if (!text || typeof text !== 'string') throw new Error('Empty response from generator');
 
+    // Track all attempt errors so we can log them all on final failure
+    // (helps diagnose which strategy got closest)
+    const attemptErrors = [];
+
+    // Strategy 0: NEW - control-character cleanup. The AI sometimes emits raw
+    // newlines, tabs, or other control codes inside string values. JSON.parse
+    // rejects U+0000 through U+001F unescaped inside strings. We strip these
+    // BEFORE other strategies because they'd otherwise break every subsequent
+    // parse attempt regardless of what else we do.
+    //
+    // Also strip BOM and zero-width characters that some encodings introduce.
+    let preCleaned = text
+      // Remove BOM and zero-width chars
+      .replace(/[\uFEFF\u200B-\u200D]/g, '')
+      // Replace literal CR/LF/TAB/etc with spaces (they shouldn't appear raw inside JSON strings)
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+      // Convert raw newlines to escaped \n (assumes we're inside a string -
+      // outside a string, JSON allows whitespace anyway, so this is safe)
+      .replace(/\r\n/g, '\\n')
+      .replace(/\n/g, '\\n')
+      .replace(/\t/g, '\\t');
+
     // Strategy 1: strip code fences and try as-is
-    let cleaned = text
+    let cleaned = preCleaned
       .replace(/```json\s*/gi, '')
       .replace(/```\s*$/g, '')
       .replace(/```/g, '')
       .trim();
 
-    try { return JSON.parse(cleaned); } catch (e1) { /* fall through */ }
+    try { return JSON.parse(cleaned); } catch (e1) { attemptErrors.push({ strategy: '1-direct', err: e1.message }); }
 
     // Strategy 2a: greedy match - first { to last }
     const greedyMatch = cleaned.match(/\{[\s\S]*\}/);
     if (greedyMatch) {
-      try { return JSON.parse(greedyMatch[0]); } catch (e2a) { /* fall through */ }
+      try { return JSON.parse(greedyMatch[0]); } catch (e2a) { attemptErrors.push({ strategy: '2a-greedy', err: e2a.message }); }
     }
 
     // Strategy 2b: brace-counting - find the FIRST balanced {...} block.
@@ -8875,7 +8897,7 @@ Return your response as JSON only, no preamble or code fences:
     // OR where there are multiple JSON-like blocks and we need the first complete one.
     const balancedBlock = findFirstBalancedJsonObject(cleaned);
     if (balancedBlock) {
-      try { return JSON.parse(balancedBlock); } catch (e2b) { /* fall through */ }
+      try { return JSON.parse(balancedBlock); } catch (e2b) { attemptErrors.push({ strategy: '2b-balanced', err: e2b.message }); }
     }
 
     // Strategy 3: normalize common LLM quote/whitespace issues on the best candidate
@@ -8884,24 +8906,119 @@ Return your response as JSON only, no preamble or code fences:
       // Convert smart quotes to straight quotes
       .replace(/[\u201C\u201D]/g, '"')
       .replace(/[\u2018\u2019]/g, "'")
-      // Remove BOM and zero-width characters
-      .replace(/[\uFEFF\u200B-\u200D]/g, '')
       // Remove trailing commas before } or ]
       .replace(/,(\s*[\}\]])/g, '$1');
 
-    try { return JSON.parse(normalized); } catch (e3) { /* fall through */ }
+    try { return JSON.parse(normalized); } catch (e3) { attemptErrors.push({ strategy: '3-normalized', err: e3.message }); }
 
     // Strategy 4: try to surgically repair by truncating at the last complete entry
     // For arrays where one entry is malformed, sometimes we can salvage prior entries
     try {
       const repaired = attemptArrayTruncation(normalized);
-      if (repaired) return JSON.parse(repaired);
-    } catch (e4) { /* fall through */ }
+      if (repaired) {
+        const result = JSON.parse(repaired);
+        console.warn('parseJsonResilient: salvaged via array truncation - some trailing entries may be missing');
+        return result;
+      }
+    } catch (e4) { attemptErrors.push({ strategy: '4-truncation', err: e4.message }); }
 
-    // All strategies failed - log the first 500 chars of the problematic response
-    // so the developer can see what the AI actually returned (helps tune prompts)
-    console.warn('parseJsonResilient: all strategies failed. Response preview:', text.slice(0, 500));
+    // Strategy 5 (NEW): aggressive escape repair. The AI sometimes produces
+    // strings with unescaped quotes inside them (e.g. handler M. "Mike" Reynolds)
+    // or unescaped backslashes. Try to detect string boundaries by structure
+    // and re-escape problematic characters inside string values.
+    try {
+      const aggressivelyRepaired = aggressiveEscapeRepair(candidate);
+      if (aggressivelyRepaired) {
+        const result = JSON.parse(aggressivelyRepaired);
+        console.warn('parseJsonResilient: salvaged via aggressive escape repair - some strings may have lost quotes');
+        return result;
+      }
+    } catch (e5) { attemptErrors.push({ strategy: '5-aggressive', err: e5.message }); }
+
+    // All strategies failed. Log everything we know to help diagnose:
+    // - Full response (not truncated) so we can see exactly what failed
+    // - Each strategy's error message so we can see which got closest
+    // - Length and character codes around the position of the most informative error
+    console.error('=== parseJsonResilient: ALL STRATEGIES FAILED ===');
+    console.error('Total response length:', text.length, 'characters');
+    console.error('Pre-cleaned response length:', preCleaned.length, 'characters');
+    console.error('Strategy errors:', attemptErrors);
+    // Try to extract the position from the most descriptive error and show context
+    const lastErr = attemptErrors[attemptErrors.length - 1];
+    if (lastErr) {
+      const posMatch = lastErr.err.match(/position (\d+)/);
+      if (posMatch) {
+        const pos = parseInt(posMatch[1]);
+        const ctxStart = Math.max(0, pos - 80);
+        const ctxEnd = Math.min(preCleaned.length, pos + 80);
+        console.error(`Context around position ${pos}:`, JSON.stringify(preCleaned.slice(ctxStart, ctxEnd)));
+        console.error(`Char at position ${pos}:`, JSON.stringify(preCleaned[pos] || ''), 'code:', preCleaned.charCodeAt(pos) || 'EOF');
+      }
+    }
+    console.error('FULL response (no truncation):');
+    console.error(text);
+    console.error('=== end parseJsonResilient failure log ===');
     throw new Error('Invalid JSON from generator after all recovery attempts');
+  }
+
+  // Aggressively re-escape string values when standard parsers fail. Walks the
+  // text expecting JSON structure, but inside string values escapes any " that
+  // isn't followed by ,/}/]/space/colon (i.e., that doesn't look like a string
+  // terminator). This is a last-resort repair that may corrupt embedded quotes
+  // but recovers the overall structure.
+  function aggressiveEscapeRepair(text) {
+    if (!text) return null;
+    const start = text.indexOf('{');
+    if (start === -1) return null;
+
+    let result = '';
+    let inString = false;
+    let escapeNext = false;
+    let depth = 0;
+    let arrayDepth = 0;
+
+    for (let i = start; i < text.length; i++) {
+      const c = text[i];
+      if (escapeNext) { result += c; escapeNext = false; continue; }
+      if (c === '\\') { result += c; escapeNext = true; continue; }
+
+      if (c === '"') {
+        if (!inString) {
+          // Opening string
+          inString = true;
+          result += c;
+        } else {
+          // Possible closing - peek ahead to see if next non-space char is structural
+          let j = i + 1;
+          while (j < text.length && (text[j] === ' ' || text[j] === '\t')) j++;
+          const next = text[j];
+          if (next === ',' || next === '}' || next === ']' || next === ':' || next === undefined) {
+            // Real closing quote
+            inString = false;
+            result += c;
+          } else {
+            // Embedded quote inside string value - escape it
+            result += '\\"';
+          }
+        }
+        continue;
+      }
+
+      if (!inString) {
+        if (c === '{') depth++;
+        else if (c === '}') {
+          depth--;
+          if (depth === 0 && arrayDepth === 0) {
+            result += c;
+            return result;
+          }
+        }
+        else if (c === '[') arrayDepth++;
+        else if (c === ']') arrayDepth--;
+      }
+      result += c;
+    }
+    return result;
   }
 
   // Find the first balanced JSON object in a string. Handles strings inside the JSON
