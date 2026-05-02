@@ -3417,9 +3417,21 @@
     <!-- ============ PANEL 4: PRO FORMA PRE-CHECK ============ -->
     <section class="bnc-panel" data-panel="proforma">
       <div class="bnc-panel-intro">
-        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Month-End Review Assistant</span>
+        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Partner-Level Pro Forma Review</span>
         <h2>Pro Forma Pre-Check</h2>
-        <p>Upload a month-end pro forma (the billing report partners review before invoicing) and get a structured pre-check report. The Pre-Check identifies ATVR weaknesses, duplicate entries, block-billed entries, code mismatches, and compliance issues against any client guidelines you've loaded into your Vault. The Pre-Check is a first-pass assistant; partner-level judgment and final review remain with you.</p>
+        <p class="bnc-me-intro-headline">Catch what client bill review will flag - before you send the invoice.</p>
+        <p>Upload a single-matter pro forma and the Pre-Check reviews every entry against your client's outside counsel guidelines and ATVR best practices. It surfaces:</p>
+        <ul class="bnc-me-intro-list">
+          <li><strong>Block-billed entries</strong> - automatically broken up into separate advocacy narratives with hours allocated.</li>
+          <li><strong>Vague or clerical-sounding narratives</strong> like "Reviewed file" or "Conference call with client" - flagged for clarification or rewritten as advocacy.</li>
+          <li><strong>ATVR weaknesses</strong> where your narrative describes the action instead of the strategic value of your work.</li>
+          <li><strong>Possibly missing billing bookends</strong> on hearings, depositions, mediations, calls, and meetings - so you can capture prep and follow-up time you may have forgotten to bill.</li>
+          <li><strong>Code mismatches</strong> where the task code doesn't match the work described.</li>
+          <li><strong>Compliance gaps</strong> specific to the carrier or client guidelines you mapped from your Vault.</li>
+          <li><strong>Spelling errors and typos</strong> caught silently before the client sees them.</li>
+        </ul>
+        <p>Designed for partner-level review of a single client's pro forma before invoicing. Each matter can be mapped to its specific carrier or client guidelines from your Vault for compliance-aware review.</p>
+        <p class="bnc-me-intro-cta"><em>For a timekeeper's whole-month review of their own time before submitting to the firm, use the Month-End Pre-Check tab. Like all Pre-Checks, this is a first-pass assistant; partner-level judgment and final review remain with you.</em></p>
       </div>
 
       <!-- STEP 1: Upload -->
@@ -4300,6 +4312,23 @@
       toastWarn(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB. The Pre-Check supports PDFs up to 8 MB. For larger pro formas, split the document or contact support.`, 'PDF too large');
       return;
     }
+    // Show the loading panel IMMEDIATELY - before we even start reading the
+    // file - so the user always sees a "we're working on it" indicator.
+    // Without this, base64 conversion of larger PDFs creates 1-3 seconds of
+    // dead air where nothing happens visually.
+    pfOutput.innerHTML = `
+      <div class="bnc-pf-loading">
+        <div class="bnc-pf-loading-spinner"></div>
+        <div class="bnc-pf-loading-title">Loading your pro forma...</div>
+        <div class="bnc-pf-loading-stage">Reading the file from your computer...</div>
+        <div class="bnc-pf-loading-note">This usually takes just a moment.</div>
+      </div>
+    `;
+    setTimeout(() => {
+      const loadingEl = pfOutput.querySelector('.bnc-pf-loading');
+      if (loadingEl) loadingEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+
     try {
       const b64 = await toBase64(file);
       proFormaState.pdfFile = { name: file.name, size: file.size, base64: b64 };
@@ -4308,7 +4337,8 @@
       pfUploadPrompt.style.display = 'none';
       pfUploadLoaded.style.display = '';
       pfUploadZone.classList.add('has-file');
-      // Kick off extraction
+      // Kick off extraction (this replaces the loading UI we just rendered
+      // with the richer rotating-stages version that includes the elapsed counter)
       pfExtractEntries();
     } catch (err) {
       console.error('PF file read error:', err);
@@ -5506,6 +5536,21 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
       toastWarn(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB. Month-End Pre-Check supports PDFs up to 12 MB. For larger files, split by matter or contact support.`, 'PDF too large');
       return;
     }
+    // Show the loading panel IMMEDIATELY so users never see a frozen page
+    // during base64 conversion of larger monthly exports.
+    meOutput.innerHTML = `
+      <div class="bnc-pf-loading">
+        <div class="bnc-pf-loading-spinner"></div>
+        <div class="bnc-pf-loading-title">Loading your monthly export...</div>
+        <div class="bnc-pf-loading-stage">Reading the file from your computer...</div>
+        <div class="bnc-pf-loading-note">This usually takes just a moment.</div>
+      </div>
+    `;
+    setTimeout(() => {
+      const loadingEl = meOutput.querySelector('.bnc-pf-loading');
+      if (loadingEl) loadingEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+
     try {
       const b64 = await toBase64(file);
       monthEndState.pdfFile = { name: file.name, size: file.size, base64: b64 };
