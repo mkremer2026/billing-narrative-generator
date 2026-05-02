@@ -1954,7 +1954,120 @@
   .bnc-me-cat-tag.severity-high { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
   .bnc-me-cat-tag.severity-medium { background: #fef7e6; color: #92400e; border-color: #fde68a; }
 
+  /* ============ STREAMING UI ============ */
+  /* Live shell shown during streaming - replaces the old static spinner with
+     a panel that fills with finding cards as they arrive */
+  .bnc-pf-streaming-shell {
+    background: var(--paper);
+    border: 1.5px solid var(--gold);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .bnc-pf-streaming-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px dashed var(--border);
+  }
+  .bnc-pf-streaming-pulse {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+    animation: bncPfStreamPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes bncPfStreamPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+  .bnc-pf-streaming-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--navy);
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-bottom: 0.15rem;
+  }
+  .bnc-pf-streaming-sub {
+    font-family: 'Outfit', sans-serif;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+  .bnc-pf-streaming-sub strong,
+  .bnc-pf-streaming-sub [data-pf-stream-count] {
+    color: var(--navy);
+    font-weight: 700;
+  }
+  .bnc-pf-streaming-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  /* New card slide-in animation - subtle, doesn't distract */
+  .bnc-pf-streaming-card-new {
+    animation: bncPfCardIn 0.4s ease-out;
+  }
+  @keyframes bncPfCardIn {
+    0% { opacity: 0; transform: translateY(-4px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
   /* ============ MONTH-END STAGE 2: FILTER BAR + BULK ACTIONS + CLICKABLE PATTERNS ============ */
+
+  /* Value-forward intro on the Month-End tab */
+  .bnc-me-intro-headline {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--navy);
+    font-size: 1.18rem;
+    font-weight: 600;
+    margin: 0.75rem 0 0.85rem;
+    line-height: 1.35;
+  }
+  .bnc-me-intro-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.6rem 0 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 1.2rem;
+  }
+  @media (max-width: 720px) {
+    .bnc-me-intro-list { grid-template-columns: 1fr; }
+  }
+  .bnc-me-intro-list li {
+    position: relative;
+    padding: 0.45rem 0.6rem 0.45rem 1.6rem;
+    font-family: Georgia, serif;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--charcoal);
+    background: var(--ivory);
+    border-radius: 4px;
+    border-left: 2px solid var(--gold);
+  }
+  .bnc-me-intro-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0.55rem;
+    top: 0.5rem;
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  .bnc-me-intro-list strong {
+    color: var(--navy);
+    font-weight: 600;
+  }
+  .bnc-me-intro-cta {
+    margin-top: 0.85rem;
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
 
   /* Per-matter mapping in Step 2: bulk-apply row + auto-suggested badge */
   .bnc-me-bulk-apply {
@@ -3324,9 +3437,21 @@
     <!-- ============ PANEL 5: MONTH-END NARRATIVE PRE-CHECK ============ -->
     <section class="bnc-panel" data-panel="monthend">
       <div class="bnc-panel-intro">
-        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Triage Tool for Whole-Month Reviews</span>
+        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Whole-Month Review for Timekeepers</span>
         <h2>Month-End Narrative Pre-Check</h2>
-        <p>Upload your full monthly time export from your billing system - hundreds of entries across many matters - and get a fast triage report. Use this when you're reviewing your own time across the whole month before submitting to the firm. For deeper per-matter review, use the Pro Forma Pre-Check tab. Like all Pre-Checks, this is a first-pass assistant; final review remains with you.</p>
+        <p class="bnc-me-intro-headline">Catch what bill review will flag - before it ever gets there.</p>
+        <p>Export your full monthly time report from your billing software and upload it here. The Pre-Check scans every entry across every matter you billed and surfaces:</p>
+        <ul class="bnc-me-intro-list">
+          <li><strong>Block-billed entries</strong> - automatically broken up into separate advocacy narratives with suggested hours allocated.</li>
+          <li><strong>Vague or clerical-sounding narratives</strong> like "Reviewed file" or "Conference call with client" - flagged for clarification or rewritten as advocacy.</li>
+          <li><strong>ATVR weaknesses</strong> where your narrative describes the action instead of the strategic value of your work.</li>
+          <li><strong>Possibly missing billing bookends</strong> on calls, meetings, and internal communications - so you can capture prep and follow-up time you may have forgotten to bill.</li>
+          <li><strong>Duplicate or near-duplicate entries</strong> on the same date for the same matter.</li>
+          <li><strong>Spelling errors and task code mismatches</strong> - caught silently before partner review.</li>
+          <li><strong>Repeated identical narratives</strong> across the month - fix once with a bulk-action rewrite.</li>
+        </ul>
+        <p>Designed for timekeepers reviewing their own time across the whole month before submitting to the firm. Processes matters in parallel - finishes in roughly the same time whether you have 50 entries or 400+.</p>
+        <p class="bnc-me-intro-cta"><em>For partner-level pro forma review with per-matter carrier guidelines, use the Pro Forma Pre-Check tab. Like all Pre-Checks, this is a first-pass assistant; final review remains with you.</em></p>
       </div>
 
       <!-- STEP 1: Upload -->
@@ -3335,7 +3460,7 @@
           <span class="bnc-pf-step-num">Step 1</span>
           <h3>Upload your monthly time export</h3>
         </div>
-        <p class="bnc-pf-step-help">PDF format. Up to 12MB supported. Designed for monthly exports with 50-400+ entries across many matters. The Pre-Check processes matters in parallel so larger pro formas finish in roughly the same time as smaller ones.</p>
+        <p class="bnc-pf-step-help">PDF format. Up to 12MB supported.</p>
 
         <div class="bnc-pf-upload-zone" data-me-upload-zone>
           <input type="file" accept="application/pdf" data-me-pdf-input style="display:none">
@@ -4494,16 +4619,45 @@ Two-mode handling for spelling:
 (a) If the entry ALSO has another finding (ATVR_WEAKNESS, BLOCK_BILLING, etc.) that produces a suggested_rewrite, silently fix the spelling within that rewrite. Do NOT generate a separate SPELLING finding for that entry. The rewrite presents corrected spelling as part of the polished narrative.
 (b) If the entry is OTHERWISE clean (no other finding) but has a typo, flag as SPELLING (low severity). Populate the spelling_corrections array with the misspellings found and their corrections. The suggested_rewrite is the original narrative with the spellings corrected; nothing else changed.
 
-STEP 8 - Is the entry a phone call, meeting, or internal communication of 0.3+ hours that may be missing Billing Bookends?
-Bookends are: (before) preparation time - reviewing relevant documents, outlining agenda, drafting talking points; (task) the call/meeting/communication itself; (after) follow-up time - drafting memo to file, sending follow-up emails, updating case strategy notes.
+STEP 8 - Is the entry a live event that may be missing Billing Bookends (preparation time before, follow-up time after)?
+Bookends are: (before) preparation time - reviewing relevant documents, outlining agenda, drafting talking points, anticipating issues; (task) the live event itself; (after) follow-up time - drafting memo to file, sending follow-up correspondence, updating case strategy notes, memorializing decisions.
 
-Detection rules:
-- Only fire this flag for entries describing a call, meeting, telephone conference, internal communication, or similar live exchange.
-- Only fire when the entry's hours are 0.3 OR HIGHER. Below 0.3, separate bookend entries usually aren't worth capturing.
-- SUPPRESS this flag if there is a companion entry on the same date for the same matter that captures preparation OR follow-up time. Look for entries that mention preparing for the call, reviewing materials in advance, drafting follow-up correspondence, updating notes, or memorializing decisions from the call.
-- Do NOT fire this flag for entries that already block-bill prep + call + follow-up (those get BLOCK_BILLING instead).
+LIVE EVENT TRIGGER LIST - fire this flag for entries describing any of:
+- Phone calls, telephone conferences, client calls
+- Meetings (client meetings, team meetings, opposing counsel meetings)
+- Internal communications (live discussions among team members)
+- HEARINGS of any kind (motion hearings, status hearings, pretrial hearings, sentencing hearings)
+- COURT APPEARANCES of any kind (oral argument, bench trials, jury trials, court conferences)
+- DEPOSITIONS (taking and defending)
+- MEDIATIONS
+- ARBITRATIONS
+- SETTLEMENT CONFERENCES
+- PRETRIAL CONFERENCES
+- Witness interviews and witness preparation sessions
+- Site visits and inspections
 
-Action: Flag as POSSIBLY_MISSING_BOOKENDS (low severity). The suggested_rewrite is a coaching prompt: "Consider whether preparation time (reviewing documents, outlining talking points) and follow-up time (memorializing decisions, drafting follow-up correspondence) were also captured for this [call/meeting]. If prep and follow-up time exist but were not billed, add separate bookend entries to capture the full scope of work."
+DETECTION RULES (TWO TIERS - aggressive):
+
+TIER 1 - HIGH-STAKES LIVE EVENTS: hearings, court appearances, depositions, mediations, arbitrations, settlement conferences, pretrial conferences, trials.
+- Trigger threshold: ANY duration (0.1 hours or more). These events ALWAYS have prep work and almost always have follow-up work. Even a 15-minute status conference involves reviewing the docket, the order being addressed, and a brief memo afterward.
+- ALWAYS flag if no preparation entry is visible in the same chunk for the same matter on the same date or a date close to the event. Do NOT suppress this flag just because a follow-up entry exists - prep and follow-up are SEPARATE bookends and missing prep is independently flag-worthy.
+- Look for prep entries that mention: reviewing documents in advance, preparing argument, preparing witness, drafting outline, anticipating issues, reviewing pleadings before hearing/deposition/mediation, etc.
+- Look for follow-up entries that mention: post-hearing memo, post-deposition summary, settlement memo, mediation outcome notes, drafting order following hearing, etc.
+
+TIER 2 - ROUTINE LIVE EVENTS: phone calls, meetings, telephone conferences, internal communications, witness interviews, site visits.
+- Trigger threshold: 0.3 hours or higher. Below 0.3, separate bookend entries usually aren't worth capturing.
+- SUPPRESS this flag if there is a companion entry on the same date for the same matter that captures preparation OR follow-up time.
+- Do NOT fire for entries that already block-bill prep + call + follow-up (those get BLOCK_BILLING instead).
+
+Action: Flag as POSSIBLY_MISSING_BOOKENDS. Severity:
+- Tier 1 events (hearings/depositions/mediations/arbitrations/court appearances/settlement conferences/pretrial conferences/trials): MEDIUM severity (these typically represent meaningful unbilled time - 1-3+ hours of prep and follow-up combined)
+- Tier 2 events (calls/meetings/internal comms): LOW severity
+
+The suggested_rewrite is a coaching prompt tailored to the event type. Examples:
+- For a hearing: "Consider whether preparation time (reviewing pleadings, preparing argument, anticipating questions from the bench) and follow-up time (post-hearing memo capturing the court's signals, communicating outcome to client, drafting any required follow-up filings) were also captured. Hearings almost always have substantial prep and follow-up work that should be billed as separate entries."
+- For a deposition: "Consider whether preparation time (reviewing prior testimony, preparing outline, reviewing exhibits) and follow-up time (post-deposition summary, key admissions memo, strategy update) were also captured. Depositions almost always involve substantial prep and follow-up that should be billed separately."
+- For a mediation/arbitration/settlement conference: "Consider whether preparation time (reviewing settlement positions, preparing opening, reviewing damages analysis) and follow-up time (memorializing outcome, drafting settlement documents or status update to client) were also captured."
+- For a call/meeting: "Consider whether preparation time (reviewing documents, outlining talking points) and follow-up time (memorializing decisions, drafting follow-up correspondence) were also captured for this [call/meeting]."
 
 DO NOT use a separate "COMPLIANCE_VIOLATION" category. The vast majority of what previously triggered that category is actually ATVR_WEAKNESS - the work IS billable, the narrative just needs to advocate for the value. Apply Step 5 to those entries instead. Only use COMPLIANCE_VIOLATION (high severity) for genuinely non-billable items: personal time billed to a matter, double-billing across timekeepers, time exceeding actual hours worked, billing on a closed matter. These are integrity issues, not narrative issues.
 
@@ -4573,18 +4727,76 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
         messageContent = reviewPrompt;
       }
 
-      const r = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: messageContent }]
-        })
+      // Set up streaming UI: replace the spinner with a live results panel that
+      // populates findings one card at a time as they stream in. Total wall-clock
+      // time is the same, but the user sees content within ~5-10 seconds instead
+      // of staring at a spinner for the whole run.
+      let streamingStarted = false;
+      let streamingFindingsContainer = null;
+      let streamingCount = 0;
+
+      const findingsParser = createStreamingFindingsParser({
+        onFinding: (f) => {
+          if (!streamingStarted) {
+            // First finding - swap the spinner for the streaming results shell
+            streamingStarted = true;
+            clearInterval(stageInterval);
+            pfOutput.innerHTML = `
+              <div class="bnc-pf-streaming-shell">
+                <div class="bnc-pf-streaming-header">
+                  <div class="bnc-pf-streaming-pulse"></div>
+                  <div>
+                    <div class="bnc-pf-streaming-title">Findings are streaming in...</div>
+                    <div class="bnc-pf-streaming-sub"><span data-pf-stream-count>0</span> findings so far. Final report will organize them by category and severity when complete.</div>
+                  </div>
+                </div>
+                <div class="bnc-pf-streaming-list" data-pf-stream-list></div>
+              </div>
+            `;
+            streamingFindingsContainer = pfOutput.querySelector('[data-pf-stream-list]');
+          }
+          streamingCount++;
+          const countEl = pfOutput.querySelector('[data-pf-stream-count]');
+          if (countEl) countEl.textContent = streamingCount;
+          // Render the new finding card and append it to the list. We use the
+          // same renderer as the final report, so styling is consistent.
+          if (streamingFindingsContainer) {
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = pfRenderFindingCardHtml(f);
+            const card = wrapper.firstElementChild;
+            if (card) {
+              card.classList.add('bnc-pf-streaming-card-new');
+              streamingFindingsContainer.appendChild(card);
+              // Wire copy buttons for THIS card immediately so users can interact
+              card.querySelectorAll('[data-pf-copy-rewrite]').forEach(b => {
+                b.addEventListener('click', async () => {
+                  try {
+                    await navigator.clipboard.writeText(b.dataset.pfCopyRewrite);
+                    const orig = b.textContent;
+                    b.textContent = '✓ Copied';
+                    b.classList.add('copied');
+                    setTimeout(() => { b.textContent = orig; b.classList.remove('copied'); }, 1500);
+                  } catch { toastError("Couldn't copy."); }
+                });
+              });
+            }
+          }
+        }
+      });
+
+      let fullText = '';
+      await streamGenerate({
+        messages: [{ role: 'user', content: messageContent }],
+        onTextDelta: (chunk, accumulated) => {
+          fullText = accumulated;
+          findingsParser(accumulated);
+        }
       });
       clearInterval(stageInterval);
-      if (!r.ok) throw new Error('API ' + r.status);
-      const json = await r.json();
-      const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
-      const data = parseJsonResilient(text);
+
+      // Stream complete. Parse the full assembled text resiliently and render
+      // the final grouped-by-category report. This replaces the streaming view.
+      const data = parseJsonResilient(fullText);
 
       proFormaState.review = data;
       pfRenderReport(data);
@@ -4662,6 +4874,75 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
       POSSIBLY_MISSING_BOOKENDS: '⤺'
     };
     return icons[category] || '?';
+  }
+
+  // Render a single finding card. Used both during streaming (one card at a time
+  // as findings arrive) and during final report render (grouped by category).
+  function pfRenderFindingCardHtml(f) {
+    return `
+      <div class="bnc-pf-finding severity-${f.severity || 'low'}">
+        <div class="bnc-pf-finding-meta">
+          ${f.matter ? `<strong>${escapeHtml(f.matter)}</strong>` : ''}
+          ${f.date ? `· ${escapeHtml(f.date)}` : ''}
+          ${f.timekeeper ? `· ${escapeHtml(f.timekeeper)}` : ''}
+          ${f.hours ? `· ${escapeHtml(f.hours)} hrs` : ''}
+        </div>
+        <div class="bnc-pf-finding-issue">${escapeHtml(f.issue || 'Issue flagged')}</div>
+        ${f.original_narrative ? `
+          <div class="bnc-pf-finding-original">
+            <span class="bnc-pf-finding-original-label">Original</span>
+            ${escapeHtml(f.original_narrative)}
+          </div>
+        ` : ''}
+        ${(Array.isArray(f.unbundled_narratives) && f.unbundled_narratives.length > 0) ? `
+          <div class="bnc-pf-unbundled">
+            <div class="bnc-pf-unbundled-header">Unbundled narratives (${f.unbundled_narratives.length})</div>
+            <div class="bnc-pf-unbundled-list">
+              ${f.unbundled_narratives.map((u, ui) => `
+                <div class="bnc-pf-unbundled-card">
+                  <span class="bnc-pf-unbundled-num">${ui + 1}.</span>
+                  <div class="bnc-pf-unbundled-body">
+                    <div class="bnc-pf-unbundled-narrative">${escapeHtml(u.narrative || '')}</div>
+                    <div class="bnc-pf-unbundled-meta">
+                      <strong>${escapeHtml(u.suggested_hours || '?')} hrs</strong> suggested
+                    </div>
+                  </div>
+                  <div class="bnc-pf-unbundled-actions">
+                    <button class="bnc-pf-finding-btn" data-pf-copy-rewrite="${escapeAttr(u.narrative || '')}">Copy</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            <div class="bnc-pf-unbundled-disclaimer">
+              Hours are estimates. Verify against your actual time before billing - the AI infers splits from the description, not from your records.
+            </div>
+          </div>
+        ` : ''}
+        ${(Array.isArray(f.spelling_corrections) && f.spelling_corrections.length > 0) ? `
+          <div class="bnc-pf-spelling">
+            <span class="bnc-pf-spelling-label">Spelling corrections</span>
+            <div class="bnc-pf-spelling-list">
+              ${f.spelling_corrections.map(c => `
+                <span class="bnc-pf-spelling-chip">
+                  <span class="bnc-pf-spelling-original">${escapeHtml(c.original || '')}</span>
+                  <span class="bnc-pf-spelling-arrow">→</span>
+                  <span class="bnc-pf-spelling-corrected">${escapeHtml(c.corrected || '')}</span>
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+        ${f.suggested_rewrite ? `
+          <div class="bnc-pf-finding-suggestion">
+            <span class="bnc-pf-finding-suggestion-label">Suggested rewrite</span>
+            ${escapeHtml(f.suggested_rewrite)}
+          </div>
+          <div class="bnc-pf-finding-actions">
+            <button class="bnc-pf-finding-btn" data-pf-copy-rewrite="${escapeAttr(f.suggested_rewrite)}">Copy Rewrite</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
   }
 
   function pfRenderReport(data) {
@@ -4770,70 +5051,7 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
             <span class="bnc-pf-category-chev"></span>
           </div>
           <div class="bnc-pf-category-body">
-            ${items.map((f, i) => `
-              <div class="bnc-pf-finding severity-${f.severity || 'low'}">
-                <div class="bnc-pf-finding-meta">
-                  ${f.matter ? `<strong>${escapeHtml(f.matter)}</strong>` : ''}
-                  ${f.date ? `· ${escapeHtml(f.date)}` : ''}
-                  ${f.timekeeper ? `· ${escapeHtml(f.timekeeper)}` : ''}
-                  ${f.hours ? `· ${escapeHtml(f.hours)} hrs` : ''}
-                </div>
-                <div class="bnc-pf-finding-issue">${escapeHtml(f.issue || 'Issue flagged')}</div>
-                ${f.original_narrative ? `
-                  <div class="bnc-pf-finding-original">
-                    <span class="bnc-pf-finding-original-label">Original</span>
-                    ${escapeHtml(f.original_narrative)}
-                  </div>
-                ` : ''}
-                ${(Array.isArray(f.unbundled_narratives) && f.unbundled_narratives.length > 0) ? `
-                  <div class="bnc-pf-unbundled">
-                    <div class="bnc-pf-unbundled-header">Unbundled narratives (${f.unbundled_narratives.length})</div>
-                    <div class="bnc-pf-unbundled-list">
-                      ${f.unbundled_narratives.map((u, ui) => `
-                        <div class="bnc-pf-unbundled-card">
-                          <span class="bnc-pf-unbundled-num">${ui + 1}.</span>
-                          <div class="bnc-pf-unbundled-body">
-                            <div class="bnc-pf-unbundled-narrative">${escapeHtml(u.narrative || '')}</div>
-                            <div class="bnc-pf-unbundled-meta">
-                              <strong>${escapeHtml(u.suggested_hours || '?')} hrs</strong> suggested
-                            </div>
-                          </div>
-                          <div class="bnc-pf-unbundled-actions">
-                            <button class="bnc-pf-finding-btn" data-pf-copy-rewrite="${escapeAttr(u.narrative || '')}">Copy</button>
-                          </div>
-                        </div>
-                      `).join('')}
-                    </div>
-                    <div class="bnc-pf-unbundled-disclaimer">
-                      Hours are estimates. Verify against your actual time before billing - the AI infers splits from the description, not from your records.
-                    </div>
-                  </div>
-                ` : ''}
-                ${(Array.isArray(f.spelling_corrections) && f.spelling_corrections.length > 0) ? `
-                  <div class="bnc-pf-spelling">
-                    <span class="bnc-pf-spelling-label">Spelling corrections</span>
-                    <div class="bnc-pf-spelling-list">
-                      ${f.spelling_corrections.map(c => `
-                        <span class="bnc-pf-spelling-chip">
-                          <span class="bnc-pf-spelling-original">${escapeHtml(c.original || '')}</span>
-                          <span class="bnc-pf-spelling-arrow">→</span>
-                          <span class="bnc-pf-spelling-corrected">${escapeHtml(c.corrected || '')}</span>
-                        </span>
-                      `).join('')}
-                    </div>
-                  </div>
-                ` : ''}
-                ${f.suggested_rewrite ? `
-                  <div class="bnc-pf-finding-suggestion">
-                    <span class="bnc-pf-finding-suggestion-label">Suggested rewrite</span>
-                    ${escapeHtml(f.suggested_rewrite)}
-                  </div>
-                  <div class="bnc-pf-finding-actions">
-                    <button class="bnc-pf-finding-btn" data-pf-copy-rewrite="${escapeAttr(f.suggested_rewrite)}">Copy Rewrite</button>
-                  </div>
-                ` : ''}
-              </div>
-            `).join('')}
+            ${items.map(f => pfRenderFindingCardHtml(f)).join('')}
           </div>
         </div>
       `;
@@ -5611,11 +5829,25 @@ JSON FORMATTING (non-negotiable):
           }).join('')}
         </div>
       </div>
+      <div class="bnc-pf-streaming-shell" data-me-streaming-shell style="margin-top: 1.25rem;">
+        <div class="bnc-pf-streaming-header">
+          <div class="bnc-pf-streaming-pulse"></div>
+          <div>
+            <div class="bnc-pf-streaming-title">Findings are streaming in...</div>
+            <div class="bnc-pf-streaming-sub"><span data-me-stream-count>0</span> findings so far. The final report will organize them by category, severity, and matter when complete.</div>
+          </div>
+        </div>
+        <div class="bnc-pf-streaming-list" data-me-stream-list></div>
+      </div>
     `;
     setTimeout(() => {
       const progEl = meOutput.querySelector('.bnc-me-progress');
       if (progEl) progEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
+
+    const meStreamList = meOutput.querySelector('[data-me-stream-list]');
+    const meStreamCount = meOutput.querySelector('[data-me-stream-count]');
+    let meStreamingCount = 0;
 
     // Process chunks with bounded parallelism
     const allFindings = [];
@@ -5628,7 +5860,35 @@ JSON FORMATTING (non-negotiable):
       try {
         // Look up THIS matter's guideline context + PDF
         const ctx = matterGuidelineCtx[chunk.matter] || { context: '(No guidelines)', pdf: null };
-        const findings = await meReviewChunk(chunk, ctx.context, ctx.pdf);
+        const findings = await meReviewChunk(chunk, ctx.context, ctx.pdf, {
+          onFinding: (f) => {
+            // Append a card to the live streaming list. Card shows matter
+            // name in the header so users can see which matter the finding
+            // came from when interleaved across parallel chunks.
+            if (!meStreamList) return;
+            meStreamingCount++;
+            if (meStreamCount) meStreamCount.textContent = meStreamingCount;
+            const card = meRenderFindingCard(f);
+            meStreamList.insertAdjacentHTML('beforeend', card);
+            // Wire copy buttons for THIS newly inserted card so users can
+            // interact with rewrites immediately while the stream continues
+            const justInserted = meStreamList.lastElementChild;
+            if (justInserted) {
+              justInserted.classList.add('bnc-pf-streaming-card-new');
+              justInserted.querySelectorAll('[data-me-copy-rewrite]').forEach(b => {
+                b.addEventListener('click', async () => {
+                  try {
+                    await navigator.clipboard.writeText(b.dataset.meCopyRewrite || '');
+                    const orig = b.textContent;
+                    b.textContent = '✓ Copied';
+                    b.classList.add('copied');
+                    setTimeout(() => { b.textContent = orig; b.classList.remove('copied'); }, 1500);
+                  } catch { toastError("Couldn't copy."); }
+                });
+              });
+            }
+          }
+        });
         allFindings.push(...findings);
         if (itemEl) {
           itemEl.classList.remove('processing');
@@ -5720,7 +5980,8 @@ JSON FORMATTING (non-negotiable):
     }
   });
 
-  async function meReviewChunk(chunk, guidelineContext, guidelinePdf) {
+  async function meReviewChunk(chunk, guidelineContext, guidelinePdf, opts = {}) {
+    const onFinding = opts && typeof opts.onFinding === 'function' ? opts.onFinding : null;
     const reviewPrompt = `Your ONLY job is to return a JSON object with findings for the time entries below. Start with { and end with }.
 
 You are conducting a triage-level review of one matter from a monthly time export. The reviewing attorney is checking their own work before submitting to the firm.
@@ -5779,9 +6040,27 @@ STEP 6 - Spelling errors?
 - If otherwise clean: SPELLING (low). spelling_corrections array; suggested_rewrite is the original with spelling corrected.
 - Do NOT flag proper nouns, legal terms of art, or common abbreviations.
 
-STEP 7 - Phone/meeting/internal call >= 0.3 hrs without prep/follow-up bookend in the same chunk?
--> POSSIBLY_MISSING_BOOKENDS (low). suggested_rewrite is a short coaching prompt about adding bookends.
-- SUPPRESS if a companion entry on the same date in this chunk captures prep or follow-up.
+STEP 7 - Live event possibly missing Billing Bookends (preparation before, follow-up after)?
+
+LIVE EVENT TRIGGER LIST: phone calls, telephone conferences, client calls, meetings, internal communications, HEARINGS, COURT APPEARANCES, DEPOSITIONS, MEDIATIONS, ARBITRATIONS, SETTLEMENT CONFERENCES, PRETRIAL CONFERENCES, trials, witness interviews, witness preparation, site visits, inspections.
+
+TWO-TIER DETECTION (aggressive):
+
+TIER 1 - HIGH-STAKES LIVE EVENTS: hearings, court appearances, depositions, mediations, arbitrations, settlement conferences, pretrial conferences, trials.
+-> POSSIBLY_MISSING_BOOKENDS (MEDIUM severity).
+- Trigger threshold: ANY duration (0.1 hrs or more).
+- ALWAYS flag if no preparation entry visible in this chunk for the same matter on the same date or close-in dates. Do NOT suppress just because a follow-up entry exists - prep and follow-up are SEPARATE bookends; missing prep is independently flag-worthy.
+- Look for prep entries mentioning: reviewing pleadings/documents in advance, preparing argument, preparing witness, drafting outline, anticipating issues, reviewing exhibits.
+- Look for follow-up entries mentioning: post-hearing/post-deposition memo, settlement memo, mediation outcome notes, drafting order following hearing, key admissions summary.
+- suggested_rewrite is an event-specific coaching prompt. For hearings: prompt about reviewing pleadings, preparing argument, anticipating questions from the bench, plus post-hearing memo and client communication. For depositions: prompt about reviewing prior testimony, preparing outline, exhibits, plus post-deposition summary and key admissions memo. For mediations/arbitrations/settlement conferences: prompt about reviewing settlement positions, preparing opening, damages analysis, plus memorializing outcome.
+
+TIER 2 - ROUTINE LIVE EVENTS: phone calls, meetings, telephone conferences, internal communications, witness interviews, site visits.
+-> POSSIBLY_MISSING_BOOKENDS (LOW severity).
+- Trigger threshold: 0.3 hrs or higher.
+- SUPPRESS if a companion entry on the same date in this chunk captures prep OR follow-up.
+- suggested_rewrite is a short coaching prompt about adding prep/follow-up bookend entries.
+
+Do NOT fire this flag for entries that already block-bill prep + event + follow-up (those get BLOCK_BILLING instead).
 
 STEP 8 - Duplicate or overlapping with another entry IN THIS CHUNK on the same date for this matter?
 -> DUPLICATE_OR_OVERLAP (medium or high). suggested_rewrite = "Consolidate with the other entry, or differentiate by clarifying the distinct scope of each."
@@ -5829,6 +6108,84 @@ JSON FORMATTING (non-negotiable):
       messageContent = reviewPrompt;
     }
 
+    // If onFinding callback is provided, stream the response and emit findings
+    // as they arrive. Otherwise fall back to non-streaming for callers that
+    // don't need progressive rendering (e.g. cross-matter summary pass).
+    if (typeof onFinding === 'function') {
+      const findingsParser = createStreamingFindingsParser({
+        onFinding: (f) => {
+          // Decorate the finding with chunk context so caller can route it correctly
+          if (!f.matter) f.matter = chunk.matter;
+          onFinding(f);
+        }
+      });
+      let fullText = '';
+      await streamGenerate({
+        messages: [{ role: 'user', content: messageContent }],
+        onTextDelta: (_chunk, accumulated) => {
+          fullText = accumulated;
+          findingsParser(accumulated);
+        }
+      });
+      const data = parseJsonResilient(fullText);
+      return Array.isArray(data.findings) ? data.findings : [];
+    }
+
+    // If caller provided a streaming callback, stream findings as they arrive
+    // via streamGenerate + the progressive findings parser. Otherwise fall back
+    // to the original non-streaming fetch (kept for any future non-UI callers).
+    if (opts.onFinding) {
+      const localFindings = [];
+      const seenKeys = new Set(); // dedupe so we don't return + emit the same finding twice
+      const findingsParser = createStreamingFindingsParser({
+        onFinding: (f) => {
+          // Tag the finding with its source matter and chunk hours for the UI
+          const key = `${f.entry_index}-${f.category}-${f.matter || chunk.matter}`;
+          if (seenKeys.has(key)) return;
+          seenKeys.add(key);
+          localFindings.push(f);
+          try { opts.onFinding(f, chunk); } catch (cbErr) { console.warn('onFinding callback error:', cbErr); }
+        }
+      });
+
+      let streamedText = '';
+      try {
+        await streamGenerate({
+          messages: [{ role: 'user', content: messageContent }],
+          onTextDelta: (_chunkText, fullText) => {
+            streamedText = fullText;
+            findingsParser(fullText);
+          }
+        });
+      } catch (streamErr) {
+        // If streaming itself failed, fall through to a final resilient parse on
+        // whatever text we did receive - we may still recover findings.
+        console.warn('ME chunk stream error, falling back to resilient parse:', streamErr);
+      }
+
+      // Final resilient pass on the assembled text catches any findings the
+      // progressive parser missed (e.g., trailing partial-but-completed objects).
+      try {
+        const data = parseJsonResilient(streamedText);
+        if (Array.isArray(data.findings)) {
+          data.findings.forEach(f => {
+            const key = `${f.entry_index}-${f.category}-${f.matter || chunk.matter}`;
+            if (!seenKeys.has(key)) {
+              seenKeys.add(key);
+              localFindings.push(f);
+              try { opts.onFinding(f, chunk); } catch (cbErr) { /* swallow */ }
+            }
+          });
+        }
+      } catch (parseErr) {
+        // If we never got valid JSON at all, let the caller decide how to react
+        if (localFindings.length === 0) throw parseErr;
+      }
+
+      return localFindings;
+    }
+
+    // Non-streaming path (legacy / no UI callback)
     const r = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -8187,6 +8544,169 @@ Return your response as JSON only, no preamble or code fences:
       return ['phase1','phase2','phase3','phase4'].some(k => data[k] && formatCodes(data[k].codes) !== null);
     }
     return false;
+  }
+
+  // ============ STREAMING INFRASTRUCTURE ============
+  // Core helpers that let any review or generation flow stream content as it's
+  // produced by the AI, instead of waiting for the full response. The big UX
+  // win is that finding cards start appearing within 5-10 seconds instead of
+  // the user staring at a spinner for 60-90 seconds.
+
+  // streamGenerate: drop-in replacement for fetch('/api/generate') that streams.
+  // Calls onTextDelta(textChunk) as each chunk of text arrives from the AI.
+  // Calls onDone(fullText, fullJsonResponse) when the stream ends successfully.
+  // Calls onError(err) on any failure. Caller can also await the returned
+  // promise to know when streaming finished.
+  //
+  // The shape of fullJsonResponse mimics the non-streaming response so callers
+  // can extract text the same way they did before:
+  //   { content: [{ type: 'text', text: <fullAssembledText> }] }
+  async function streamGenerate({ messages, onTextDelta, onDone, onError, signal }) {
+    let fullText = '';
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages, stream: true }),
+        signal: signal
+      });
+      if (!response.ok) throw new Error('API error ' + response.status);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // Anthropic SSE events are separated by \n\n. Process each complete event.
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || ''; // keep partial last event in buffer
+
+        for (const eventBlock of events) {
+          if (!eventBlock.trim()) continue;
+          // Each block has lines like "event: content_block_delta\ndata: {...}"
+          const lines = eventBlock.split('\n');
+          let dataLine = '';
+          for (const line of lines) {
+            if (line.startsWith('data:')) {
+              dataLine = line.slice(5).trim();
+              break;
+            }
+          }
+          if (!dataLine || dataLine === '[DONE]') continue;
+          try {
+            const evt = JSON.parse(dataLine);
+            // The events we care about are content_block_delta with text_delta type
+            if (evt.type === 'content_block_delta' && evt.delta && evt.delta.type === 'text_delta') {
+              const chunk = evt.delta.text || '';
+              if (chunk) {
+                fullText += chunk;
+                if (onTextDelta) onTextDelta(chunk, fullText);
+              }
+            }
+            // We can also surface message_stop or errors if needed
+            if (evt.type === 'error') {
+              throw new Error(evt.error?.message || 'Stream error');
+            }
+          } catch (parseErr) {
+            // A bad event line shouldn't kill the whole stream - just skip it
+            console.warn('Stream event parse error:', parseErr.message, dataLine.slice(0, 100));
+          }
+        }
+      }
+
+      // Decode any remaining bytes
+      const tail = decoder.decode();
+      if (tail) buffer += tail;
+
+      const fullJsonResponse = { content: [{ type: 'text', text: fullText }] };
+      if (onDone) onDone(fullText, fullJsonResponse);
+      return fullJsonResponse;
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        // Caller cancelled - don't treat as error
+        throw err;
+      }
+      console.error('streamGenerate error:', err);
+      if (onError) onError(err);
+      throw err;
+    }
+  }
+
+  // createStreamingFindingsParser: returns a callable that you feed accumulated
+  // text into as it streams in. Each time a complete finding object closes inside
+  // the findings[] array, it calls onFinding(parsedFindingObject).
+  //
+  // Strategy: track brace depth and string state while walking through the text.
+  // When we're inside the findings[...] array and a top-level {} closes, that
+  // chunk is a complete finding. Slice it out, JSON.parse it, fire callback.
+  //
+  // We keep state across calls so that you can feed it incremental chunks; it
+  // remembers where it left off in the text.
+  function createStreamingFindingsParser({ onFinding, onUnbundled }) {
+    let lastIndex = 0;       // how much of the text we've already parsed
+    let inFindingsArray = false;  // have we seen "findings": [
+    let depth = 0;           // current brace depth INSIDE the findings array
+    let findingStart = -1;   // index where the current finding object started
+    let inString = false;
+    let escapeNext = false;
+    const seenFindings = new Set(); // dedupe key based on entry_index + category
+
+    return function feed(accumulatedText) {
+      // Lazy-init: find the start of the findings array on first call where it appears
+      if (!inFindingsArray) {
+        const arrStart = accumulatedText.indexOf('"findings"');
+        if (arrStart === -1) return;
+        const bracketStart = accumulatedText.indexOf('[', arrStart);
+        if (bracketStart === -1) return;
+        inFindingsArray = true;
+        lastIndex = bracketStart + 1;
+        depth = 0;
+        findingStart = -1;
+        inString = false;
+        escapeNext = false;
+      }
+
+      // Walk forward from lastIndex looking for complete finding objects
+      for (let i = lastIndex; i < accumulatedText.length; i++) {
+        const c = accumulatedText[i];
+        if (escapeNext) { escapeNext = false; continue; }
+        if (c === '\\') { escapeNext = true; continue; }
+        if (c === '"') { inString = !inString; continue; }
+        if (inString) continue;
+
+        if (c === '{') {
+          if (depth === 0) findingStart = i;
+          depth++;
+        } else if (c === '}') {
+          depth--;
+          if (depth === 0 && findingStart !== -1) {
+            // We just closed a top-level object inside findings[]. Slice + parse.
+            const objText = accumulatedText.slice(findingStart, i + 1);
+            try {
+              const finding = JSON.parse(objText);
+              const key = `${finding.entry_index}-${finding.category}-${finding.matter || ''}`;
+              if (!seenFindings.has(key)) {
+                seenFindings.add(key);
+                if (onFinding) onFinding(finding);
+              }
+            } catch (e) {
+              // Partial / malformed finding - skip silently. The final
+              // resilient parse at the end will catch what we missed.
+            }
+            findingStart = -1;
+          }
+        } else if (c === ']' && depth === 0) {
+          // End of findings array - we're done
+          lastIndex = i;
+          return;
+        }
+      }
+      lastIndex = accumulatedText.length;
+    };
   }
 
   // Resilient JSON parser - tries progressively more aggressive recovery strategies
