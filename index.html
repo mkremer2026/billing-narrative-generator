@@ -5101,14 +5101,39 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
       });
 
       let fullText = '';
-      await streamGenerate({
-        messages: [{ role: 'user', content: messageContent }],
-        onTextDelta: (chunk, accumulated) => {
-          fullText = accumulated;
-          findingsParser(accumulated);
-        }
-      });
+      try {
+        await streamGenerate({
+          messages: [{ role: 'user', content: messageContent }],
+          onTextDelta: (chunk, accumulated) => {
+            fullText = accumulated;
+            findingsParser(accumulated);
+          }
+        });
+      } catch (streamErr) {
+        // If streaming silently failed (e.g. "Stream produced empty response"),
+        // fall back to a non-streaming request. Slower (full wait) but reliable.
+        console.warn('PF stream failed, falling back to non-streaming request:', streamErr.message);
+        // Update the loading UI to indicate the fallback path
+        const stageEl = pfOutput.querySelector('[data-pf-stream-list]')
+          ? pfOutput.querySelector('.bnc-pf-streaming-sub')
+          : pfOutput.querySelector('[data-loading-stage]');
+        if (stageEl) stageEl.textContent = 'Streaming unavailable - waiting for the full response (this can take 60-90 seconds)...';
+
+        const r = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: [{ role: 'user', content: messageContent }] })
+        });
+        if (!r.ok) throw new Error('Pre-Check API ' + r.status);
+        const json = await r.json();
+        fullText = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+      }
       clearInterval(stageInterval);
+
+      // If we still have no text after both attempts, give up with a clear error
+      if (!fullText) {
+        throw new Error('Pre-Check returned no content from either streaming or non-streaming request');
+      }
 
       // Stream complete. Parse the full assembled text resiliently and render
       // the final grouped-by-category report. This replaces the streaming view.
@@ -6476,9 +6501,22 @@ JSON FORMATTING (non-negotiable):
           }
         });
       } catch (streamErr) {
-        // If streaming itself failed, fall through to a final resilient parse on
-        // whatever text we did receive - we may still recover findings.
-        console.warn('ME chunk stream error, falling back to resilient parse:', streamErr);
+        // If streaming silently failed (e.g. "Stream produced empty response"),
+        // fall back to a non-streaming request for THIS chunk. Slower but reliable.
+        console.warn('ME chunk stream failed, falling back to non-streaming for this matter:', streamErr.message);
+        try {
+          const fallbackR = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: [{ role: 'user', content: messageContent }] })
+          });
+          if (fallbackR.ok) {
+            const fallbackJson = await fallbackR.json();
+            streamedText = (fallbackJson.content && fallbackJson.content[0] && fallbackJson.content[0].text) || fallbackJson.text || '';
+          }
+        } catch (fallbackErr) {
+          console.warn('ME chunk non-streaming fallback also failed:', fallbackErr.message);
+        }
       }
 
       // Final resilient pass on the assembled text catches any findings the
@@ -8881,6 +8919,9 @@ Return your response as JSON only, no preamble or code fences:
   //   { content: [{ type: 'text', text: <fullAssembledText> }] }
   async function streamGenerate({ messages, onTextDelta, onDone, onError, signal }) {
     let fullText = '';
+    let totalChunks = 0;
+    let totalEvents = 0;
+    let firstChunkLogged = false;
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
@@ -8890,6 +8931,12 @@ Return your response as JSON only, no preamble or code fences:
       });
       if (!response.ok) throw new Error('API error ' + response.status);
 
+      // Log the response Content-Type so we can verify the backend is actually
+      // streaming SSE (text/event-stream) versus returning a non-streaming
+      // application/json response that the SSE parser would silently skip.
+      const responseContentType = response.headers.get('content-type') || '';
+      console.log('streamGenerate: response Content-Type =', responseContentType);
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
@@ -8897,7 +8944,16 @@ Return your response as JSON only, no preamble or code fences:
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        buffer += decoder.decode(value, { stream: true });
+        const decodedChunk = decoder.decode(value, { stream: true });
+        totalChunks++;
+        // Log the FIRST decoded chunk so we can see what the actual format looks
+        // like - this helps diagnose streaming failures by showing whether we're
+        // getting SSE events or JSON or something else entirely.
+        if (!firstChunkLogged) {
+          console.log('streamGenerate: first chunk preview (200 chars):', JSON.stringify(decodedChunk.slice(0, 200)));
+          firstChunkLogged = true;
+        }
+        buffer += decodedChunk;
 
         // Anthropic SSE events are separated by \n\n. Process each complete event.
         const events = buffer.split('\n\n');
@@ -8905,6 +8961,7 @@ Return your response as JSON only, no preamble or code fences:
 
         for (const eventBlock of events) {
           if (!eventBlock.trim()) continue;
+          totalEvents++;
           // Each block has lines like "event: content_block_delta\ndata: {...}"
           const lines = eventBlock.split('\n');
           let dataLine = '';
@@ -8939,6 +8996,14 @@ Return your response as JSON only, no preamble or code fences:
       // Decode any remaining bytes
       const tail = decoder.decode();
       if (tail) buffer += tail;
+
+      // SAFETY NET: if the stream completed without producing any text, that
+      // means SSE parsing silently skipped everything. Throw so the caller can
+      // fall back to a non-streaming retry.
+      if (!fullText) {
+        console.error(`streamGenerate: stream ended with empty text. Received ${totalChunks} raw chunks and ${totalEvents} SSE events but no content_block_delta events. Content-Type was: ${responseContentType}`);
+        throw new Error('Stream produced empty response - SSE parsing yielded no content');
+      }
 
       const fullJsonResponse = { content: [{ type: 'text', text: fullText }] };
       if (onDone) onDone(fullText, fullJsonResponse);
