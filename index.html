@@ -3207,7 +3207,7 @@
       <div class="bnc-mode-toggle" role="tablist" aria-label="Generation mode">
         <button class="bnc-mode-btn active" data-mode="single">One Task</button>
         <button class="bnc-mode-btn" data-mode="multi">Multiple Tasks <span class="bnc-mode-count" data-multi-count>1</span></button>
-        <button class="bnc-mode-btn" data-mode="bulk">Day / Week / Month</button>
+        <button class="bnc-mode-btn" data-mode="bulk">Quick Capture</button>
       </div>
 
       <div class="bnc-section-label">Select Your Role <span class="bnc-help-icon" data-help-tip="role">?</span></div>
@@ -3259,15 +3259,15 @@
         </div>
       </div>
 
-      <!-- ===== BULK MODE: Day / Week / Month ===== -->
+      <!-- ===== BULK MODE: Quick Capture ===== -->
       <div class="bnc-mode-form" data-mode-form="bulk">
         <div class="bnc-multi-tip">
-          <strong>Paste a whole day, week, or month of time entries.</strong> Any format works - exports from your timekeeping software, raw notes from your phone, bullet points, even an email recap. Include matter/client names and approximate times where you have them. The generator will parse each entry and produce a polished ATVR narrative for every one, grouped by date and matter on the way out.
+          <strong>Capture time as you go - throughout the day, every day.</strong> Between calls, after a hearing, walking out of a deposition. Jot down the date, the time, the client, and what you did. No polished prose required. The generator reads your shorthand and returns clean ATVR narratives, grouped by date and matter. Capture it now, polish it never - the Generator handles that part.
         </div>
         <div class="bnc-form-grid">
           <div class="bnc-field">
-            <label>Paste your time entries <span class="bnc-hint">freeform - any layout is fine</span> <span class="bnc-help-icon" data-help-tip="bulk-format">?</span></label>
-            <textarea class="bnc-textarea" id="bulk-entries" data-persist style="min-height: 320px; font-family: 'Outfit', sans-serif; font-size: 0.9rem; line-height: 1.6;" placeholder="Examples - paste any of these formats, or your own:&#10;&#10;10/15  Smith v. Acme        1.5   reviewed expert deposition transcript, pulled inconsistencies on preemption issue&#10;10/15  Jones matter         0.4   call with client re settlement posture and authority range&#10;10/16  Smith v. Acme        2.5   drafted MSJ section on causation, integrated transcript findings&#10;10/16  ABC Corp closing     1.2   reviewed buyer's revisions to disclosure schedules&#10;&#10;- OR -&#10;&#10;Monday: Smith MSJ research and outlining (3 hrs); Jones emails to OC (0.5); ABC closing checklist (1.2)&#10;Tuesday: Smith MSJ drafting argument 1 (4 hrs); ABC opinion letter review (0.8)&#10;&#10;- OR -&#10;&#10;Just braindump in your own words - mention the matter, the time, what you did. The generator will figure it out and lay it out clean for you."></textarea>
+            <label>Jot down what you did <span class="bnc-hint">shorthand is fine - or paste a longer batch</span> <span class="bnc-help-icon" data-help-tip="bulk-format">?</span></label>
+            <textarea class="bnc-textarea" id="bulk-entries" data-persist style="min-height: 320px; font-family: 'Outfit', sans-serif; font-size: 0.9rem; line-height: 1.6;" placeholder="Capture as you go - shorthand is fine:&#10;&#10;10/15  Smith v. Acme   1.5   reviewed expert depo transcript, pulled inconsistencies on preemption&#10;10/15  Jones           0.4   call w/ client re settlement posture&#10;10/16  Smith v. Acme   2.5   drafted MSJ section on causation&#10;10/16  ABC closing     1.2   reviewed buyer's revisions to disclosure schedules&#10;&#10;- OR a longer batch -&#10;&#10;Monday: Smith MSJ research (3 hrs); Jones emails to OC (0.5); ABC closing checklist (1.2)&#10;Tuesday: Smith MSJ drafting (4 hrs); ABC opinion letter review (0.8)&#10;&#10;- OR just freeform -&#10;&#10;Date, time, client, what you did. Even loose notes work. The generator parses it and lays it out clean for you."></textarea>
           </div>
         </div>
       </div>
@@ -3687,7 +3687,7 @@
 
           <p><strong>2. Standard Narrative <em>- Multiple Tasks</em>.</strong> Got several tasks queued up? Switch to this mode (button at the top of the Standard Narrative tab). Add a row for each task - up to 20 - and the generator returns clean narratives for the entire batch in a single shot. Output stays grouped by matter so it's easy to copy into the right place.</p>
 
-          <p><strong>3. Standard Narrative <em>- Day / Week / Month</em>.</strong> Catch-up power tool. Paste an entire day, week, or month of time entries in <em>any</em> format. Timesheet export, calendar dump, bullet list, freeform notes from your phone. The generator parses every entry and returns polished narratives grouped by date and matter.</p>
+          <p><strong>3. Standard Narrative <em>- Quick Capture</em>.</strong> Real-time capture power tool. Throughout the day - between calls, after a hearing, walking out of a deposition - jot down the date, time, client, and what you did. The generator reads your shorthand and returns polished ATVR narratives grouped by date and matter. <em>Capture it now, polish it never - the Generator handles that part.</em></p>
 
           <p><strong>4. Billing Bookends.</strong> Capture the full work cycle: the strategic prep <em>before</em> a task, the event itself, and the substantive follow-up <em>after</em>. Three narratives, one shot. This is where the time most attorneys leave on the table - the thinking and prep around an event - finally gets captured.</p>
 
@@ -3750,7 +3750,7 @@
       <div class="bnc-help-tab-card">
         <div><span class="bnc-help-tab-num">i.</span><strong>Standard Narrative</strong></div>
         <p>One task, one entry. Use this when you finished a discrete piece of work and want to bill it cleanly. Paste the messy blurb you'd type into your timekeeper, hit generate, get the polished version. 20-25 words, full ATVR.</p>
-        <p style="margin-top: 0.45rem;"><em>Three modes inside this tab:</em> <strong>One Task</strong> (single narrative), <strong>Multiple Tasks</strong> (up to 20 structured rows), and <strong>Day / Week / Month</strong> (paste any messy timesheet, calendar, or braindump - the generator parses each entry and writes a polished narrative for every one, grouped by date and matter).</p>
+        <p style="margin-top: 0.45rem;"><em>Three modes inside this tab:</em> <strong>One Task</strong> (single narrative), <strong>Multiple Tasks</strong> (up to 20 structured rows), and <strong>Quick Capture</strong> (real-time capture as you go - jot down date, time, client, and what you did, and the generator returns polished narratives grouped by date and matter).</p>
       </div>
 
       <div class="bnc-help-tab-card">
@@ -8173,8 +8173,8 @@ Return your response as JSON only, no preamble or code fences:
       if (descEl) descEl.textContent = "Add a row for each task you completed. The generator returns a polished ATVR narrative for each one - all in a single batch. Up to 20 tasks at a time.";
       if (genBtn) genBtn.textContent = 'Generate All Narratives';
     } else if (mode === 'bulk') {
-      if (titleEl) titleEl.textContent = 'Day / Week / Month';
-      if (descEl) descEl.textContent = "Paste an entire day, week, or month of time entries in any format. The generator parses each entry and produces a polished ATVR narrative for every one, grouped by date and matter.";
+      if (titleEl) titleEl.textContent = 'Quick Capture';
+      if (descEl) descEl.textContent = "Real-time capture for busy attorneys. Throughout the day - between calls, after a hearing, walking out of a deposition - jot down the date, time, client, and what you did. The generator reads your shorthand and returns polished ATVR narratives grouped by date and matter. Capture it now, polish it never - the Generator handles that part.";
       if (genBtn) genBtn.textContent = 'Generate All Narratives';
     } else {
       if (titleEl) titleEl.textContent = 'Single Narrative';
@@ -8375,7 +8375,7 @@ Return your response as JSON only, no preamble or code fences:
     return html;
   }
 
-  // ============ STANDARD: BULK (Day / Week / Month) ============
+  // ============ STANDARD: BULK (Quick Capture) ============
   async function handleStandardBulk(btn, mode) {
     const raw = document.getElementById('bulk-entries').value.trim();
     if (!raw) { toastWarn("Paste your time entries into the box first."); return; }
@@ -9482,7 +9482,7 @@ Return your response as JSON only, no preamble or code fences:
         } else if (panel === 'standard' && currentStandardMode === 'bulk') {
           const entries = Array.isArray(data.entries) ? data.entries : [];
           snippet = entries[0] && entries[0].narrative ? entries[0].narrative : '';
-          label = `Day/Week/Month · ${entries.length} entries`;
+          label = `Quick Capture · ${entries.length} entries`;
         } else if (panel === 'standard') {
           snippet = data.narrative || '';
           label = 'One Task';
@@ -9625,7 +9625,7 @@ Return your response as JSON only, no preamble or code fences:
     'matter-context': "<strong>Optional but powerful.</strong> Two or three words about the case (e.g., \"employment discrimination, defending employer\") give the generator real context to write from. Without it, narratives stay generic.",
     'bookends-time': "<strong>Capture all three.</strong> Most attorneys forget that the strategic prep <em>before</em> a call/event and the substantive follow-up <em>after</em> are billable - and often more billable than the event itself. Cringe and count it.",
     'phase-split': "<strong>Auto-split is fine.</strong> Leave blank if you don't have specific phase times - the generator will distribute reasonably. If you want control, enter four numbers separated by dashes: e.g., <em>2-1.5-4-1</em> means 2 hrs review, 1.5 hrs outlining, 4 hrs drafting, 1 hr finalizing.",
-    'bulk-format': "<strong>Almost any format works.</strong> Timesheet exports, calendar dumps, bullet lists, an email recap from yesterday, even a freeform braindump from your phone. Just include the matter/client name, time, and what you did - even loosely. The generator will parse it and lay everything out cleanly grouped by date and matter."
+    'bulk-format': "<strong>Quick capture, no polished prose required.</strong> Just jot down the date, time, client, and what you did - shorthand is fine. Or paste a longer timesheet export, calendar dump, or freeform notes if you're catching up on a stretch. The generator parses it all and lays everything out cleanly grouped by date and matter."
   };
 
   document.querySelectorAll('[data-help-tip]').forEach(icon => {
@@ -9678,7 +9678,7 @@ Return your response as JSON only, no preamble or code fences:
   const tourSteps = [
     { title: 'Standard Narrative <em>- One Task</em>', body: '<p>Welcome to your billing toolkit. The most common move starts here: paste a single task you just completed, hit <strong>Generate</strong>, get a polished ATVR narrative back in seconds.</p><p>Most days, this is the only mode you\'ll need.</p>' },
     { title: 'Standard Narrative <em>- Multiple Tasks</em>', body: '<p>Got several tasks queued up at once? Click <strong>Multiple Tasks</strong> at the top of the Standard Narrative tab.</p><p>Add a row for each task - up to 20 - and the generator returns clean ATVR narratives for the entire batch in a single shot.</p>' },
-    { title: 'Standard Narrative <em>- Day / Week / Month</em>', body: '<p>The fastest catch-up tool in the app. Click <strong>Day / Week / Month</strong> at the top of the Standard Narrative tab.</p><p>Paste an entire day, week, or month of time entries - any format works. Timesheet export, calendar dump, freeform notes from your phone. The generator parses everything and returns polished narratives grouped by date and matter.</p>' },
+    { title: 'Standard Narrative <em>- Quick Capture</em>', body: '<p>Real-time capture for busy attorneys. Click <strong>Quick Capture</strong> at the top of the Standard Narrative tab.</p><p>Throughout the day - between calls, after a hearing, walking out of a deposition - jot down the date, time, client, and what you did. The generator reads your shorthand and returns polished ATVR narratives grouped by date and matter.</p>' },
     { title: 'Billing Bookends', body: '<p>Capture the full work cycle. The strategic prep <strong>before</strong> a task. The event itself. The substantive follow-up <strong>after</strong>.</p><p>Three narratives, one shot. This is where the time most attorneys leave on the table - the thinking and prep around an event - finally gets billed.</p>' },
     { title: 'Break It Up', body: '<p>Big project? MSJ, purchase agreement, trial prep, complex motion?</p><p>This tab splits one block of work into four phase narratives - <strong>review</strong>, <strong>outlining</strong>, <strong>drafting</strong>, <strong>finalizing</strong> - so nothing reads as block billing. Each phase stands alone, each gets paid.</p>' },
     { title: 'Pro Forma Pre-Check', body: '<p>Hate reviewing month-end pro formas? Upload the PDF and the Pre-Check flags ATVR weaknesses, block billing, duplicate entries, code mismatches, and guideline compliance issues. You get a structured report (with suggested rewrites for each finding) so partner review takes minutes instead of hours.</p>' },
