@@ -5734,14 +5734,15 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
 
   async function meHandleFile(file) {
     if (file.size > ME_PDF_SIZE_LIMIT) {
-      toastWarn(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB. Month-End Pre-Check supports PDFs up to 12 MB. For larger files, split by matter or contact support.`, 'PDF too large');
+      toastWarn(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB. Month-End Pre-Check supports PDFs up to 15 MB. For larger files, split by matter or contact support.`, 'PDF too large');
       return;
     }
     // Show the GUARANTEED-VISIBLE fixed-position overlay spinner. Lives outside
     // the page flow so it always appears in the viewport center.
     const overlay = showLoadingOverlay({
-      title: 'Reading through your monthly time export...',
+      title: 'Uploading your monthly time export...',
       stages: [
+        'Uploading PDF to secure storage...',
         'Reading through your monthly time entries...',
         'Looking at every matter you billed this month...',
         'Identifying timekeepers and task codes...',
@@ -5753,8 +5754,17 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
     monthEndState._activeOverlay = overlay;
 
     try {
-      const b64 = await toBase64(file);
-      monthEndState.pdfFile = { name: file.name, size: file.size, base64: b64 };
+      // Upload the PDF directly to Vercel Blob storage instead of base64-encoding it
+      // into memory and shipping it through /api/generate. This bypasses Vercel's
+      // serverless function body size limit, which was rejecting PDFs above ~4.5 MB.
+      // The blob URL is what we'll send to /api/generate from this point on; the
+      // server fetches the PDF from blob storage and forwards it to Anthropic.
+      const blobUrl = await uploadPdfToBlob(file, (progress) => {
+        if (progress && progress.percentage != null) {
+          overlay.update(`Uploading: ${Math.round(progress.percentage)}%`);
+        }
+      });
+      monthEndState.pdfFile = { name: file.name, size: file.size, blobUrl: blobUrl };
       meFileName.textContent = file.name;
       meFileSize.textContent = `· ${meFormatSize(file.size)}`;
       meUploadPrompt.style.display = 'none';
@@ -5762,10 +5772,10 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
       meUploadZone.classList.add('has-file');
       meExtractEntries();
     } catch (err) {
-      console.error('ME file read error:', err);
+      console.error('ME upload error:', err);
       if (overlay) overlay.stop();
       monthEndState._activeOverlay = null;
-      toastError("Couldn't read that PDF. Try a different file.");
+      toastError("Couldn't upload that PDF. Try a different file or check your connection.");
       meResetAll();
     }
   }
@@ -5821,7 +5831,7 @@ JSON FORMATTING (non-negotiable):
           messages: [{
             role: 'user',
             content: [
-              { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: monthEndState.pdfFile.base64 } },
+            { type: 'document', source: { pdfBlobUrl: monthEndState.pdfFile.blobUrl } },
               { type: 'text', text: extractPrompt }
             ]
           }]
@@ -5851,7 +5861,7 @@ JSON FORMATTING (non-negotiable):
             messages: [{
               role: 'user',
               content: [
-                { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: monthEndState.pdfFile.base64 } },
+                { type: 'document', source: { pdfBlobUrl: monthEndState.pdfFile.blobUrl } },
                 { type: 'text', text: retryPrompt }
               ]
             }]
