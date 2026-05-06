@@ -4278,6 +4278,8 @@
   // -> user maps each matter to a Vault entry -> run review -> render report.
 
   const PF_PDF_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB - text extraction in browser, no Vercel payload limit
+  const PF_PAGES_PER_CHUNK = 8;       // pages per parallel extraction chunk - keeps each AI response well under output token cap
+  const PF_EXTRACT_PARALLELISM = 3;   // concurrent extraction API calls - same shape Month-End uses for matters
   const proFormaState = {
     pdfFile: null,         // { name, size, base64 }
     extracted: null,       // { entries: [...], matters: [...], pageCount: number }
@@ -4606,16 +4608,96 @@
     };
   }
 
+  // ============================================================================
+  // PRO FORMA CHUNKED EXTRACTION
+  // Long pro formas have so many entries that asking the AI to extract them all
+  // into one JSON array overflows the model's output token cap mid-response,
+  // breaking the JSON. Fix: split the extracted PDF text by page-boundaries
+  // into N-page chunks, run extraction calls in parallel with bounded concurrency,
+  // merge the results. Each chunk produces a manageable response.
+  // ============================================================================
+
+  // Split the full PDF text (as produced by extractPdfTextInBrowser, with
+  // "--- PAGE N ---" markers) into per-page entries.
+  function pfSplitTextByPages(fullText) {
+    const pages = [];
+    // Match "--- PAGE N ---" markers and capture the page number + the text
+    // that follows up to the next marker (or end of string).
+    const re = /--- PAGE (\d+) ---\n([\s\S]*?)(?=\n*--- PAGE \d+ ---|$)/g;
+    let m;
+    while ((m = re.exec(fullText)) !== null) {
+      const num = parseInt(m[1], 10);
+      const text = (m[2] || '').trim();
+      if (text) pages.push({ pageNum: num, text });
+    }
+    return pages;
+  }
+
+  // Group per-page entries into chunks of N pages each.
+  function pfChunkPages(pages, pagesPerChunk) {
+    const chunks = [];
+    for (let i = 0; i < pages.length; i += pagesPerChunk) {
+      const slice = pages.slice(i, i + pagesPerChunk);
+      chunks.push({
+        startPage: slice[0].pageNum,
+        endPage: slice[slice.length - 1].pageNum,
+        text: slice.map(p => `--- PAGE ${p.pageNum} ---\n${p.text}`).join('\n\n')
+      });
+    }
+    return chunks;
+  }
+
+  // Extract a single chunk. Same prompt + JSON parsing logic as the original
+  // single-call path, with one retry on parse failure.
+  async function pfExtractChunk(chunk, extractPromptBase) {
+    const chunkPrompt = `${extractPromptBase}\n\n<pdf_text pages="${chunk.startPage}-${chunk.endPage}">\n${chunk.text}\n</pdf_text>`;
+    const r = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: chunkPrompt }] })
+    });
+    if (!r.ok) throw new Error('Chunk API ' + r.status);
+    const json = await r.json();
+    const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+    try {
+      return parseJsonResilient(text);
+    } catch (firstErr) {
+      console.warn(`PF chunk pages ${chunk.startPage}-${chunk.endPage}: initial parse failed, retrying. Error:`, firstErr.message);
+      const retryPrompt = chunkPrompt + `\n\nIMPORTANT: Your previous response could not be parsed as JSON. Return ONLY the JSON object - no preamble, no markdown fences, every quote escaped properly, no trailing commas.`;
+      const r2 = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: retryPrompt }] })
+      });
+      if (!r2.ok) throw new Error('Chunk retry API ' + r2.status);
+      const json2 = await r2.json();
+      const text2 = (json2.content && json2.content[0] && json2.content[0].text) || json2.text || '';
+      return parseJsonResilient(text2);
+    }
+  }
+
+  // Merge per-chunk extraction results into the single shape pfRenderMappingUI expects.
+  function pfMergeChunkResults(chunkResults, totalPageCount) {
+    const entries = [];
+    const matterSet = new Set();
+    const notes = [];
+    chunkResults.forEach(r => {
+      if (r && Array.isArray(r.entries)) entries.push(...r.entries);
+      if (r && Array.isArray(r.matters)) r.matters.forEach(m => matterSet.add(m));
+      if (r && r.extraction_notes) notes.push(r.extraction_notes);
+    });
+    return {
+      entries,
+      matters: Array.from(matterSet),
+      page_count: totalPageCount,
+      extraction_notes: notes.length ? notes.join('; ') : null
+    };
+  }
+
   async function pfExtractEntries() {
-    // Toast lets the user know what's happening even if they look away from the page
     toastInfo('Reading through your pro forma - this takes about 20-40 seconds.', 'Working on it');
 
     // The overlay was started in pfHandleFile and persists through extraction.
-    // We DON'T render an in-flow loading panel here anymore - the overlay
-    // handles all the "we're working on it" UX.
-    //
-    // extractStageInterval.stop() is called from multiple paths below
-    // (success, retry, error). Each call must dismiss the overlay too.
     const extractStageInterval = {
       stop: () => {
         if (proFormaState._activeOverlay) {
@@ -4659,97 +4741,133 @@ The exact shape:
   "extraction_notes": "any caveats or null"
 }
 
-If the PDF doesn't appear to be a pro forma at all, return:
+If the section doesn't appear to be a pro forma at all, return:
 { "entries": [], "matters": [], "page_count": 0, "extraction_notes": "This document does not appear to be a pro forma or billing report." }`;
 
     try {
-      const r = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [{
-            role: 'user',
-            content: `${extractPrompt}\n\n<pdf_text>\n${proFormaState.pdfFile.text}\n</pdf_text>`
-          }]
-        })
-      });
-      if (!r.ok) throw new Error('API ' + r.status);
-      const json = await r.json();
-      const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
-      let data;
-      try {
-        data = parseJsonResilient(text);
-      } catch (firstErr) {
-        // Initial parse failed - retry once with a stronger JSON-only reminder.
-        // Stop the cycling stage messages, then spin up a fresh overlay
-        // with retry-specific copy so the user sees the retry happening.
-        extractStageInterval.stop();
-        console.warn('PF extract: initial parse failed, retrying. Error:', firstErr.message);
-        proFormaState._activeOverlay = showLoadingOverlay({
-          title: 'Let me try that again...',
-          stages: ['Cleaning up the response and giving it another pass...'],
-          warning: 'The first read came back a bit messy. Trying once more with a stricter prompt - this should clear up in a few seconds.'
-        });
+      // Split the extracted text by page boundaries. Pages were marked by
+      // extractPdfTextInBrowser as "--- PAGE N ---" headers.
+      const pages = pfSplitTextByPages(proFormaState.pdfFile.text);
 
-        const retryPrompt = extractPrompt + `\n\nIMPORTANT: Your previous response could not be parsed as JSON. Common mistakes to avoid:
-- Do NOT include any text before the opening { or after the closing }
-- Do NOT wrap the JSON in markdown code fences
-- Do NOT include explanations like "Here is the JSON" or "I extracted the entries"
-- Use ONLY straight ASCII double quotes (")
-- Make sure every { has a matching } and every [ has a matching ]
-- Your entire response must be parseable by JSON.parse() with no preprocessing.`;
+      // Defensive fallback: if no page markers were found (shouldn't happen with
+      // our extractor, but handle it), do a single-shot extraction on the full text.
+      if (pages.length === 0) {
+        console.warn('PF extract: no page markers found in extracted text, falling back to single-shot.');
+        const singleChunk = { startPage: 1, endPage: 1, text: proFormaState.pdfFile.text };
+        const result = await pfExtractChunk(singleChunk, extractPrompt);
+        const data = pfMergeChunkResults([result], 1);
+        return pfFinalizeExtraction(data, extractStageInterval);
+      }
 
-        const r2 = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: [{
-              role: 'user',
-              content: `${retryPrompt}\n\n<pdf_text>\n${proFormaState.pdfFile.text}\n</pdf_text>`
-            }]
-          })
-        });
-        if (!r2.ok) throw new Error('Retry API ' + r2.status);
-        const json2 = await r2.json();
-        const text2 = (json2.content && json2.content[0] && json2.content[0].text) || json2.text || '';
-        try {
-          data = parseJsonResilient(text2);
-        } catch (secondErr) {
-          console.error('PF extract retry also failed. Second response preview:', text2.slice(0, 500));
-          throw new Error('Could not parse the AI response after retry');
+      const chunks = pfChunkPages(pages, PF_PAGES_PER_CHUNK);
+      const totalPages = pages.length;
+
+      // Single-chunk path: small pro forma, just do one call. No parallelism overhead.
+      if (chunks.length === 1) {
+        const result = await pfExtractChunk(chunks[0], extractPrompt);
+        const data = pfMergeChunkResults([result], totalPages);
+        return pfFinalizeExtraction(data, extractStageInterval);
+      }
+
+      // Multi-chunk path: run chunks in parallel with bounded concurrency.
+      // Update the overlay stage as chunks complete so the user sees progress.
+      const totalChunks = chunks.length;
+      let completedChunks = 0;
+      const updateProgress = () => {
+        if (proFormaState._activeOverlay) {
+          proFormaState._activeOverlay.update(
+            `Reading section ${completedChunks} of ${totalChunks}... (running ${PF_EXTRACT_PARALLELISM} in parallel)`
+          );
         }
+      };
+      updateProgress();
+
+      const chunkResults = new Array(totalChunks);
+      const chunkErrors = [];
+
+      // Bounded-parallel runner: keep PF_EXTRACT_PARALLELISM in flight at once.
+      let nextIdx = 0;
+      const inFlight = [];
+      const runOne = async (idx) => {
+        try {
+          chunkResults[idx] = await pfExtractChunk(chunks[idx], extractPrompt);
+        } catch (err) {
+          console.error(`PF chunk ${idx} (pages ${chunks[idx].startPage}-${chunks[idx].endPage}) failed:`, err);
+          chunkErrors.push({ idx, pages: `${chunks[idx].startPage}-${chunks[idx].endPage}`, err });
+          chunkResults[idx] = null;
+        } finally {
+          completedChunks++;
+          updateProgress();
+        }
+      };
+
+      while (nextIdx < totalChunks || inFlight.length > 0) {
+        while (inFlight.length < PF_EXTRACT_PARALLELISM && nextIdx < totalChunks) {
+          const idx = nextIdx++;
+          const p = runOne(idx).then(() => {
+            const i = inFlight.indexOf(p);
+            if (i !== -1) inFlight.splice(i, 1);
+          });
+          inFlight.push(p);
+        }
+        if (inFlight.length > 0) await Promise.race(inFlight);
       }
 
-      if (!data.entries || data.entries.length === 0) {
-        extractStageInterval.stop();
-        pfOutput.innerHTML = `
-          <div class="bnc-pf-loading" style="border-color:#fde68a; background:#fef7e6;">
-            <div class="bnc-pf-loading-title" style="color:#92400e;">Couldn't find time entries</div>
-            <div class="bnc-pf-loading-note" style="color:#78350f;">${escapeHtml(data.extraction_notes || "We couldn't extract billing entries from this PDF. Make sure it's a pro forma and not a different kind of document.")}</div>
-          </div>
-        `;
-        return;
+      // If MORE THAN HALF the chunks failed, treat as a hard failure - the
+      // result would be too patchy to be useful. If only a few failed, surface
+      // a warning toast but continue with what we got.
+      if (chunkErrors.length > totalChunks / 2) {
+        throw new Error(`Extraction failed on ${chunkErrors.length} of ${totalChunks} sections`);
       }
 
-      extractStageInterval.stop();
-      proFormaState.extracted = data;
-      pfOutput.innerHTML = '';
-      pfRenderMappingUI();
-      toastSuccess(`Found ${data.entries.length} entries across ${data.matters.length} matter${data.matters.length === 1 ? '' : 's'}.`, 'Extraction complete');
-      // Scroll Step 2 into view so the user sees what to do next
-      setTimeout(() => {
-        if (pfMappingStep) pfMappingStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 200);
+      const data = pfMergeChunkResults(chunkResults.filter(r => r !== null), totalPages);
+
+      if (chunkErrors.length > 0) {
+        toastWarn(
+          `${chunkErrors.length} of ${totalChunks} sections couldn't be read (pages ${chunkErrors.map(e => e.pages).join(', ')}). The other entries were extracted - review the matter list to confirm everything you expected is there.`,
+          'Partial extraction'
+        );
+      }
+
+      return pfFinalizeExtraction(data, extractStageInterval);
+
     } catch (err) {
       extractStageInterval.stop();
       console.error('PF extract error:', err);
       pfOutput.innerHTML = `
         <div class="bnc-pf-loading" style="border-color:#fecaca; background:#fef2f2;">
           <div class="bnc-pf-loading-title" style="color:#991b1b;">Extraction failed</div>
-          <div class="bnc-pf-loading-note" style="color:#7f1d1d;">Couldn't read the pro forma. Try uploading again, or use a different PDF.</div>
+          <div class="bnc-pf-loading-note" style="color:#7f1d1d;">Couldn't read the pro forma. Try uploading again, or split the PDF and run the halves separately.</div>
         </div>
       `;
     }
+  }
+
+  // Shared finalize step: validates results, sets state, renders mapping UI.
+  // Both the chunked path and the fallback single-shot path go through this.
+  function pfFinalizeExtraction(data, extractStageInterval) {
+    if (!data.entries || data.entries.length === 0) {
+      extractStageInterval.stop();
+      pfOutput.innerHTML = `
+        <div class="bnc-pf-loading" style="border-color:#fde68a; background:#fef7e6;">
+          <div class="bnc-pf-loading-title" style="color:#92400e;">Couldn't find time entries</div>
+          <div class="bnc-pf-loading-note" style="color:#78350f;">${escapeHtml(data.extraction_notes || "We couldn't extract billing entries from this PDF. Make sure it's a pro forma and not a different kind of document.")}</div>
+        </div>
+      `;
+      return;
+    }
+
+    extractStageInterval.stop();
+    proFormaState.extracted = data;
+    pfOutput.innerHTML = '';
+    pfRenderMappingUI();
+    toastSuccess(
+      `Found ${data.entries.length} entries across ${data.matters.length} matter${data.matters.length === 1 ? '' : 's'}.`,
+      'Extraction complete'
+    );
+    setTimeout(() => {
+      if (pfMappingStep) pfMappingStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
   }
 
   function pfRenderMappingUI() {
