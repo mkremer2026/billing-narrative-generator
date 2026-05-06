@@ -4,6 +4,10 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
 <title>ATVR Narrative Generator | The Billing Coach</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
 <script>
 // ============================================================================
 //  The Billing Coach - Access Gate
@@ -5692,6 +5696,26 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   }
 
+  // Extract text from a PDF entirely in the browser using PDF.js.
+  // Returns a single string with page breaks. Throws SCANNED_OR_EMPTY
+  // if the PDF has no real text layer (i.e. it's a scan that needs OCR).
+  async function extractPdfTextInBrowser(file) {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    const pages = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const tc = await page.getTextContent();
+      const pageText = tc.items.map(it => it.str).join(' ').trim();
+      if (pageText) pages.push(`--- PAGE ${i} ---\n${pageText}`);
+    }
+    const full = pages.join('\n\n');
+    if (full.replace(/\s+/g, '').length < 50) {
+      throw new Error('SCANNED_OR_EMPTY');
+    }
+    return full;
+  }
+
   function meResetAll() {
     monthEndState.pdfFile = null;
     monthEndState.extracted = null;
@@ -5733,38 +5757,30 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
   });
 
   async function meHandleFile(file) {
-    if (file.size > ME_PDF_SIZE_LIMIT) {
-      toastWarn(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB. Month-End Pre-Check supports PDFs up to 15 MB. For larger files, split by matter or contact support.`, 'PDF too large');
+    // Text extraction in the browser means we can be much more generous
+    // with size now - text payloads are tiny, no Vercel limit to worry about.
+    if (file.size > 50 * 1024 * 1024) {
+      toastWarn(
+        `This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB - unusually large for a monthly export. Please split by week or matter, or compress the PDF.`,
+        'PDF too large'
+      );
       return;
     }
-    // Show the GUARANTEED-VISIBLE fixed-position overlay spinner. Lives outside
-    // the page flow so it always appears in the viewport center.
+
     const overlay = showLoadingOverlay({
-      title: 'Uploading your monthly time export...',
+      title: 'Reading your monthly export...',
       stages: [
-        'Uploading PDF to secure storage...',
-        'Reading through your monthly time entries...',
-        'Looking at every matter you billed this month...',
-        'Identifying timekeepers and task codes...',
-        'Grouping entries by matter (the slowest step on big months)...',
-        'Almost there - finalizing your matter list...'
+        'Extracting text from the PDF in your browser...',
+        'No upload needed - this happens locally...',
+        'Almost there...'
       ],
-      warning: 'Hang tight while I work through your monthly entries. Larger months take 30-90 seconds - please don\'t refresh the page.'
+      warning: 'Reading the PDF directly in your browser. Usually just a few seconds.'
     });
     monthEndState._activeOverlay = overlay;
 
     try {
-      // Upload the PDF directly to Vercel Blob storage instead of base64-encoding it
-      // into memory and shipping it through /api/generate. This bypasses Vercel's
-      // serverless function body size limit, which was rejecting PDFs above ~4.5 MB.
-      // The blob URL is what we'll send to /api/generate from this point on; the
-      // server fetches the PDF from blob storage and forwards it to Anthropic.
-      const blobUrl = await uploadPdfToBlob(file, (progress) => {
-        if (progress && progress.percentage != null) {
-          overlay.update(`Uploading: ${Math.round(progress.percentage)}%`);
-        }
-      });
-      monthEndState.pdfFile = { name: file.name, size: file.size, blobUrl: blobUrl };
+      const pdfText = await extractPdfTextInBrowser(file);
+      monthEndState.pdfFile = { name: file.name, size: file.size, text: pdfText };
       meFileName.textContent = file.name;
       meFileSize.textContent = `· ${meFormatSize(file.size)}`;
       meUploadPrompt.style.display = 'none';
@@ -5772,10 +5788,17 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
       meUploadZone.classList.add('has-file');
       meExtractEntries();
     } catch (err) {
-      console.error('ME upload error:', err);
+      console.error('ME PDF text extraction failed:', err);
       if (overlay) overlay.stop();
       monthEndState._activeOverlay = null;
-      toastError("Couldn't upload that PDF. Try a different file or check your connection.");
+      if (err.message === 'SCANNED_OR_EMPTY') {
+        toastError(
+          "This PDF doesn't have selectable text - it looks like a scanned image. Please re-export from your billing system as a text-based PDF.",
+          'Scanned PDF detected'
+        );
+      } else {
+        toastError("Couldn't read that PDF. Try re-exporting from your billing system, or split by week.");
+      }
       meResetAll();
     }
   }
@@ -5798,7 +5821,7 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
 
     const extractPrompt = `Your ONLY job in this response is to return a single JSON object. Do not include any preamble, explanation, commentary, or markdown formatting. Your entire response must start with the character { and end with the character }.
 
-Task: extract structured time entries from the attached monthly time export PDF.
+Task: extract structured time entries from the time export text shown in <pdf_text> below.
 
 This is a MONTHLY pro forma covering many matters and potentially hundreds of entries. Extract every entry you can find. For each entry, capture:
 - date (the date the work was performed, in any format the document uses)
@@ -5830,10 +5853,7 @@ JSON FORMATTING (non-negotiable):
         body: JSON.stringify({
           messages: [{
             role: 'user',
-            content: [
-            { type: 'document', source: { pdfBlobUrl: monthEndState.pdfFile.blobUrl } },
-              { type: 'text', text: extractPrompt }
-            ]
+            content: `${extractPrompt}\n\n<pdf_text>\n${monthEndState.pdfFile.text}\n</pdf_text>`
           }]
         })
       });
@@ -5860,10 +5880,7 @@ JSON FORMATTING (non-negotiable):
           body: JSON.stringify({
             messages: [{
               role: 'user',
-              content: [
-                { type: 'document', source: { pdfBlobUrl: monthEndState.pdfFile.blobUrl } },
-                { type: 'text', text: retryPrompt }
-              ]
+              content: `${retryPrompt}\n\n<pdf_text>\n${monthEndState.pdfFile.text}\n</pdf_text>`
             }]
           })
         });
