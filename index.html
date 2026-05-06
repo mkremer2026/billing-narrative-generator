@@ -4277,7 +4277,7 @@
   // Multi-step flow: upload PDF -> extract entries via API -> show matter mapping
   // -> user maps each matter to a Vault entry -> run review -> render report.
 
-  const PF_PDF_SIZE_LIMIT = 8 * 1024 * 1024; // 8MB
+  const PF_PDF_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB - text extraction in browser, no Vercel payload limit
   const proFormaState = {
     pdfFile: null,         // { name, size, base64 }
     extracted: null,       // { entries: [...], matters: [...], pageCount: number }
@@ -4402,31 +4402,26 @@
 
   async function pfHandleFile(file) {
     if (file.size > PF_PDF_SIZE_LIMIT) {
-      toastWarn(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB. The Pre-Check supports PDFs up to 8 MB. For larger pro formas, split the document or contact support.`, 'PDF too large');
+      toastWarn(`This PDF is ${(file.size / 1024 / 1024).toFixed(1)} MB - unusually large for a pro forma. Please split the document or compress the PDF.`, 'PDF too large');
       return;
     }
-    // Show the GUARANTEED-VISIBLE fixed-position overlay spinner. It's anchored
-    // to the viewport center and lives outside the page flow, so it appears
-    // regardless of where pfOutput is or whether scrollIntoView fires.
-    // The overlay persists through base64 conversion AND extraction, with
-    // rotating stages that update the user on what's happening.
+    // Text extraction happens in the browser via PDF.js - no upload, no payload
+    // limit, much faster than the old base64-then-ship-to-API approach.
     const overlay = showLoadingOverlay({
       title: 'Reading through your pro forma...',
       stages: [
-        'Reading through your time entries...',
-        'Looking at your matters and timekeepers...',
-        'Pulling out task codes and hours...',
-        'Organizing everything by matter...',
-        'Almost there - finalizing your matter list...'
+        'Extracting text from the PDF in your browser...',
+        'No upload needed - this happens locally...',
+        'Almost there...'
       ],
-      warning: 'Hang tight while I read through your pro forma. Larger PDFs take 30-60 seconds - please don\'t refresh the page.'
+      warning: 'Reading the PDF directly in your browser. Usually just a few seconds.'
     });
     // Stash the overlay handle so pfExtractEntries can stop it when Step 2 appears
     proFormaState._activeOverlay = overlay;
 
     try {
-      const b64 = await toBase64(file);
-      proFormaState.pdfFile = { name: file.name, size: file.size, base64: b64 };
+      const pdfText = await extractPdfTextInBrowser(file);
+      proFormaState.pdfFile = { name: file.name, size: file.size, text: pdfText };
       pfFileName.textContent = file.name;
       pfFileSize.textContent = `· ${pfFormatSize(file.size)}`;
       pfUploadPrompt.style.display = 'none';
@@ -4436,10 +4431,17 @@
       // extraction call - pfExtractEntries calls overlay.stop() when Step 2 renders.
       pfExtractEntries();
     } catch (err) {
-      console.error('PF file read error:', err);
+      console.error('PF PDF text extraction failed:', err);
       if (overlay) overlay.stop();
       proFormaState._activeOverlay = null;
-      toastError("Couldn't read that PDF. Try a different file.");
+      if (err.message === 'SCANNED_OR_EMPTY') {
+        toastError(
+          "This PDF doesn't have selectable text - it looks like a scanned image. Please re-export from your billing system as a text-based PDF.",
+          'Scanned PDF detected'
+        );
+      } else {
+        toastError("Couldn't read that PDF. Try re-exporting from your billing system.");
+      }
       pfResetAll();
     }
   }
@@ -4625,7 +4627,7 @@
 
     const extractPrompt = `Your ONLY job in this response is to return a single JSON object. Do not include any preamble, explanation, commentary, or markdown formatting. Do not say "Here is the JSON" or "I'll extract the entries." Your entire response must start with the character { and end with the character }. Nothing before. Nothing after.
 
-Task: extract structured time entries from the attached law firm pro forma PDF.
+Task: extract structured time entries from the law firm pro forma text shown in <pdf_text> below.
 
 The pro forma may be from any billing system (Aderant, Elite, ProLaw, Centerbase, Clio, Smokeball, etc.) and the layout will vary - tables, paragraphs, mixed.
 
@@ -4667,10 +4669,7 @@ If the PDF doesn't appear to be a pro forma at all, return:
         body: JSON.stringify({
           messages: [{
             role: 'user',
-            content: [
-              { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: proFormaState.pdfFile.base64 } },
-              { type: 'text', text: extractPrompt }
-            ]
+            content: `${extractPrompt}\n\n<pdf_text>\n${proFormaState.pdfFile.text}\n</pdf_text>`
           }]
         })
       });
@@ -4706,10 +4705,7 @@ If the PDF doesn't appear to be a pro forma at all, return:
           body: JSON.stringify({
             messages: [{
               role: 'user',
-              content: [
-                { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: proFormaState.pdfFile.base64 } },
-                { type: 'text', text: retryPrompt }
-              ]
+              content: `${retryPrompt}\n\n<pdf_text>\n${proFormaState.pdfFile.text}\n</pdf_text>`
             }]
           })
         });
