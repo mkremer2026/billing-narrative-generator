@@ -9301,6 +9301,25 @@ Return your response as JSON only, no preamble or code fences:
       // shift-out, etc.) that have no legitimate place in JSON
       .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
 
+    // Strategy 0b (NEW): aggressive preamble strip. Some AI responses begin
+    // with chatty narration like "I'll work through all 130 entries..." before
+    // the actual JSON. Strip everything before the first ``` fence OR the
+    // first { (whichever comes first), so downstream strategies work on a
+    // clean candidate. Also strip a trailing ``` and anything after it.
+    const firstFence = preCleaned.indexOf('```');
+    const firstBrace = preCleaned.indexOf('{');
+    if (firstFence !== -1 && (firstBrace === -1 || firstFence < firstBrace)) {
+      // Fence comes first - strip everything up to and including the opening fence,
+      // including any "json" language tag right after it.
+      const afterFence = preCleaned.slice(firstFence).replace(/^```(json)?\s*/i, '');
+      // Also strip the closing fence and anything after it.
+      const closingFence = afterFence.lastIndexOf('```');
+      preCleaned = closingFence !== -1 ? afterFence.slice(0, closingFence) : afterFence;
+    } else if (firstBrace > 0) {
+      // No fence but preamble before the JSON object - strip the preamble.
+      preCleaned = preCleaned.slice(firstBrace);
+    }
+
     // Strategy 1: strip code fences and try as-is
     let cleaned = preCleaned
       .replace(/```json\s*/gi, '')
@@ -9470,9 +9489,13 @@ Return your response as JSON only, no preamble or code fences:
           inString = true;
           result += c;
         } else {
-          // Possible closing - peek ahead to see if next non-space char is structural
+          // Possible closing - peek ahead to see if next non-whitespace char is structural.
+          // CRITICAL: must include newlines and carriage returns, because JSON output from
+          // the AI is multi-line (key-value pairs are separated by `,\n      `). If we only
+          // skip spaces/tabs, the peek lands on \n and we mis-classify the closing quote
+          // as embedded - which then cascades and breaks every subsequent string.
           let j = i + 1;
-          while (j < text.length && (text[j] === ' ' || text[j] === '\t')) j++;
+          while (j < text.length && (text[j] === ' ' || text[j] === '\t' || text[j] === '\n' || text[j] === '\r')) j++;
           const next = text[j];
           if (next === ',' || next === '}' || next === ']' || next === ':' || next === undefined) {
             // Real closing quote
