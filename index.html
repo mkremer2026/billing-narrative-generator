@@ -4280,6 +4280,11 @@
   const PF_PDF_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB - text extraction in browser, no Vercel payload limit
   const PF_PAGES_PER_CHUNK = 8;       // pages per parallel extraction chunk - keeps each AI response well under output token cap
   const PF_EXTRACT_PARALLELISM = 3;   // concurrent extraction API calls - same shape Month-End uses for matters
+  const PF_REVIEW_PARALLELISM = 4;    // concurrent review API calls during chunk processing (one per matter or sub-matter)
+  const PF_MAX_ENTRIES_PER_CHUNK = 25; // sub-chunk a matter if it has more than this many entries
+  const PF_MODEL = 'claude-haiku-4-5'; // Haiku is much faster than Sonnet for this structured triage work
+  const PF_RETRY_ATTEMPTS = 3;        // total tries (initial + 2 retries) on transient failures (502, 503, etc.)
+  const PF_RETRY_BASE_DELAY = 1000;   // ms - exponential backoff: 1s, 2s, 4s
   const proFormaState = {
     pdfFile: null,         // { name, size, base64 }
     extracted: null,       // { entries: [...], matters: [...], pageCount: number }
@@ -4648,13 +4653,14 @@
   }
 
   // Extract a single chunk. Same prompt + JSON parsing logic as the original
-  // single-call path, with one retry on parse failure.
+  // single-call path, with one retry on parse failure. Uses Haiku for speed -
+  // extraction is mechanical transcription work that Haiku handles well.
   async function pfExtractChunk(chunk, extractPromptBase) {
     const chunkPrompt = `${extractPromptBase}\n\n<pdf_text pages="${chunk.startPage}-${chunk.endPage}">\n${chunk.text}\n</pdf_text>`;
     const r = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', content: chunkPrompt }] })
+      body: JSON.stringify({ model: PF_MODEL, messages: [{ role: 'user', content: chunkPrompt }] })
     });
     if (!r.ok) throw new Error('Chunk API ' + r.status);
     const json = await r.json();
@@ -4667,7 +4673,7 @@
       const r2 = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [{ role: 'user', content: retryPrompt }] })
+        body: JSON.stringify({ model: PF_MODEL, messages: [{ role: 'user', content: retryPrompt }] })
       });
       if (!r2.ok) throw new Error('Chunk retry API ' + r2.status);
       const json2 = await r2.json();
@@ -4910,385 +4916,550 @@ If the section doesn't appear to be a pro forma at all, return:
     pfMappingStep.style.display = '';
   }
 
+  // ============================================================================
+  // PRO FORMA CHUNKED REVIEW
+  // The review used to be one giant API call covering every entry across every
+  // matter. On 130+ entry pro formas, the response was so large the model would
+  // truncate mid-finding and the parser couldn't recover the full report.
+  //
+  // New architecture (mirrors Month-End's parallel-by-matter approach):
+  //   1. Group entries by matter -> one chunk per matter
+  //   2. Sub-chunk any matter with > PF_MAX_ENTRIES_PER_CHUNK entries
+  //   3. Run chunks in parallel with bounded concurrency PF_REVIEW_PARALLELISM
+  //   4. Each chunk is a small, focused review call to Haiku (fast, structured)
+  //   5. Auto-retry on transient failures (502/503/429) with exponential backoff
+  //   6. After all chunks complete, run one cross-matter synthesis call for
+  //      the executive summary
+  //   7. Stream findings into the live results panel as chunks complete
+  //
+  // Speed target: 130-entry pro forma in 30-60 seconds, down from 2-3 minutes.
+  // ============================================================================
+
+  // Sleep helper for exponential backoff
+  function pfSleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Resilient fetch to /api/generate. Retries on transient failures (502, 503,
+  // 429, network errors) with exponential backoff. Throws after all attempts
+  // exhausted, or immediately on non-retryable status codes (4xx other than 429).
+  async function pfFetchWithRetry(messageContent, attemptLabel) {
+    const body = JSON.stringify({
+      model: PF_MODEL,
+      messages: [{ role: 'user', content: messageContent }]
+    });
+    let lastErr = null;
+    for (let attempt = 1; attempt <= PF_RETRY_ATTEMPTS; attempt++) {
+      try {
+        const r = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body
+        });
+        if (r.ok) {
+          const json = await r.json();
+          return (json.content && json.content[0] && json.content[0].text) || json.text || '';
+        }
+        // Retry on 5xx and 429 (rate limit). Fail fast on other 4xx.
+        const isRetryable = r.status >= 500 || r.status === 429;
+        lastErr = new Error(`API ${r.status} on ${attemptLabel}`);
+        if (!isRetryable) throw lastErr;
+        if (attempt < PF_RETRY_ATTEMPTS) {
+          const delay = PF_RETRY_BASE_DELAY * Math.pow(2, attempt - 1);
+          console.warn(`PF: ${attemptLabel} got ${r.status}, retrying in ${delay}ms (attempt ${attempt}/${PF_RETRY_ATTEMPTS})`);
+          await pfSleep(delay);
+        }
+      } catch (networkErr) {
+        // Network errors (DNS, connection refused, etc.) are also retryable
+        lastErr = networkErr;
+        if (attempt < PF_RETRY_ATTEMPTS) {
+          const delay = PF_RETRY_BASE_DELAY * Math.pow(2, attempt - 1);
+          console.warn(`PF: ${attemptLabel} network error, retrying in ${delay}ms (attempt ${attempt}/${PF_RETRY_ATTEMPTS}):`, networkErr.message);
+          await pfSleep(delay);
+        }
+      }
+    }
+    throw lastErr || new Error(`${attemptLabel} failed after ${PF_RETRY_ATTEMPTS} attempts`);
+  }
+
+  // Build the per-matter review prompt. Each chunk gets its specific Vault
+  // guideline context (text and/or PDF reference). Reasoning order is the same
+  // 8-step rubric the original single-call prompt used, condensed for clarity.
+  function pfBuildChunkPrompt(chunk, guidelineContext) {
+    const partLabel = chunk.partIdx ? ` (part ${chunk.partIdx} of ${chunk.totalParts})` : '';
+    return `Your ONLY job is to return a JSON object with findings for the time entries below. Start with { and end with }.
+
+You are conducting a partner-level pro forma pre-check for a single matter from a law firm pro forma. You're checking each entry for issues before invoicing.
+
+CORE COACHING PRINCIPLE:
+The work happened. The work has value. The narrative needs to advocate for the value. Communications about strategy, internal collaborations, supervisory work, file transfers, research, and thinking time are ALL billable when properly framed as advocacy. Carrier guidelines that flag these categories are not "do not bill" rules - they are "do not bill THIS WAY" warnings. The Pre-Check teaches the timekeeper to bill them the right way.
+
+The ONLY exceptions:
+(a) Genuinely clerical work with no strategic dimension (true filing, copying, scheduling without analysis)
+(b) Narratives so thin you cannot determine what work was done
+In both exception cases, do NOT fabricate value - the rewrite asks the timekeeper to clarify.
+
+MATTER: ${chunk.matter}${partLabel}
+
+ENTRIES (use _original_idx as the entry_index in your findings):
+${JSON.stringify(chunk.entries.map(e => ({
+  date: e.date, timekeeper: e.timekeeper, matter: e.matter,
+  hours: e.hours, narrative: e.narrative, code: e.code,
+  _original_idx: e._original_idx
+})), null, 2)}
+
+GUIDELINES FOR THIS MATTER:
+${guidelineContext}
+
+REVIEW EACH ENTRY using this reasoning order. Stop at the first matching condition. An entry can have at most one finding.
+
+STEP 1 - Entry too thin to determine work? (e.g., "Worked on case", "Reviewed file" with no detail, "Conference call with client" with no subject)
+-> VAGUE_OR_THIN (medium). suggested_rewrite = "TIMEKEEPER TO CLARIFY: [specific question]."
+
+STEP 2 - Genuinely clerical with no strategic dimension visible? (e.g., "Organized file", "Filed motion", "Made copies")
+-> VAGUE_OR_THIN (medium). suggested_rewrite = "TIMEKEEPER TO CLARIFY: This narrative reads as clerical work. If review/analysis was performed alongside, specify so it can be rewritten as advocacy. If purely clerical, consider writing off."
+
+STEP 3 - Block billing (multiple distinct tasks under one block)?
+-> BLOCK_BILLING (high). Populate unbundled_narratives with 2-4 separate advocacy narratives, one per distinct task. Each is a polished 20-25 word ATVR narrative with strategic verbs (strategize, evaluate, analyze, formulate, develop). Allocate suggested_hours proportionally summing to the original total. Set suggested_rewrite to null.
+
+STEP 4 - Duplicate or overlapping with another entry IN THIS CHUNK on the same date?
+-> DUPLICATE_OR_OVERLAP (high). suggested_rewrite = "Consolidate with the other entry, or differentiate by clarifying the distinct scope."
+
+STEP 5 - Substantively billable but action-described instead of value-described?
+This includes: intra-firm communications, emails, thinking/strategy time, supervision, file transfers, research distribution, filing/finalizing/coordinating with strategic component.
+-> ATVR_WEAKNESS (low or medium). suggested_rewrite is a polished advocacy rewrite (20-25 words):
+- Strategic verbs (strategize, evaluate, analyze, formulate, develop, synthesize, assess - NOT confer, discuss, talk, meet, call, email)
+- Replace "email" with "correspondence"
+- Connect to client outcome, case advancement, risk prevention, or strategic positioning
+- Identify WHAT legal value was created, not WHO was involved
+- Present tense, action-first
+
+STEP 6 - Task code wrong for the work described?
+-> CODE_MISMATCH (medium). suggested_rewrite = corrected code with brief explanation.
+
+STEP 7 - Spelling errors?
+- If entry already has another finding above: silently fix spelling within that rewrite. No separate finding.
+- If otherwise clean: SPELLING (low). spelling_corrections array; suggested_rewrite is original with corrected spelling.
+- Do NOT flag proper nouns, legal terms of art, common abbreviations.
+
+STEP 8 - Live event possibly missing Billing Bookends?
+LIVE EVENT TRIGGER LIST: phone calls, telephone conferences, client calls, meetings, internal communications, HEARINGS, COURT APPEARANCES, DEPOSITIONS, MEDIATIONS, ARBITRATIONS, SETTLEMENT CONFERENCES, PRETRIAL CONFERENCES, trials, witness interviews, witness preparation, site visits.
+
+Two-tier detection:
+- TIER 1 (HIGH-STAKES: hearings, depositions, mediations, arbitrations, court appearances, settlement/pretrial conferences, trials): trigger at ANY duration. Flag MEDIUM severity. ALWAYS flag if no prep entry visible in this chunk for the same date or close-in dates - prep and follow-up are SEPARATE bookends.
+- TIER 2 (calls, meetings, internal comms, witness interviews, site visits): trigger at 0.3 hours or higher. Flag LOW severity. SUPPRESS if a companion prep or follow-up entry exists in this chunk.
+- Do NOT fire if entry already block-bills prep + event + follow-up (that's BLOCK_BILLING).
+suggested_rewrite is an event-specific coaching prompt about adding prep and/or follow-up bookend entries.
+
+EVERY finding must have either a populated suggested_rewrite OR populated unbundled_narratives. Block-billed uses unbundled_narratives. Everything else uses suggested_rewrite.
+
+JSON FORMATTING (non-negotiable):
+- Pure JSON. No preamble.
+- Inside any string, escape every double quote as \\"
+- Only straight ASCII quotes
+- Replace newlines inside strings with single spaces
+- No trailing commas
+
+Return ONLY this shape:
+{
+  "findings": [
+    {
+      "category": "ATVR_WEAKNESS" | "BLOCK_BILLING" | "DUPLICATE_OR_OVERLAP" | "CODE_MISMATCH" | "VAGUE_OR_THIN" | "SPELLING" | "POSSIBLY_MISSING_BOOKENDS",
+      "severity": "high" | "medium" | "low",
+      "entry_index": <use _original_idx from the entry>,
+      "matter": "${chunk.matter}",
+      "date": "...",
+      "timekeeper": "...",
+      "hours": "...",
+      "original_narrative": "...",
+      "issue": "one-sentence description",
+      "suggested_rewrite": "..." or null (null only when unbundled_narratives is populated),
+      "unbundled_narratives": [{"narrative":"...","suggested_hours":"1.5"}] or null,
+      "spelling_corrections": [{"original":"...","corrected":"..."}] or null
+    }
+  ]
+}`;
+  }
+
+  // Run a single review chunk. Returns array of findings (possibly empty).
+  // Uses pfFetchWithRetry for resilience against transient API errors.
+  async function pfReviewChunk(chunk, guidelineContext, guidelinePdf) {
+    const promptText = pfBuildChunkPrompt(chunk, guidelineContext);
+
+    // Build message content. PDF guidelines (if any for this matter) attach
+    // first as a document block, then the prompt text references the PDF.
+    let messageContent;
+    if (guidelinePdf && guidelinePdf.data) {
+      messageContent = [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: guidelinePdf.data } },
+        { type: 'text', text: promptText }
+      ];
+    } else {
+      messageContent = promptText;
+    }
+
+    const label = `chunk "${chunk.matter}"${chunk.partIdx ? ` part ${chunk.partIdx}` : ''}`;
+    const text = await pfFetchWithRetry(messageContent, label);
+    try {
+      const data = parseJsonResilient(text);
+      return Array.isArray(data.findings) ? data.findings : [];
+    } catch (parseErr) {
+      console.error(`PF ${label}: JSON parse failed, response preview:`, text.slice(0, 400));
+      throw parseErr;
+    }
+  }
+
+  // After all chunks complete, run one small synthesis call to produce the
+  // executive summary across all findings. This is much smaller than the
+  // original monolithic call - it gets findings counts + categories, not the
+  // full text of each finding, so the response is short.
+  async function pfSynthesizeReport(allFindings, totalEntries, totalMatters) {
+    if (allFindings.length === 0) {
+      return {
+        executive_summary: 'No findings flagged across all entries. The pro forma is ready for partner review.'
+      };
+    }
+
+    // Compact findings for synthesis: just the metadata, not full text
+    const compact = allFindings.map(f => ({
+      category: f.category,
+      severity: f.severity,
+      matter: f.matter,
+      timekeeper: f.timekeeper,
+      issue: f.issue
+    }));
+
+    const synthesisPrompt = `Your ONLY job is to return a JSON object with an executive summary for a pro forma pre-check review. Start with { end with }.
+
+CONTEXT:
+- ${totalEntries} time entries reviewed across ${totalMatters} matter${totalMatters === 1 ? '' : 's'}
+- ${allFindings.length} findings flagged
+
+ALL FINDINGS (compact form - category, severity, matter, timekeeper, issue):
+${JSON.stringify(compact, null, 2)}
+
+Produce an executive_summary paragraph (3-5 sentences) framed in a coaching tone:
+- What patterns stand out across the matters
+- Where the partner should focus review time
+- Frame issues as advocacy gaps, not compliance violations
+- The work is billable; the narratives need to advocate for the value
+- Be direct but constructive
+
+JSON shape (return ONLY this):
+{
+  "executive_summary": "..."
+}
+
+JSON FORMATTING (non-negotiable):
+- Pure JSON. No preamble.
+- Escape double quotes as \\"
+- Only straight ASCII quotes
+- No trailing commas`;
+
+    try {
+      const text = await pfFetchWithRetry(synthesisPrompt, 'synthesis');
+      const data = parseJsonResilient(text);
+      return { executive_summary: data.executive_summary || '' };
+    } catch (err) {
+      console.warn('PF synthesis failed - rendering report without executive summary:', err.message);
+      return { executive_summary: '' };
+    }
+  }
+
+  // Build summary stats from the merged findings + extracted entries.
+  // Same shape pfRenderReport expects (mirrors what the old monolithic call returned).
+  function pfBuildSummaryStats(findings, totalEntries) {
+    const sev = { high: 0, medium: 0, low: 0 };
+    const flaggedIdx = new Set();
+    findings.forEach(f => {
+      sev[f.severity || 'low'] = (sev[f.severity || 'low'] || 0) + 1;
+      flaggedIdx.add(f.entry_index);
+    });
+    return {
+      total_entries: totalEntries,
+      total_findings: findings.length,
+      high_severity: sev.high,
+      medium_severity: sev.medium,
+      low_severity: sev.low,
+      clean_entries: totalEntries - flaggedIdx.size
+    };
+  }
+
   pfRunBtn.addEventListener('click', async () => {
     if (!proFormaState.extracted) return;
     pfRunBtn.disabled = true;
     pfRunBtn.textContent = 'Running Pre-Check...';
 
-    pfOutput.innerHTML = `
-      <div class="bnc-pf-loading">
-        <div class="bnc-pf-loading-spinner"></div>
-        <div class="bnc-pf-loading-title">Running your Pre-Check...</div>
-        <div class="bnc-pf-loading-stage" data-pf-stage>Reviewing each entry against the ATVR framework</div>
-        <div class="bnc-pf-loading-note">This typically takes 60-90 seconds for a multi-page pro forma. The longer the document, the longer the wait. Feel free to step away and come back.</div>
-      </div>
-    `;
+    // Decorate entries with their original index so chunk findings can
+    // reference back to the right entry
+    proFormaState.extracted.entries.forEach((e, idx) => { e._original_idx = idx; });
 
-    // Cycle stage messages so the user knows the tool is alive
-    const stageEl = pfOutput.querySelector('[data-pf-stage]');
-    const stages = [
-      'Reviewing each entry against the ATVR framework',
-      'Checking for duplicate and overlapping entries',
-      'Cross-referencing your loaded guidelines',
-      'Assembling findings by issue type',
-      'Almost there...'
-    ];
-    let stageIdx = 0;
-    const stageInterval = setInterval(() => {
-      stageIdx = (stageIdx + 1) % stages.length;
-      if (stageEl) stageEl.textContent = stages[stageIdx];
-    }, 12000);
+    // Build per-matter guideline context. For each matter, resolve its mapped
+    // Vault entry to (a) a context string for the prompt, and (b) optional PDF
+    // data to attach to the multimodal message.
+    const lib = loadLibrary();
+    const matterGuidelineCtx = {}; // { [matter]: { context: string, pdf: { name, data } | null, label: string } }
+    Object.keys(proFormaState.extracted.matters_grouped || {}).forEach(matter => {
+      // proFormaState.extracted.matters_grouped doesn't exist yet - we'll build it below
+    });
 
-    try {
-      // Build the context: matter -> guideline content lookup for the prompt.
-      // For PDF-only guidelines (no extracted text), we attach the PDF to the
-      // multimodal message and reference it by name in the text prompt.
-      const lib = loadLibrary();
-      const matterGuidelines = {};
-      const attachedPdfs = []; // { matter, label, pdfName, pdfData } - dedupe by vault id
-      const seenVaultIds = new Set();
-      Object.entries(proFormaState.matterMapping).forEach(([matter, vaultId]) => {
-        if (vaultId && vaultId !== 'none') {
-          const item = lib.items.find(i => i.id === vaultId);
-          if (item) {
-            const hasText = item.content && item.content.trim().length > 0;
-            const hasPdf = item.pdf && item.pdf.data;
-            let contentForPrompt;
-            if (hasText) {
-              contentForPrompt = item.content;
-            } else if (hasPdf) {
-              contentForPrompt = `(See attached PDF: "${item.pdf.name}" - I'll read this PDF directly)`;
-            } else {
-              contentForPrompt = '(No content stored for this guideline)';
-            }
-            matterGuidelines[matter] = { label: item.label, content: contentForPrompt };
-            // Attach PDF only once per Vault entry, even if applied to multiple matters
-            if (hasPdf && !seenVaultIds.has(vaultId)) {
-              seenVaultIds.add(vaultId);
-              attachedPdfs.push({ label: item.label, pdfName: item.pdf.name, pdfData: item.pdf.data });
-            }
-          }
-        }
-      });
+    // Group entries by matter (proFormaState.extracted has .entries and .matters but not grouped)
+    const grouped = {};
+    proFormaState.extracted.entries.forEach(e => {
+      const m = e.matter || '(unspecified)';
+      if (!grouped[m]) grouped[m] = [];
+      grouped[m].push(e);
+    });
 
-      const reviewPrompt = `You are conducting a pro forma pre-check review for a law firm. The user has uploaded a month-end pro forma (a billing report listing time entries for partner review before invoicing) and you are checking each entry for issues.
-
-PRO FORMA ENTRIES:
-${JSON.stringify(proFormaState.extracted.entries, null, 2)}
-
-CLIENT GUIDELINES (mapped per matter):
-${Object.keys(matterGuidelines).length === 0
-  ? '(No specific client guidelines loaded for any matter. Apply standard UTBMS / ATVR best practices only.)'
-  : Object.entries(matterGuidelines).map(([m, g]) => `=== ${m} ===\nGuidelines name: ${g.label}\n${g.content}`).join('\n\n')}
-
-REVIEW EACH ENTRY using the following coaching-aligned reasoning order. This reasoning order reflects The Billing Coach's philosophy: most "non-billable" work IS billable when the narrative advocates for the strategic value, not the action. The rewrite's job is to help the timekeeper get paid for work they actually did - not to validate write-offs that should never have been suggested.
-
-CORE COACHING PRINCIPLE:
-The work happened. The work has value. The narrative needs to advocate for the value. Communications about strategy, internal collaborations, supervisory work, file transfers, research, and thinking time are ALL billable when properly framed as advocacy for the client's interests. Carrier guidelines that flag these categories are not "do not bill" rules - they are "do not bill THIS WAY" warnings. The Pre-Check's job is to teach the timekeeper to bill them the right way.
-
-The ONLY exceptions are:
-(a) Genuinely clerical work the timekeeper actually performed with no strategic dimension (true filing, true file organization, copying, scanning, scheduling without analysis)
-(b) Narratives so thin the AI cannot determine what work was done
-
-In both exception cases, the AI does NOT fabricate value. The rewrite asks the timekeeper to clarify.
-
-For each entry, evaluate in this order. Stop at the first matching condition:
-
-STEP 1 - Is the entry too thin to determine what work was done?
-Examples: "Worked on case", "Reviewed file" with no further detail, "Conference call with client" with no subject, "File management".
-Action: Flag as VAGUE_OR_THIN (medium severity). The suggested_rewrite is "TIMEKEEPER TO CLARIFY: [specific question about what was done, e.g. 'Please specify what review or analysis was performed during this 1.6 hours so the entry can be rewritten in advocacy form']."
-
-STEP 2 - Does the original narrative describe genuinely clerical work with no strategic dimension visible in the wording?
-Examples: "Organized file documents", "Scanned discovery responses", "Filed motion with court", "Made copies of brief".
-Action: Flag as VAGUE_OR_THIN (medium severity). The suggested_rewrite is "TIMEKEEPER TO CLARIFY: This narrative reads as clerical work, which is generally non-billable. If review, analysis, or coordination was performed alongside this task, please specify that work so the entry can be rewritten as advocacy. If the time was purely clerical, consider writing it off or delegating to non-billable staff."
-
-STEP 3 - Is the entry block-billed (multiple distinct tasks combined under one time block)?
-Examples: "Drafted answer, reviewed records, called adjuster, outlined discovery plan - 3.8 hours".
-Action: Flag as BLOCK_BILLING (high severity). Populate unbundled_narratives with 2-4 separate advocacy narratives - one per distinct task. Each unbundled narrative is a polished narrative (20-25 words) that frames the work as strategic advocacy. Allocate hours proportionally; the user is told these are estimates. Set suggested_rewrite to null.
-
-STEP 4 - Are there duplicate or overlapping entries on the same date for the same matter?
-Action: Flag both entries as DUPLICATE_OR_OVERLAP (high severity). The suggested_rewrite for each is "Consolidate with the [other date/index] entry into a single entry that captures the combined scope of work; do not bill both as written."
-
-STEP 5 - Is the work substantively billable but the narrative describes the action rather than the value? This is the most common case and includes ALL of the following situations:
-   - Internal/intra-firm communications (calls, emails, meetings between firm members)
-   - Email correspondence with clients, opposing counsel, experts, or third parties
-   - Thinking/strategy time (analysis, evaluation, formulation)
-   - Supervisory work, training, delegation, file transfers
-   - Research distribution and team coordination
-   - Filing, finalizing, or coordinating tasks that have a strategic component
-
-Action: Flag as ATVR_WEAKNESS (low or medium severity depending on how thin the action-orientation is). Produce an advocacy-rewritten suggested_rewrite (20-25 words) that:
-   - Replaces action verbs with strategic verbs (strategize, evaluate, analyze, formulate, develop, synthesize, assess - NOT confer, discuss, talk, meet, call, email)
-   - Replaces "email" with "correspondence" where applicable
-   - Connects the work to a specific client outcome, case advancement, risk prevention, or strategic positioning
-   - Identifies WHAT legal value was created, not WHO was involved
-   - Uses present tense, action-first construction
-
-Examples of advocacy rewrites:
-
-Before: "Internal call with associate Jameson regarding case strategy and division of upcoming discovery tasks."
-After: "Strategize with litigation team re division of upcoming discovery tasks to position case advantageously for scheduling order and ensure efficient resource allocation."
-
-Before: "Internal email exchange with paralegal Hayes regarding service of motion and confirmation of filing receipt."
-After: "Coordinate with litigation team re service of motion for summary judgment to preserve dispositive motion deadlines and confirm proper docketing."
-
-Before: "Conference call with client."
-After: "TIMEKEEPER TO CLARIFY: Please specify the subject matter of the client conference, decisions reached, or strategic guidance provided so this entry can be rewritten in advocacy form." (Step 1 applies because the original is too thin to advocate for.)
-
-Before: "Review medical records produced by plaintiff in response to interrogatories."
-After: "Review and analyze medical records produced by plaintiff in response to interrogatories to evaluate claimed injuries, identify treatment gaps, and assess damages exposure for defense strategy."
-
-STEP 6 - Is the task code wrong for the work described?
-Action: Flag as CODE_MISMATCH (medium severity). The suggested_rewrite is the corrected code with brief explanation, OR an advocacy-rewritten narrative if the narrative also needs work.
-
-STEP 7 - Are there obvious spelling errors in the original narrative?
-Spelling detection rules:
-- Flag obvious typos in common English words (e.g., "telephne" -> "telephone", "depostion" -> "deposition", "intterogatory" -> "interrogatory", "negotaite" -> "negotiate", "summery judgement" -> "summary judgment").
-- Do NOT flag proper nouns: client names, matter names, party names, opposing counsel surnames, judge names, court names, expert names. You cannot reliably distinguish a typo from a real name.
-- Do NOT flag legal terms of art that look unusual but are correct: "voire dire", "res ipsa loquitur", "stare decisis", "Erie doctrine", "in limine", etc.
-- Do NOT flag British vs American spellings: "favour" / "favor", "centre" / "center", etc. Both are acceptable.
-- Do NOT flag intentional abbreviations or shorthand commonly used in billing: "MSJ", "OC" (opposing counsel), "TC" (telephone conference).
-
-Two-mode handling for spelling:
-(a) If the entry ALSO has another finding (ATVR_WEAKNESS, BLOCK_BILLING, etc.) that produces a suggested_rewrite, silently fix the spelling within that rewrite. Do NOT generate a separate SPELLING finding for that entry. The rewrite presents corrected spelling as part of the polished narrative.
-(b) If the entry is OTHERWISE clean (no other finding) but has a typo, flag as SPELLING (low severity). Populate the spelling_corrections array with the misspellings found and their corrections. The suggested_rewrite is the original narrative with the spellings corrected; nothing else changed.
-
-STEP 8 - Is the entry a live event that may be missing Billing Bookends (preparation time before, follow-up time after)?
-Bookends are: (before) preparation time - reviewing relevant documents, outlining agenda, drafting talking points, anticipating issues; (task) the live event itself; (after) follow-up time - drafting memo to file, sending follow-up correspondence, updating case strategy notes, memorializing decisions.
-
-LIVE EVENT TRIGGER LIST - fire this flag for entries describing any of:
-- Phone calls, telephone conferences, client calls
-- Meetings (client meetings, team meetings, opposing counsel meetings)
-- Internal communications (live discussions among team members)
-- HEARINGS of any kind (motion hearings, status hearings, pretrial hearings, sentencing hearings)
-- COURT APPEARANCES of any kind (oral argument, bench trials, jury trials, court conferences)
-- DEPOSITIONS (taking and defending)
-- MEDIATIONS
-- ARBITRATIONS
-- SETTLEMENT CONFERENCES
-- PRETRIAL CONFERENCES
-- Witness interviews and witness preparation sessions
-- Site visits and inspections
-
-DETECTION RULES (TWO TIERS - aggressive):
-
-TIER 1 - HIGH-STAKES LIVE EVENTS: hearings, court appearances, depositions, mediations, arbitrations, settlement conferences, pretrial conferences, trials.
-- Trigger threshold: ANY duration (0.1 hours or more). These events ALWAYS have prep work and almost always have follow-up work. Even a 15-minute status conference involves reviewing the docket, the order being addressed, and a brief memo afterward.
-- ALWAYS flag if no preparation entry is visible in the same chunk for the same matter on the same date or a date close to the event. Do NOT suppress this flag just because a follow-up entry exists - prep and follow-up are SEPARATE bookends and missing prep is independently flag-worthy.
-- Look for prep entries that mention: reviewing documents in advance, preparing argument, preparing witness, drafting outline, anticipating issues, reviewing pleadings before hearing/deposition/mediation, etc.
-- Look for follow-up entries that mention: post-hearing memo, post-deposition summary, settlement memo, mediation outcome notes, drafting order following hearing, etc.
-
-TIER 2 - ROUTINE LIVE EVENTS: phone calls, meetings, telephone conferences, internal communications, witness interviews, site visits.
-- Trigger threshold: 0.3 hours or higher. Below 0.3, separate bookend entries usually aren't worth capturing.
-- SUPPRESS this flag if there is a companion entry on the same date for the same matter that captures preparation OR follow-up time.
-- Do NOT fire for entries that already block-bill prep + call + follow-up (those get BLOCK_BILLING instead).
-
-Action: Flag as POSSIBLY_MISSING_BOOKENDS. Severity:
-- Tier 1 events (hearings/depositions/mediations/arbitrations/court appearances/settlement conferences/pretrial conferences/trials): MEDIUM severity (these typically represent meaningful unbilled time - 1-3+ hours of prep and follow-up combined)
-- Tier 2 events (calls/meetings/internal comms): LOW severity
-
-The suggested_rewrite is a coaching prompt tailored to the event type. Examples:
-- For a hearing: "Consider whether preparation time (reviewing pleadings, preparing argument, anticipating questions from the bench) and follow-up time (post-hearing memo capturing the court's signals, communicating outcome to client, drafting any required follow-up filings) were also captured. Hearings almost always have substantial prep and follow-up work that should be billed as separate entries."
-- For a deposition: "Consider whether preparation time (reviewing prior testimony, preparing outline, reviewing exhibits) and follow-up time (post-deposition summary, key admissions memo, strategy update) were also captured. Depositions almost always involve substantial prep and follow-up that should be billed separately."
-- For a mediation/arbitration/settlement conference: "Consider whether preparation time (reviewing settlement positions, preparing opening, reviewing damages analysis) and follow-up time (memorializing outcome, drafting settlement documents or status update to client) were also captured."
-- For a call/meeting: "Consider whether preparation time (reviewing documents, outlining talking points) and follow-up time (memorializing decisions, drafting follow-up correspondence) were also captured for this [call/meeting]."
-
-DO NOT use a separate "COMPLIANCE_VIOLATION" category. The vast majority of what previously triggered that category is actually ATVR_WEAKNESS - the work IS billable, the narrative just needs to advocate for the value. Apply Step 5 to those entries instead. Only use COMPLIANCE_VIOLATION (high severity) for genuinely non-billable items: personal time billed to a matter, double-billing across timekeepers, time exceeding actual hours worked, billing on a closed matter. These are integrity issues, not narrative issues.
-
-CRITICAL RULES FOR ALL REWRITES:
-- The rewrite must be grounded in what the original narrative actually says. Do NOT fabricate strategic content the timekeeper did not indicate.
-- If the original narrative does not give you enough material to write a credible advocacy rewrite, the rewrite must be a "TIMEKEEPER TO CLARIFY" prompt rather than an invented narrative.
-- Every finding MUST have either a populated suggested_rewrite or a populated unbundled_narratives array. There are no findings without rewrite guidance.
-- If you find spelling errors AND another issue in the same entry, fix the spelling silently inside the rewrite for the other finding. Do NOT generate a separate SPELLING finding when the entry already has another rewrite that addresses the typo.
-
-CRITICAL JSON FORMATTING:
-- Inside any string, escape double quotes as \\"
-- Do NOT use smart quotes
-- Replace newlines inside string values with spaces
-- No trailing commas
-- Return ONLY the JSON object
-
-Return this shape:
-{
-  "summary": {
-    "total_entries": <number>,
-    "total_findings": <number>,
-    "high_severity": <number>,
-    "medium_severity": <number>,
-    "low_severity": <number>,
-    "clean_entries": <number of entries with NO findings>
-  },
-  "findings": [
-    {
-      "category": "ATVR_WEAKNESS" | "BLOCK_BILLING" | "DUPLICATE_OR_OVERLAP" | "CODE_MISMATCH" | "COMPLIANCE_VIOLATION" | "VAGUE_OR_THIN" | "SPELLING" | "POSSIBLY_MISSING_BOOKENDS",
-      "severity": "high" | "medium" | "low",
-      "entry_index": <index in the entries array, 0-based>,
-      "second_entry_index": <only for DUPLICATE_OR_OVERLAP, the other entry's index> or null,
-      "matter": "matter name",
-      "date": "date",
-      "timekeeper": "timekeeper",
-      "hours": "hours",
-      "original_narrative": "the original narrative text",
-      "issue": "one-sentence description of what's wrong",
-      "suggested_rewrite": "advocacy-rewritten narrative OR TIMEKEEPER TO CLARIFY prompt OR consolidation guidance OR bookends coaching prompt" or null (only null when unbundled_narratives is populated),
-      "unbundled_narratives": [
-        { "narrative": "...", "suggested_hours": "1.5" },
-        { "narrative": "...", "suggested_hours": "1.0" }
-      ] or null,
-      "spelling_corrections": [
-        { "original": "telephne", "corrected": "telephone" }
-      ] or null
-    }
-  ],
-  "executive_summary": "one paragraph (3-5 sentences) summarizing the overall state of the pro forma in a coaching tone - what's working, what the biggest opportunities are, where the partner should focus their review time. Frame issues as advocacy gaps, not as compliance violations. The work is billable; the narratives need to advocate for the value."
-}
-
-Tone: coaching, not punitive. The goal is to help the timekeeper get paid for work they actually did, by teaching them to write narratives that advocate for the strategic value of their work. Frame issues as advocacy gaps, not as compliance violations. Be direct about what needs to change, but constructive about why - the work is billable; the narrative needs to do its job.`;
-
-      // Build the message content. If PDF guidelines are attached, send a
-      // multimodal message: PDFs first as document blocks, then the prompt text.
-      // The prompt text references the PDFs by their label name.
-      let messageContent;
-      if (attachedPdfs.length > 0) {
-        messageContent = [
-          ...attachedPdfs.map(a => ({
-            type: 'document',
-            source: { type: 'base64', media_type: 'application/pdf', data: a.pdfData }
-          })),
-          { type: 'text', text: reviewPrompt }
-        ];
-      } else {
-        messageContent = reviewPrompt;
+    // Resolve guideline context per matter
+    Object.keys(grouped).forEach(matter => {
+      const vaultId = proFormaState.matterMapping[matter] || 'none';
+      if (vaultId === 'none') {
+        matterGuidelineCtx[matter] = {
+          context: '(No specific guidelines for this matter. Apply general ATVR + Billing Coach advocacy framework only.)',
+          pdf: null,
+          label: '(none)'
+        };
+        return;
       }
+      const item = lib.items.find(i => i.id === vaultId);
+      if (!item) {
+        matterGuidelineCtx[matter] = {
+          context: '(No specific guidelines for this matter. Apply general ATVR + Billing Coach advocacy framework only.)',
+          pdf: null,
+          label: '(none)'
+        };
+        return;
+      }
+      const hasText = item.content && item.content.trim().length > 0;
+      const hasPdf = item.pdf && item.pdf.data;
+      if (hasText) {
+        matterGuidelineCtx[matter] = {
+          context: `Guidelines for this matter: ${item.label}\n${item.content}`,
+          pdf: null,
+          label: item.label
+        };
+      } else if (hasPdf) {
+        matterGuidelineCtx[matter] = {
+          context: `Guidelines for this matter: ${item.label}\n(See attached PDF: "${item.pdf.name}" - read directly to check compliance.)`,
+          pdf: { name: item.pdf.name, data: item.pdf.data },
+          label: item.label
+        };
+      } else {
+        matterGuidelineCtx[matter] = {
+          context: `Guidelines for this matter: ${item.label}\n(No content stored.)`,
+          pdf: null,
+          label: item.label
+        };
+      }
+    });
 
-      // Set up streaming UI: replace the spinner with a live results panel that
-      // populates findings one card at a time as they stream in. Total wall-clock
-      // time is the same, but the user sees content within ~5-10 seconds instead
-      // of staring at a spinner for the whole run.
-      let streamingStarted = false;
-      let streamingFindingsContainer = null;
-      let streamingCount = 0;
+    // Build chunks: one per matter, sub-chunk if a matter has too many entries
+    const chunks = [];
+    Object.entries(grouped).forEach(([matterName, matterEntries]) => {
+      if (matterEntries.length <= PF_MAX_ENTRIES_PER_CHUNK) {
+        chunks.push({ matter: matterName, entries: matterEntries, partIdx: null, totalParts: null });
+      } else {
+        const totalParts = Math.ceil(matterEntries.length / PF_MAX_ENTRIES_PER_CHUNK);
+        for (let i = 0; i < matterEntries.length; i += PF_MAX_ENTRIES_PER_CHUNK) {
+          const slice = matterEntries.slice(i, i + PF_MAX_ENTRIES_PER_CHUNK);
+          chunks.push({
+            matter: matterName,
+            entries: slice,
+            partIdx: Math.floor(i / PF_MAX_ENTRIES_PER_CHUNK) + 1,
+            totalParts
+          });
+        }
+      }
+    });
 
-      const findingsParser = createStreamingFindingsParser({
-        onFinding: (f) => {
-          if (!streamingStarted) {
-            // First finding - swap the spinner for the streaming results shell
-            streamingStarted = true;
-            clearInterval(stageInterval);
-            pfOutput.innerHTML = `
-              <div class="bnc-pf-streaming-shell">
-                <div class="bnc-pf-streaming-header">
-                  <div class="bnc-pf-streaming-pulse"></div>
-                  <div>
-                    <div class="bnc-pf-streaming-title">Findings are streaming in...</div>
-                    <div class="bnc-pf-streaming-sub"><span data-pf-stream-count>0</span> findings so far. Final report will organize them by category and severity when complete.</div>
-                  </div>
-                </div>
-                <div class="bnc-pf-streaming-list" data-pf-stream-list></div>
+    // Render the streaming UI shell with a progress board (one item per chunk)
+    // and the live findings list below it. Mirrors Month-End's UX.
+    pfOutput.innerHTML = `
+      <div class="bnc-me-progress">
+        <div class="bnc-me-progress-header">
+          <h3 class="bnc-me-progress-title">Running your Pro Forma Pre-Check</h3>
+          <span class="bnc-me-progress-counter">
+            <strong data-pf-prog-done>0</strong> of <strong>${chunks.length}</strong> ${chunks.length === 1 ? 'matter' : 'matters'} complete
+          </span>
+        </div>
+        <div class="bnc-me-progress-bar">
+          <div class="bnc-me-progress-fill" data-pf-prog-fill></div>
+        </div>
+        <div class="bnc-me-progress-list" data-pf-prog-list>
+          ${chunks.map((c, i) => {
+            const guidelineNote = matterGuidelineCtx[c.matter]?.label || '(none)';
+            return `
+              <div class="bnc-me-progress-item" data-pf-prog-item="${i}">
+                <span class="bnc-me-progress-item-status"></span>
+                <span class="bnc-me-progress-item-name">${escapeHtml(c.matter)}${c.partIdx ? ` (part ${c.partIdx}/${c.totalParts})` : ''}</span>
+                <span class="bnc-me-progress-item-count" title="Applying ${escapeAttr(guidelineNote)}">${c.entries.length}</span>
               </div>
             `;
-            streamingFindingsContainer = pfOutput.querySelector('[data-pf-stream-list]');
-          }
-          streamingCount++;
-          const countEl = pfOutput.querySelector('[data-pf-stream-count]');
-          if (countEl) countEl.textContent = streamingCount;
-          // Render the new finding card and append it to the list. We use the
-          // same renderer as the final report, so styling is consistent.
-          if (streamingFindingsContainer) {
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = pfRenderFindingCardHtml(f);
-            const card = wrapper.firstElementChild;
-            if (card) {
-              card.classList.add('bnc-pf-streaming-card-new');
-              streamingFindingsContainer.appendChild(card);
-              // Wire copy buttons for THIS card immediately so users can interact
-              card.querySelectorAll('[data-pf-copy-rewrite]').forEach(b => {
-                b.addEventListener('click', async () => {
-                  try {
-                    await navigator.clipboard.writeText(b.dataset.pfCopyRewrite);
-                    const orig = b.textContent;
-                    b.textContent = '✓ Copied';
-                    b.classList.add('copied');
-                    setTimeout(() => { b.textContent = orig; b.classList.remove('copied'); }, 1500);
-                  } catch { toastError("Couldn't copy."); }
-                });
-              });
-            }
-          }
-        }
-      });
+          }).join('')}
+        </div>
+      </div>
+      <div class="bnc-pf-streaming-shell" style="margin-top: 1.25rem;">
+        <div class="bnc-pf-streaming-header">
+          <div class="bnc-pf-streaming-pulse"></div>
+          <div>
+            <div class="bnc-pf-streaming-title">Findings populate as matters finish...</div>
+            <div class="bnc-pf-streaming-sub"><span data-pf-stream-count>0</span> findings so far. Final report organizes them by category and severity when complete.</div>
+          </div>
+        </div>
+        <div class="bnc-pf-streaming-list" data-pf-stream-list></div>
+      </div>
+    `;
+    setTimeout(() => {
+      const progEl = pfOutput.querySelector('.bnc-me-progress');
+      if (progEl) progEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
 
-      let fullText = '';
+    const streamList = pfOutput.querySelector('[data-pf-stream-list]');
+    const streamCountEl = pfOutput.querySelector('[data-pf-stream-count]');
+    let streamCount = 0;
+
+    // Process chunks with bounded parallelism
+    const allFindings = [];
+    const chunkErrors = [];
+    let doneCount = 0;
+    const startTime = Date.now();
+
+    async function processChunk(chunk, chunkIdx) {
+      const itemEl = pfOutput.querySelector(`[data-pf-prog-item="${chunkIdx}"]`);
+      if (itemEl) itemEl.classList.add('processing');
+      const ctx = matterGuidelineCtx[chunk.matter] || { context: '(No guidelines)', pdf: null };
       try {
-        await streamGenerate({
-          messages: [{ role: 'user', content: messageContent }],
-          onTextDelta: (chunk, accumulated) => {
-            fullText = accumulated;
-            findingsParser(accumulated);
+        const findings = await pfReviewChunk(chunk, ctx.context, ctx.pdf);
+        allFindings.push(...findings);
+        // Render newly-arrived findings into the live streaming list
+        findings.forEach(f => {
+          if (!streamList) return;
+          streamCount++;
+          if (streamCountEl) streamCountEl.textContent = streamCount;
+          const wrapper = document.createElement('div');
+          wrapper.innerHTML = pfRenderFindingCardHtml(f);
+          const card = wrapper.firstElementChild;
+          if (card) {
+            card.classList.add('bnc-pf-streaming-card-new');
+            streamList.appendChild(card);
+            // Wire copy buttons immediately
+            card.querySelectorAll('[data-pf-copy-rewrite]').forEach(b => {
+              b.addEventListener('click', async () => {
+                try {
+                  await navigator.clipboard.writeText(b.dataset.pfCopyRewrite);
+                  const orig = b.textContent;
+                  b.textContent = '✓ Copied';
+                  b.classList.add('copied');
+                  setTimeout(() => { b.textContent = orig; b.classList.remove('copied'); }, 1500);
+                } catch { toastError("Couldn't copy."); }
+              });
+            });
           }
         });
-      } catch (streamErr) {
-        // If streaming silently failed (e.g. "Stream produced empty response"),
-        // fall back to a non-streaming request. Slower (full wait) but reliable.
-        console.warn('PF stream failed, falling back to non-streaming request:', streamErr.message);
-        // Update the loading UI to indicate the fallback path
-        const stageEl = pfOutput.querySelector('[data-pf-stream-list]')
-          ? pfOutput.querySelector('.bnc-pf-streaming-sub')
-          : pfOutput.querySelector('[data-loading-stage]');
-        if (stageEl) stageEl.textContent = 'Streaming unavailable - waiting for the full response (this can take 60-90 seconds)...';
+        if (itemEl) {
+          itemEl.classList.remove('processing');
+          itemEl.classList.add('done');
+        }
+      } catch (err) {
+        console.error(`PF chunk ${chunkIdx} (${chunk.matter}) failed:`, err);
+        chunkErrors.push({ matter: chunk.matter, partIdx: chunk.partIdx, err });
+        if (itemEl) {
+          itemEl.classList.remove('processing');
+          itemEl.classList.add('error');
+        }
+      }
+      doneCount++;
+      const doneEl = pfOutput.querySelector('[data-pf-prog-done]');
+      if (doneEl) doneEl.textContent = String(doneCount);
+      const fillEl = pfOutput.querySelector('[data-pf-prog-fill]');
+      if (fillEl) fillEl.style.width = `${(doneCount / chunks.length * 100).toFixed(1)}%`;
+    }
 
-        const r = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: [{ role: 'user', content: messageContent }] })
+    // Bounded parallelism: keep PF_REVIEW_PARALLELISM in flight at once
+    let nextChunkIdx = 0;
+    const inFlight = [];
+    while (nextChunkIdx < chunks.length || inFlight.length > 0) {
+      while (inFlight.length < PF_REVIEW_PARALLELISM && nextChunkIdx < chunks.length) {
+        const idx = nextChunkIdx++;
+        const p = processChunk(chunks[idx], idx).then(() => {
+          const i = inFlight.indexOf(p);
+          if (i !== -1) inFlight.splice(i, 1);
         });
-        if (!r.ok) throw new Error('Pre-Check API ' + r.status);
-        const json = await r.json();
-        fullText = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+        inFlight.push(p);
       }
-      clearInterval(stageInterval);
+      if (inFlight.length > 0) await Promise.race(inFlight);
+    }
 
-      // If we still have no text after both attempts, give up with a clear error
-      if (!fullText) {
-        throw new Error('Pre-Check returned no content from either streaming or non-streaming request');
+    const elapsedSec = Math.round((Date.now() - startTime) / 1000);
+
+    try {
+      // Hard fail if MORE THAN HALF the chunks failed - the result would be
+      // too patchy to be useful. If only a few failed, surface a warning toast
+      // but continue with what we got.
+      if (chunkErrors.length > chunks.length / 2) {
+        throw new Error(`Pre-Check failed on ${chunkErrors.length} of ${chunks.length} matters`);
       }
 
-      // Stream complete. Parse the full assembled text resiliently and render
-      // the final grouped-by-category report. This replaces the streaming view.
-      const data = parseJsonResilient(fullText);
+      // Cross-matter synthesis pass for the executive summary
+      const totalMatters = Object.keys(grouped).length;
+      const totalEntries = proFormaState.extracted.entries.length;
 
-      proFormaState.review = data;
-      pfRenderReport(data);
+      // Show synthesis stage in the progress UI
+      const progListEl = pfOutput.querySelector('[data-pf-prog-list]');
+      if (progListEl) {
+        progListEl.insertAdjacentHTML('beforebegin', `
+          <div class="bnc-pf-loading-stage" data-pf-synth-msg style="text-align:center; margin: 0.65rem 0; color: var(--muted); font-family: 'Outfit', sans-serif; font-size: 0.85rem;">
+            All matters reviewed. Writing executive summary...
+          </div>
+        `);
+      }
+
+      const synthesis = await pfSynthesizeReport(allFindings, totalEntries, totalMatters);
+
+      // Remove the synthesis stage message
+      const synthMsg = pfOutput.querySelector('[data-pf-synth-msg]');
+      if (synthMsg) synthMsg.remove();
+
+      const reviewData = {
+        findings: allFindings,
+        summary: pfBuildSummaryStats(allFindings, totalEntries),
+        executive_summary: synthesis.executive_summary,
+        elapsed_seconds: elapsedSec
+      };
+
+      proFormaState.review = reviewData;
+      pfRenderReport(reviewData);
 
       // Add to history
       const baseFilename = (proFormaState.pdfFile.name || 'pro-forma').replace(/\.pdf$/i, '');
       addToHistory('proforma', {
-        snippet: data.executive_summary || `${proFormaState.pdfFile.name} reviewed: ${data.summary.total_findings} findings across ${data.summary.total_entries} entries`,
+        snippet: reviewData.executive_summary || `${proFormaState.pdfFile.name} reviewed: ${reviewData.summary.total_findings} findings across ${reviewData.summary.total_entries} entries`,
         label: `Pro Forma · ${proFormaState.pdfFile.name}`,
-        copyText: pfReportToText(data),
+        copyText: pfReportToText(reviewData),
         downloadFilename: `${baseFilename}-pre-check-report.doc`,
-        // Save the structured data so the history Download button can produce a formatted Word doc
-        reviewData: data,
+        reviewData,
         pdfFileName: proFormaState.pdfFile.name
       });
 
-      if (data._salvaged) {
-        // The response was truncated by the AI's output cap. We salvaged all complete
-        // findings before the cutoff, but trailing findings are missing. Tell the user.
+      if (chunkErrors.length > 0) {
+        const matters = chunkErrors.map(e => e.matter + (e.partIdx ? ` (part ${e.partIdx})` : '')).join(', ');
         toastWarn(
-          `The Pre-Check returned ${(data.findings || []).length} complete findings before the response was cut short. For a complete review, try splitting this pro forma in half or running Month-End Pre-Check (which processes matters in parallel).`,
-          'Partial report'
+          `${chunkErrors.length} of ${chunks.length} matters couldn't be reviewed (${matters}). Other matters were reviewed normally - retry the Pre-Check to fill in the gaps.`,
+          'Partial review'
         );
       } else {
-        toastSuccess(`Pre-Check complete: ${data.summary.total_findings} finding${data.summary.total_findings === 1 ? '' : 's'} across ${data.summary.total_entries} entries.`, 'Done');
+        toastSuccess(
+          `Pre-Check complete: ${reviewData.summary.total_findings} finding${reviewData.summary.total_findings === 1 ? '' : 's'} across ${reviewData.summary.total_entries} entries in ${elapsedSec}s.`,
+          'Done'
+        );
       }
     } catch (err) {
-      clearInterval(stageInterval);
       console.error('PF review error:', err);
       pfOutput.innerHTML = `
         <div class="bnc-pf-loading" style="border-color:#fecaca; background:#fef2f2;">
           <div class="bnc-pf-loading-title" style="color:#991b1b;">Pre-Check failed</div>
-          <div class="bnc-pf-loading-note" style="color:#7f1d1d;">Something went wrong running the review. Try clicking Run Pre-Check again, or contact support if it keeps failing.</div>
+          <div class="bnc-pf-loading-note" style="color:#7f1d1d;">${escapeHtml(err.message || 'Something went wrong running the review.')} Try clicking Run Pre-Check again, or contact support if it keeps failing.</div>
         </div>
       `;
     } finally {
@@ -5296,6 +5467,7 @@ Tone: coaching, not punitive. The goal is to help the timekeeper get paid for wo
       pfRunBtn.textContent = 'Run Pre-Check';
     }
   });
+
 
   // Cancel button at the matter mapping step - resets the entire Pro Forma flow
   if (pfCancelMappingBtn) {
@@ -5974,6 +6146,7 @@ JSON FORMATTING (non-negotiable):
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          model: 'claude-haiku-4-5',
           messages: [{
             role: 'user',
             content: `${extractPrompt}\n\n<pdf_text>\n${monthEndState.pdfFile.text}\n</pdf_text>`
@@ -6001,6 +6174,7 @@ JSON FORMATTING (non-negotiable):
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            model: 'claude-haiku-4-5',
             messages: [{
               role: 'user',
               content: `${retryPrompt}\n\n<pdf_text>\n${monthEndState.pdfFile.text}\n</pdf_text>`
@@ -6658,7 +6832,7 @@ JSON FORMATTING (non-negotiable):
           const fallbackR = await fetch('/api/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: [{ role: 'user', content: messageContent }] })
+            body: JSON.stringify({ model: 'claude-haiku-4-5', messages: [{ role: 'user', content: messageContent }] })
           });
           if (fallbackR.ok) {
             const fallbackJson = await fallbackR.json();
@@ -6695,7 +6869,7 @@ JSON FORMATTING (non-negotiable):
     const r = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', content: messageContent }] })
+      body: JSON.stringify({ model: 'claude-haiku-4-5', messages: [{ role: 'user', content: messageContent }] })
     });
     if (!r.ok) throw new Error('Chunk API ' + r.status);
     const json = await r.json();
@@ -6770,7 +6944,7 @@ JSON FORMATTING (non-negotiable):
     const r = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', content: summaryPrompt }] })
+      body: JSON.stringify({ model: 'claude-haiku-4-5', messages: [{ role: 'user', content: summaryPrompt }] })
     });
     if (!r.ok) throw new Error('Summary API ' + r.status);
     const json = await r.json();
