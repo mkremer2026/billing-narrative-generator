@@ -4,8 +4,6 @@
 //  Runs on Vercel (or any Node.js serverless platform)
 // ============================================================================
 
-const { del } = require('@vercel/blob');
-
 // --- Configuration (tune these values) --------------------------------------
 const CONFIG = {
   // Which Anthropic model to use. Sonnet 4.6 is the right balance of quality/cost.
@@ -70,10 +68,6 @@ function isOriginAllowed(origin) {
 // converts it to base64, and rewrites the block to the standard Anthropic
 // shape. Also collects the URLs so we can delete them after the request
 // finishes.
-//
-// This is what lets the browser upload large PDFs (up to 15 MB) without
-// hitting the request body size limit on this endpoint - the PDF travels
-// directly browser-to-Blob, and only a small URL string travels here.
 async function resolveBlobUrls(messages) {
   const urlsToCleanup = [];
 
@@ -91,3 +85,98 @@ async function resolveBlobUrls(messages) {
 
         const blobResponse = await fetch(blobUrl);
         if (!blobResponse.ok) {
+          throw new Error(`Blob fetch failed with status ${blobResponse.status}`);
+        }
+        const arrayBuffer = await blobResponse.arrayBuffer();
+        const base64 = Buffer.from(arrayBuffer).toString('base64');
+
+        // Replace the source with the standard Anthropic base64 shape
+        block.source = {
+          type: 'base64',
+          media_type: 'application/pdf',
+          data: base64,
+        };
+
+        urlsToCleanup.push(blobUrl);
+      }
+    }
+  }
+
+  return urlsToCleanup;
+}
+
+// --- Main handler -----------------------------------------------------------
+module.exports = async function handler(req, res) {
+  const origin = req.headers.origin || req.headers.referer || '';
+  const originUrl = origin.match(/^(https?:\/\/[^/]+)/)?.[1] || '';
+
+  if (isOriginAllowed(originUrl)) {
+    res.setHeader('Access-Control-Allow-Origin', originUrl);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Vary', 'Origin');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+  }
+
+  // ----- Access password check -----
+  const provided = req.headers['x-access-password'] || '';
+  const required = process.env.ACCESS_PASSWORD || '';
+  if (!required) {
+    return res.status(500).json({ error: 'Server misconfigured: ACCESS_PASSWORD not set' });
+  }
+  if (provided !== required) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  if (process.env.NODE_ENV === 'production' && !isOriginAllowed(originUrl)) {
+    return res.status(403).json({ error: 'Origin not allowed.' });
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error('ANTHROPIC_API_KEY environment variable is not set');
+    return res.status(500).json({
+      error: 'Server misconfiguration: API key is missing. Set ANTHROPIC_API_KEY in your Vercel environment variables.',
+    });
+  }
+
+  const ip =
+    (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+    req.headers['x-real-ip'] ||
+    req.socket?.remoteAddress ||
+    'unknown';
+
+  const rl = checkRateLimit(ip);
+  if (!rl.allowed) {
+    res.setHeader('Retry-After', String(rl.retryAfterSeconds));
+    return res.status(429).json({
+      error: `Rate limit reached. Please try again in ${Math.ceil(rl.retryAfterSeconds / 60)} minutes.`,
+    });
+  }
+  res.setHeader('X-RateLimit-Remaining', String(rl.remaining));
+
+  let body;
+  try {
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  } catch (_e) {
+    return res.status(400).json({ error: 'Invalid JSON body.' });
+  }
+
+  if (!body || typeof body !== 'object') {
+    return res.status(400).json({ error: 'Request body must be a JSON object.' });
+  }
+
+  const { messages } = body;
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: 'Request must include a non-empty "messages" array.' });
+  }
+
+  for (const msg of messages) {
+    if (!msg || typeof msg !== 'object') {
+      return res.status(400).json({ error: 'Eac
