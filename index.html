@@ -7921,6 +7921,53 @@ JSON FORMATTING (non-negotiable):
     });
   }
 
+  // ============================================================================
+  // BLOB UPLOAD HELPER
+  // Uploads a PDF directly to Vercel Blob storage using a signed URL from
+  // /api/upload-url, then returns the public URL of the uploaded blob.
+  //
+  // Why this exists: Vercel serverless functions cap request bodies at ~4.5 MB,
+  // which makes uploading larger PDFs (month-end pro formas can be 8-12 MB)
+  // impossible to send through /api/generate. By uploading directly to Blob
+  // storage first, the PDF bypasses the function size limit entirely - only
+  // a small URL string travels through /api/generate later.
+  //
+  // The Vercel Blob client library uses fetch() under the hood and DOES NOT
+  // forward custom headers like X-Access-Password. So we send the password
+  // through the clientPayload field instead, and /api/upload-url validates
+  // it before issuing an upload token.
+  // ============================================================================
+  async function uploadPdfToBlob(file, onProgress) {
+    // Lazy-load the @vercel/blob/client library from CDN, cached globally.
+    // We use esm.sh because it serves npm packages as ES modules to the browser.
+    if (!window._blobClientPromise) {
+      window._blobClientPromise = import('https://esm.sh/@vercel/blob@0.27.3/client');
+    }
+    const blobClient = await window._blobClientPromise;
+    const { upload } = blobClient;
+
+    // Pull the user's access password from the same place the rest of the
+    // app stores it. This must match what /api/upload-url expects.
+    const password = localStorage.getItem('bnc_access_pw');
+    if (!password) {
+      throw new Error('Not authenticated. Please refresh and log in again.');
+    }
+
+    const blob = await upload(file.name, file, {
+      access: 'public',
+      handleUploadUrl: '/api/upload-url',
+      contentType: 'application/pdf',
+      // Forward the password to the server inside clientPayload because
+      // the upload library does not forward custom request headers.
+      clientPayload: JSON.stringify({ password }),
+      // onUploadProgress fires periodically with { loaded, total, percentage }.
+      // The caller can use this to update a progress bar.
+      onUploadProgress: onProgress,
+    });
+
+    return blob.url;
+  }
+
   function getGuidelinesFor(panel) {
     const container = document.querySelector(`[data-guidelines="${panel}"]`);
     const text = container.querySelector('[data-guidelines-text]').value.trim();
