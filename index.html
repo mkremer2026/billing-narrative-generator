@@ -6818,7 +6818,6 @@ JSON FORMATTING (non-negotiable):
   });
 
   async function meReviewChunk(chunk, guidelineContext, guidelinePdf, opts = {}) {
-    const onFinding = opts && typeof opts.onFinding === 'function' ? opts.onFinding : null;
     const reviewPrompt = `Your ONLY job is to return a JSON object with findings for the time entries below. Start with { and end with }.
 
 You are conducting a triage-level review of one matter from a monthly time export. The reviewing attorney is checking their own work before submitting to the firm.
@@ -6945,32 +6944,13 @@ JSON FORMATTING (non-negotiable):
       messageContent = reviewPrompt;
     }
 
-    // If onFinding callback is provided, stream the response and emit findings
-    // as they arrive. Otherwise fall back to non-streaming for callers that
-    // don't need progressive rendering (e.g. cross-matter summary pass).
-    if (typeof onFinding === 'function') {
-      const findingsParser = createStreamingFindingsParser({
-        onFinding: (f) => {
-          // Decorate the finding with chunk context so caller can route it correctly
-          if (!f.matter) f.matter = chunk.matter;
-          onFinding(f);
-        }
-      });
-      let fullText = '';
-      await streamGenerate({
-        messages: [{ role: 'user', content: messageContent }],
-        onTextDelta: (_chunk, accumulated) => {
-          fullText = accumulated;
-          findingsParser(accumulated);
-        }
-      });
-      const data = parseJsonResilient(fullText);
-      return Array.isArray(data.findings) ? data.findings : [];
-    }
-
     // If caller provided a streaming callback, stream findings as they arrive
-    // via streamGenerate + the progressive findings parser. Otherwise fall back
-    // to the original non-streaming fetch (kept for any future non-UI callers).
+    // via streamGenerate + the progressive findings parser. If streaming fails
+    // (the backend's /api/generate currently doesn't honor stream:true headers,
+    // returning JSON instead of SSE), fall back to a non-streaming request via
+    // apiFetchWithRetry which adds 429/5xx resilience. Without this fallback,
+    // every Month-End chunk would error out and the report would render with
+    // zero findings - which is exactly what was happening before this fix.
     if (opts.onFinding) {
       const localFindings = [];
       const seenKeys = new Set(); // dedupe so we don't return + emit the same finding twice
