@@ -4043,6 +4043,73 @@
   function toastError(message, title)   { return toast({ kind: 'error',   title: title || '', message }); }
   function toastWarn(message, title)    { return toast({ kind: 'warning', title: title || '', message }); }
 
+  // ============ API RETRY HELPER ============
+  // General-purpose resilient fetch to /api/generate. Retries on transient
+  // failures (5xx server errors, 429 rate limits, network errors) with
+  // exponential backoff. Throws after attempts exhausted, or immediately on
+  // non-retryable status codes (4xx other than 429).
+  //
+  // Backoff is tuned for Anthropic rate limit windows: 4s/8s/16s. The 429
+  // ceiling is per-minute, so each retry needs to wait long enough for the
+  // bucket to refill. (Earlier 1s/2s/4s backoff retried inside the same
+  // rate-limit window and just compounded the problem.)
+  //
+  // onRetryNotice optional callback gets called with ({ attempt, total,
+  // delayMs, status, label }) so the UI can surface "rate limited, retrying
+  // in 8 sec" to the user. Silent retries make the tool look stuck.
+  async function apiSleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  async function apiFetchWithRetry(payload, opts) {
+    const {
+      label = 'API',
+      attempts = 3,
+      baseDelay = 4000,
+      onRetryNotice = null
+    } = (opts || {});
+    const body = JSON.stringify(payload);
+    let lastErr = null;
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      let status = null;
+      let isRetryable = false;
+      try {
+        const r = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body
+        });
+        if (r.ok) {
+          const json = await r.json();
+          return (json.content && json.content[0] && json.content[0].text) || json.text || '';
+        }
+        status = r.status;
+        // Retry on 5xx and 429 (rate limit). Fail fast on other 4xx.
+        isRetryable = r.status >= 500 || r.status === 429;
+        lastErr = new Error(`API ${r.status} on ${label}`);
+        if (!isRetryable) throw lastErr;
+      } catch (networkErr) {
+        if (status === null) {
+          // Network error (no HTTP response received) - retryable
+          lastErr = networkErr;
+          isRetryable = true;
+        } else {
+          // We got an HTTP response that was non-retryable; lastErr holds the
+          // descriptive `API <status>` error. Re-throw that, not the catch arg.
+          throw lastErr || networkErr;
+        }
+      }
+      if (attempt < attempts) {
+        const delay = baseDelay * Math.pow(2, attempt - 1);
+        console.warn(`${label}: got ${status || 'network error'}, retrying in ${delay}ms (attempt ${attempt}/${attempts})`);
+        if (typeof onRetryNotice === 'function') {
+          try { onRetryNotice({ attempt, total: attempts, delayMs: delay, status, label }); }
+          catch (_) { /* swallow callback errors so they don't abort the retry */ }
+        }
+        await apiSleep(delay);
+      }
+    }
+    throw lastErr || new Error(`${label} failed after ${attempts} attempts`);
+  }
+
   // ============ STYLED CONFIRM DIALOG ============
   // Replaces native confirm() with a Promise-returning styled dialog.
   // Returns a Promise<boolean> - true if user clicked Confirm, false otherwise.
@@ -4280,11 +4347,11 @@
   const PF_PDF_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB - text extraction in browser, no Vercel payload limit
   const PF_PAGES_PER_CHUNK = 8;       // pages per parallel extraction chunk - keeps each AI response well under output token cap
   const PF_EXTRACT_PARALLELISM = 3;   // concurrent extraction API calls - same shape Month-End uses for matters
-  const PF_REVIEW_PARALLELISM = 4;    // concurrent review API calls during chunk processing (one per matter or sub-matter)
+  const PF_REVIEW_PARALLELISM = 3;    // concurrent review API calls during chunk processing (one per matter or sub-matter). 3-wide stays comfortably under Tier 2 Haiku 90K-output-tokens-per-minute ceiling. 4-wide could hit it on long pro formas.
   const PF_MAX_ENTRIES_PER_CHUNK = 25; // sub-chunk a matter if it has more than this many entries
   const PF_MODEL = 'claude-haiku-4-5'; // Haiku is much faster than Sonnet for this structured triage work
-  const PF_RETRY_ATTEMPTS = 3;        // total tries (initial + 2 retries) on transient failures (502, 503, etc.)
-  const PF_RETRY_BASE_DELAY = 1000;   // ms - exponential backoff: 1s, 2s, 4s
+  const PF_RETRY_ATTEMPTS = 3;        // total tries (initial + 2 retries) on transient failures (502, 503, 429)
+  const PF_RETRY_BASE_DELAY = 4000;   // ms - exponential backoff: 4s, 8s, 16s. 429 ceiling is per-minute so retries need to actually wait out the rate window.
   const proFormaState = {
     pdfFile: null,         // { name, size, base64 }
     extracted: null,       // { entries: [...], matters: [...], pageCount: number }
@@ -4518,6 +4585,22 @@
         const stageEl = overlay.querySelector('[data-overlay-stage]');
         if (stageEl) stageEl.textContent = stage;
       },
+      // Surface a retry notice in the warning-style row. If no warning row
+      // exists yet (overlay was created without opts.warning), inject one.
+      showRetryNotice({ delayMs, status, label }) {
+        const seconds = Math.ceil(delayMs / 1000);
+        const reason = (status === 429) ? 'Anthropic rate limit hit' : 'temporary API hiccup';
+        const msg = `${reason}. Retrying in ~${seconds} sec - this is normal and the tool will recover automatically.`;
+        let warnEl = overlay.querySelector('.bnc-loading-overlay-warning');
+        if (!warnEl) {
+          warnEl = document.createElement('div');
+          warnEl.className = 'bnc-loading-overlay-warning';
+          const card = overlay.querySelector('.bnc-loading-overlay-card');
+          if (card) card.appendChild(warnEl);
+        }
+        warnEl.innerHTML = `<strong>Heads up:</strong> ${escapeHtml(msg)}`;
+        warnEl.style.display = '';
+      },
       stop() {
         if (stopped) return;
         stopped = true;
@@ -4655,29 +4738,22 @@
   // Extract a single chunk. Same prompt + JSON parsing logic as the original
   // single-call path, with one retry on parse failure. Uses Haiku for speed -
   // extraction is mechanical transcription work that Haiku handles well.
-  async function pfExtractChunk(chunk, extractPromptBase) {
+  // Network/rate-limit errors retry automatically via apiFetchWithRetry.
+  async function pfExtractChunk(chunk, extractPromptBase, onRetryNotice) {
     const chunkPrompt = `${extractPromptBase}\n\n<pdf_text pages="${chunk.startPage}-${chunk.endPage}">\n${chunk.text}\n</pdf_text>`;
-    const r = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: PF_MODEL, messages: [{ role: 'user', content: chunkPrompt }] })
-    });
-    if (!r.ok) throw new Error('Chunk API ' + r.status);
-    const json = await r.json();
-    const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+    const text = await apiFetchWithRetry(
+      { model: PF_MODEL, messages: [{ role: 'user', content: chunkPrompt }] },
+      { label: `PF extract pages ${chunk.startPage}-${chunk.endPage}`, attempts: 3, baseDelay: 4000, onRetryNotice }
+    );
     try {
       return parseJsonResilient(text);
     } catch (firstErr) {
       console.warn(`PF chunk pages ${chunk.startPage}-${chunk.endPage}: initial parse failed, retrying. Error:`, firstErr.message);
       const retryPrompt = chunkPrompt + `\n\nIMPORTANT: Your previous response could not be parsed as JSON. Return ONLY the JSON object - no preamble, no markdown fences, every quote escaped properly, no trailing commas.`;
-      const r2 = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: PF_MODEL, messages: [{ role: 'user', content: retryPrompt }] })
-      });
-      if (!r2.ok) throw new Error('Chunk retry API ' + r2.status);
-      const json2 = await r2.json();
-      const text2 = (json2.content && json2.content[0] && json2.content[0].text) || json2.text || '';
+      const text2 = await apiFetchWithRetry(
+        { model: PF_MODEL, messages: [{ role: 'user', content: retryPrompt }] },
+        { label: `PF extract retry pages ${chunk.startPage}-${chunk.endPage}`, attempts: 3, baseDelay: 4000, onRetryNotice }
+      );
       return parseJsonResilient(text2);
     }
   }
@@ -4755,12 +4831,20 @@ If the section doesn't appear to be a pro forma at all, return:
       // extractPdfTextInBrowser as "--- PAGE N ---" headers.
       const pages = pfSplitTextByPages(proFormaState.pdfFile.text);
 
+      // Plumb retry notices into the loading overlay so 429/5xx waits are
+      // visible to the user instead of looking like the tool is stuck.
+      const extractRetryNotice = (info) => {
+        if (proFormaState._activeOverlay && typeof proFormaState._activeOverlay.showRetryNotice === 'function') {
+          proFormaState._activeOverlay.showRetryNotice(info);
+        }
+      };
+
       // Defensive fallback: if no page markers were found (shouldn't happen with
       // our extractor, but handle it), do a single-shot extraction on the full text.
       if (pages.length === 0) {
         console.warn('PF extract: no page markers found in extracted text, falling back to single-shot.');
         const singleChunk = { startPage: 1, endPage: 1, text: proFormaState.pdfFile.text };
-        const result = await pfExtractChunk(singleChunk, extractPrompt);
+        const result = await pfExtractChunk(singleChunk, extractPrompt, extractRetryNotice);
         const data = pfMergeChunkResults([result], 1);
         return pfFinalizeExtraction(data, extractStageInterval);
       }
@@ -4770,7 +4854,7 @@ If the section doesn't appear to be a pro forma at all, return:
 
       // Single-chunk path: small pro forma, just do one call. No parallelism overhead.
       if (chunks.length === 1) {
-        const result = await pfExtractChunk(chunks[0], extractPrompt);
+        const result = await pfExtractChunk(chunks[0], extractPrompt, extractRetryNotice);
         const data = pfMergeChunkResults([result], totalPages);
         return pfFinalizeExtraction(data, extractStageInterval);
       }
@@ -4796,7 +4880,7 @@ If the section doesn't appear to be a pro forma at all, return:
       const inFlight = [];
       const runOne = async (idx) => {
         try {
-          chunkResults[idx] = await pfExtractChunk(chunks[idx], extractPrompt);
+          chunkResults[idx] = await pfExtractChunk(chunks[idx], extractPrompt, extractRetryNotice);
         } catch (err) {
           console.error(`PF chunk ${idx} (pages ${chunks[idx].startPage}-${chunks[idx].endPage}) failed:`, err);
           chunkErrors.push({ idx, pages: `${chunks[idx].startPage}-${chunks[idx].endPage}`, err });
@@ -4943,13 +5027,14 @@ If the section doesn't appear to be a pro forma at all, return:
   // Resilient fetch to /api/generate. Retries on transient failures (502, 503,
   // 429, network errors) with exponential backoff. Throws after all attempts
   // exhausted, or immediately on non-retryable status codes (4xx other than 429).
-  async function pfFetchWithRetry(messageContent, attemptLabel) {
+  async function pfFetchWithRetry(messageContent, attemptLabel, onRetryNotice) {
     const body = JSON.stringify({
       model: PF_MODEL,
       messages: [{ role: 'user', content: messageContent }]
     });
     let lastErr = null;
     for (let attempt = 1; attempt <= PF_RETRY_ATTEMPTS; attempt++) {
+      let status = null;
       try {
         const r = await fetch('/api/generate', {
           method: 'POST',
@@ -4960,6 +5045,7 @@ If the section doesn't appear to be a pro forma at all, return:
           const json = await r.json();
           return (json.content && json.content[0] && json.content[0].text) || json.text || '';
         }
+        status = r.status;
         // Retry on 5xx and 429 (rate limit). Fail fast on other 4xx.
         const isRetryable = r.status >= 500 || r.status === 429;
         lastErr = new Error(`API ${r.status} on ${attemptLabel}`);
@@ -4967,14 +5053,27 @@ If the section doesn't appear to be a pro forma at all, return:
         if (attempt < PF_RETRY_ATTEMPTS) {
           const delay = PF_RETRY_BASE_DELAY * Math.pow(2, attempt - 1);
           console.warn(`PF: ${attemptLabel} got ${r.status}, retrying in ${delay}ms (attempt ${attempt}/${PF_RETRY_ATTEMPTS})`);
+          if (typeof onRetryNotice === 'function') {
+            try { onRetryNotice({ attempt, total: PF_RETRY_ATTEMPTS, delayMs: delay, status: r.status, label: attemptLabel }); }
+            catch (_) { /* swallow */ }
+          }
           await pfSleep(delay);
         }
       } catch (networkErr) {
-        // Network errors (DNS, connection refused, etc.) are also retryable
+        if (status !== null) {
+          // We got an HTTP response that was non-retryable; lastErr holds the
+          // descriptive `API <status>` error. Re-throw that, not the catch arg.
+          throw lastErr || networkErr;
+        }
+        // Network errors (DNS, connection refused, etc.) are retryable
         lastErr = networkErr;
         if (attempt < PF_RETRY_ATTEMPTS) {
           const delay = PF_RETRY_BASE_DELAY * Math.pow(2, attempt - 1);
           console.warn(`PF: ${attemptLabel} network error, retrying in ${delay}ms (attempt ${attempt}/${PF_RETRY_ATTEMPTS}):`, networkErr.message);
+          if (typeof onRetryNotice === 'function') {
+            try { onRetryNotice({ attempt, total: PF_RETRY_ATTEMPTS, delayMs: delay, status: null, label: attemptLabel }); }
+            catch (_) { /* swallow */ }
+          }
           await pfSleep(delay);
         }
       }
@@ -5083,7 +5182,7 @@ Return ONLY this shape:
 
   // Run a single review chunk. Returns array of findings (possibly empty).
   // Uses pfFetchWithRetry for resilience against transient API errors.
-  async function pfReviewChunk(chunk, guidelineContext, guidelinePdf) {
+  async function pfReviewChunk(chunk, guidelineContext, guidelinePdf, onRetryNotice) {
     const promptText = pfBuildChunkPrompt(chunk, guidelineContext);
 
     // Build message content. PDF guidelines (if any for this matter) attach
@@ -5099,7 +5198,7 @@ Return ONLY this shape:
     }
 
     const label = `chunk "${chunk.matter}"${chunk.partIdx ? ` part ${chunk.partIdx}` : ''}`;
-    const text = await pfFetchWithRetry(messageContent, label);
+    const text = await pfFetchWithRetry(messageContent, label, onRetryNotice);
     try {
       const data = parseJsonResilient(text);
       return Array.isArray(data.findings) ? data.findings : [];
@@ -5113,7 +5212,7 @@ Return ONLY this shape:
   // executive summary across all findings. This is much smaller than the
   // original monolithic call - it gets findings counts + categories, not the
   // full text of each finding, so the response is short.
-  async function pfSynthesizeReport(allFindings, totalEntries, totalMatters) {
+  async function pfSynthesizeReport(allFindings, totalEntries, totalMatters, onRetryNotice) {
     if (allFindings.length === 0) {
       return {
         executive_summary: 'No findings flagged across all entries. The pro forma is ready for partner review.'
@@ -5157,7 +5256,7 @@ JSON FORMATTING (non-negotiable):
 - No trailing commas`;
 
     try {
-      const text = await pfFetchWithRetry(synthesisPrompt, 'synthesis');
+      const text = await pfFetchWithRetry(synthesisPrompt, 'synthesis', onRetryNotice);
       const data = parseJsonResilient(text);
       return { executive_summary: data.executive_summary || '' };
     } catch (err) {
@@ -5286,6 +5385,9 @@ JSON FORMATTING (non-negotiable):
         <div class="bnc-me-progress-bar">
           <div class="bnc-me-progress-fill" data-pf-prog-fill></div>
         </div>
+        <div data-pf-retry-banner style="display:none; margin: 0.5rem 0; padding: 0.6rem 0.85rem; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; color: #78350f; font-family: 'Outfit', sans-serif; font-size: 0.85rem;">
+          <span data-pf-retry-text></span>
+        </div>
         <div class="bnc-me-progress-list" data-pf-prog-list>
           ${chunks.map((c, i) => {
             const guidelineNote = matterGuidelineCtx[c.matter]?.label || '(none)';
@@ -5319,6 +5421,34 @@ JSON FORMATTING (non-negotiable):
     const streamCountEl = pfOutput.querySelector('[data-pf-stream-count]');
     let streamCount = 0;
 
+    // Retry banner controller: tracks how many chunks are currently waiting on
+    // a retry so we can show "2 matters waiting on rate-limit retry (8 sec)"
+    // instead of flickering the banner per-chunk.
+    const retryState = { activeRetries: 0, longestDelay: 0, hideTimer: null };
+    function showRetryBanner({ delayMs, status, label }) {
+      retryState.activeRetries++;
+      if (delayMs > retryState.longestDelay) retryState.longestDelay = delayMs;
+      const banner = pfOutput.querySelector('[data-pf-retry-banner]');
+      const txt = pfOutput.querySelector('[data-pf-retry-text]');
+      if (banner) banner.style.display = '';
+      if (txt) {
+        const seconds = Math.ceil(retryState.longestDelay / 1000);
+        const reasonLabel = (status === 429) ? 'Anthropic rate limit hit' : 'temporary API hiccup';
+        const matterCountLabel = retryState.activeRetries === 1 ? '1 matter' : `${retryState.activeRetries} matters`;
+        txt.textContent = `${reasonLabel}. Retrying ${matterCountLabel} in ~${seconds} sec - this is normal on long pro formas.`;
+      }
+      // Schedule hide just after the longest current wait elapses, in case the
+      // retry succeeds silently. If a new retry fires meanwhile, hideTimer is
+      // reset by the next call to showRetryBanner.
+      if (retryState.hideTimer) clearTimeout(retryState.hideTimer);
+      retryState.hideTimer = setTimeout(() => {
+        retryState.activeRetries = 0;
+        retryState.longestDelay = 0;
+        const b = pfOutput.querySelector('[data-pf-retry-banner]');
+        if (b) b.style.display = 'none';
+      }, retryState.longestDelay + 2000);
+    }
+
     // Process chunks with bounded parallelism
     const allFindings = [];
     const chunkErrors = [];
@@ -5330,7 +5460,7 @@ JSON FORMATTING (non-negotiable):
       if (itemEl) itemEl.classList.add('processing');
       const ctx = matterGuidelineCtx[chunk.matter] || { context: '(No guidelines)', pdf: null };
       try {
-        const findings = await pfReviewChunk(chunk, ctx.context, ctx.pdf);
+        const findings = await pfReviewChunk(chunk, ctx.context, ctx.pdf, showRetryBanner);
         allFindings.push(...findings);
         // Render newly-arrived findings into the live streaming list
         findings.forEach(f => {
@@ -5415,7 +5545,7 @@ JSON FORMATTING (non-negotiable):
         `);
       }
 
-      const synthesis = await pfSynthesizeReport(allFindings, totalEntries, totalMatters);
+      const synthesis = await pfSynthesizeReport(allFindings, totalEntries, totalMatters, showRetryBanner);
 
       // Remove the synthesis stage message
       const synthMsg = pfOutput.querySelector('[data-pf-synth-msg]');
@@ -6142,20 +6272,30 @@ JSON FORMATTING (non-negotiable):
 - No trailing commas`;
 
     try {
-      const r = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5',
-          messages: [{
-            role: 'user',
-            content: `${extractPrompt}\n\n<pdf_text>\n${monthEndState.pdfFile.text}\n</pdf_text>`
-          }]
-        })
-      });
-      if (!r.ok) throw new Error('API ' + r.status);
-      const json = await r.json();
-      const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+      // Capture the active overlay for retry notices. extractStageInterval
+      // wraps the loading overlay; we surface 429/5xx waits there so the
+      // user knows the tool is recovering, not stuck.
+      const onRetryNotice = (info) => {
+        if (monthEndState._activeOverlay && typeof monthEndState._activeOverlay.showRetryNotice === 'function') {
+          monthEndState._activeOverlay.showRetryNotice(info);
+        }
+      };
+      let text;
+      try {
+        text = await apiFetchWithRetry(
+          {
+            model: 'claude-haiku-4-5',
+            messages: [{
+              role: 'user',
+              content: `${extractPrompt}\n\n<pdf_text>\n${monthEndState.pdfFile.text}\n</pdf_text>`
+            }]
+          },
+          { label: 'ME extraction', attempts: 3, baseDelay: 4000, onRetryNotice }
+        );
+      } catch (apiErr) {
+        // Even after 3 retries we couldn't get a response. This is a hard fail.
+        throw apiErr;
+      }
 
       let data;
       try {
@@ -6170,20 +6310,21 @@ JSON FORMATTING (non-negotiable):
         });
 
         const retryPrompt = extractPrompt + `\n\nIMPORTANT: Your previous response could not be parsed as JSON. Common mistakes:\n- Do NOT include any text before { or after }\n- Do NOT use markdown fences\n- Use only straight ASCII quotes`;
-        const r2 = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const retryNotice2 = (info) => {
+          if (monthEndState._activeOverlay && typeof monthEndState._activeOverlay.showRetryNotice === 'function') {
+            monthEndState._activeOverlay.showRetryNotice(info);
+          }
+        };
+        const text2 = await apiFetchWithRetry(
+          {
             model: 'claude-haiku-4-5',
             messages: [{
               role: 'user',
               content: `${retryPrompt}\n\n<pdf_text>\n${monthEndState.pdfFile.text}\n</pdf_text>`
             }]
-          })
-        });
-        if (!r2.ok) throw new Error('Retry API ' + r2.status);
-        const json2 = await r2.json();
-        const text2 = (json2.content && json2.content[0] && json2.content[0].text) || json2.text || '';
+          },
+          { label: 'ME extraction retry', attempts: 3, baseDelay: 4000, onRetryNotice: retryNotice2 }
+        );
         data = parseJsonResilient(text2);
       }
 
@@ -6482,6 +6623,9 @@ JSON FORMATTING (non-negotiable):
         <div class="bnc-me-progress-bar">
           <div class="bnc-me-progress-fill" data-me-prog-fill></div>
         </div>
+        <div data-me-retry-banner style="display:none; margin: 0.5rem 0; padding: 0.6rem 0.85rem; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; color: #78350f; font-family: 'Outfit', sans-serif; font-size: 0.85rem;">
+          <span data-me-retry-text></span>
+        </div>
         <div class="bnc-me-progress-list" data-me-prog-list>
           ${chunks.map((c, i) => {
             const gLabel = matterMappingLabels[c.matter];
@@ -6516,6 +6660,31 @@ JSON FORMATTING (non-negotiable):
     const meStreamCount = meOutput.querySelector('[data-me-stream-count]');
     let meStreamingCount = 0;
 
+    // Retry banner controller: same pattern as Pro Forma. Tracks active retries
+    // and shows a friendly "Anthropic rate limit hit, retrying in 8 sec" banner
+    // so users know the tool is recovering rather than stuck.
+    const meRetryState = { activeRetries: 0, longestDelay: 0, hideTimer: null };
+    function showMeRetryBanner({ delayMs, status, label }) {
+      meRetryState.activeRetries++;
+      if (delayMs > meRetryState.longestDelay) meRetryState.longestDelay = delayMs;
+      const banner = meOutput.querySelector('[data-me-retry-banner]');
+      const txt = meOutput.querySelector('[data-me-retry-text]');
+      if (banner) banner.style.display = '';
+      if (txt) {
+        const seconds = Math.ceil(meRetryState.longestDelay / 1000);
+        const reasonLabel = (status === 429) ? 'Anthropic rate limit hit' : 'temporary API hiccup';
+        const matterCountLabel = meRetryState.activeRetries === 1 ? '1 matter' : `${meRetryState.activeRetries} matters`;
+        txt.textContent = `${reasonLabel}. Retrying ${matterCountLabel} in ~${seconds} sec - this is normal on long pro formas.`;
+      }
+      if (meRetryState.hideTimer) clearTimeout(meRetryState.hideTimer);
+      meRetryState.hideTimer = setTimeout(() => {
+        meRetryState.activeRetries = 0;
+        meRetryState.longestDelay = 0;
+        const b = meOutput.querySelector('[data-me-retry-banner]');
+        if (b) b.style.display = 'none';
+      }, meRetryState.longestDelay + 2000);
+    }
+
     // Process chunks with bounded parallelism
     const allFindings = [];
     let doneCount = 0;
@@ -6528,6 +6697,7 @@ JSON FORMATTING (non-negotiable):
         // Look up THIS matter's guideline context + PDF
         const ctx = matterGuidelineCtx[chunk.matter] || { context: '(No guidelines)', pdf: null };
         const findings = await meReviewChunk(chunk, ctx.context, ctx.pdf, {
+          onRetryNotice: showMeRetryBanner,
           onFinding: (f) => {
             // Append a card to the live streaming list. Card shows matter
             // name in the header so users can see which matter the finding
@@ -6603,7 +6773,7 @@ JSON FORMATTING (non-negotiable):
           </div>
         `);
       }
-      const summaryAndPatterns = await meCrossMatterPass(allFindings, monthEndState.extracted);
+      const summaryAndPatterns = await meCrossMatterPass(allFindings, monthEndState.extracted, showMeRetryBanner);
 
       const reviewData = {
         findings: allFindings,
@@ -6827,17 +6997,13 @@ JSON FORMATTING (non-negotiable):
       } catch (streamErr) {
         // If streaming silently failed (e.g. "Stream produced empty response"),
         // fall back to a non-streaming request for THIS chunk. Slower but reliable.
+        // Uses apiFetchWithRetry so transient 429/5xx don't kill the chunk.
         console.warn('ME chunk stream failed, falling back to non-streaming for this matter:', streamErr.message);
         try {
-          const fallbackR = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: 'claude-haiku-4-5', messages: [{ role: 'user', content: messageContent }] })
-          });
-          if (fallbackR.ok) {
-            const fallbackJson = await fallbackR.json();
-            streamedText = (fallbackJson.content && fallbackJson.content[0] && fallbackJson.content[0].text) || fallbackJson.text || '';
-          }
+          streamedText = await apiFetchWithRetry(
+            { model: 'claude-haiku-4-5', messages: [{ role: 'user', content: messageContent }] },
+            { label: `ME chunk fallback "${chunk.matter}"`, attempts: 3, baseDelay: 4000, onRetryNotice: opts.onRetryNotice }
+          );
         } catch (fallbackErr) {
           console.warn('ME chunk non-streaming fallback also failed:', fallbackErr.message);
         }
@@ -6865,20 +7031,16 @@ JSON FORMATTING (non-negotiable):
       return localFindings;
     }
 
-    // Non-streaming path (legacy / no UI callback)
-    const r = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5', messages: [{ role: 'user', content: messageContent }] })
-    });
-    if (!r.ok) throw new Error('Chunk API ' + r.status);
-    const json = await r.json();
-    const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+    // Non-streaming path (legacy / no UI callback). Uses apiFetchWithRetry for resilience.
+    const text = await apiFetchWithRetry(
+      { model: 'claude-haiku-4-5', messages: [{ role: 'user', content: messageContent }] },
+      { label: `ME chunk legacy "${chunk.matter}"`, attempts: 3, baseDelay: 4000, onRetryNotice: opts.onRetryNotice }
+    );
     const data = parseJsonResilient(text);
     return Array.isArray(data.findings) ? data.findings : [];
   }
 
-  async function meCrossMatterPass(allFindings, extracted) {
+  async function meCrossMatterPass(allFindings, extracted, onRetryNotice) {
     // Build a compact summary the AI can synthesize from
     const findingsByMatter = {};
     const findingsByTimekeeper = {};
@@ -6941,14 +7103,10 @@ JSON FORMATTING (non-negotiable):
 - Only straight ASCII quotes
 - No trailing commas`;
 
-    const r = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5', messages: [{ role: 'user', content: summaryPrompt }] })
-    });
-    if (!r.ok) throw new Error('Summary API ' + r.status);
-    const json = await r.json();
-    const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+    const text = await apiFetchWithRetry(
+      { model: 'claude-haiku-4-5', messages: [{ role: 'user', content: summaryPrompt }] },
+      { label: 'ME cross-matter synthesis', attempts: 3, baseDelay: 4000, onRetryNotice }
+    );
     return parseJsonResilient(text);
   }
 
