@@ -1174,6 +1174,63 @@
   }
 
   /* ============ QUICK CAPTURE: PER-ENTRY GUIDELINE PICKER ============ */
+  /* Photo upload button (above the textarea) — lets attorneys snap a notepad pic
+     and have Claude transcribe handwritten entries straight into the box. */
+  .bnc-bulk-photo-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin: 0.55rem 0 0.85rem;
+    padding: 0.7rem 0.9rem;
+    background: var(--cream);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+  }
+  .bnc-bulk-photo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1rem;
+    background: var(--navy);
+    color: var(--paper);
+    border: 1px solid var(--navy);
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+    white-space: nowrap;
+  }
+  .bnc-bulk-photo-btn:hover:not(:disabled) {
+    background: var(--gold);
+    color: var(--navy);
+    border-color: var(--gold);
+    transform: translateY(-1px);
+  }
+  .bnc-bulk-photo-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .bnc-bulk-photo-btn.transcribing {
+    background: var(--gold-soft);
+    color: var(--navy);
+    border-color: var(--gold);
+  }
+  .bnc-bulk-photo-icon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .bnc-bulk-photo-hint {
+    flex: 1;
+    min-width: 200px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+    line-height: 1.4;
+  }
   /* Banner at top of bulk output when some entries have unmatched guideline mentions */
   .bnc-bulk-unmatched-banner {
     background: #fef6e4;
@@ -3474,6 +3531,14 @@
         <div class="bnc-form-grid">
           <div class="bnc-field">
             <label>Jot down what you did <span class="bnc-hint">shorthand is fine - or paste a longer batch</span> <span class="bnc-help-icon" data-help-tip="bulk-format">?</span></label>
+            <div class="bnc-bulk-photo-row">
+              <button type="button" class="bnc-bulk-photo-btn" data-bulk-photo-trigger>
+                <span class="bnc-bulk-photo-icon">📷</span>
+                <span class="bnc-bulk-photo-text">Upload Photo of Notes</span>
+              </button>
+              <input type="file" accept="image/*" style="display:none" data-bulk-photo-input>
+              <span class="bnc-bulk-photo-hint">Snap a pic of your notepad - we'll transcribe handwritten entries into the box below. Or just type/paste in the box.</span>
+            </div>
             <textarea class="bnc-textarea" id="bulk-entries" data-persist style="min-height: 320px; font-family: 'Outfit', sans-serif; font-size: 0.9rem; line-height: 1.6;" placeholder="Capture as you go - shorthand is fine. Drop the guideline name (Chubb, Allstate, etc.) anywhere in the entry and we'll match it to your Vault:&#10;&#10;10/15  Smith v. Acme  [Chubb]  1.5  reviewed expert depo transcript, pulled inconsistencies on preemption&#10;10/15  Jones - Allstate gl - 0.4  call w/ client re settlement posture&#10;10/16  Smith v. Acme  2.5  drafted MSJ section on causation (per Chubb)&#10;10/16  ABC closing  1.2  reviewed buyer's revisions to disclosure schedules&#10;&#10;- OR a longer batch -&#10;&#10;Monday: Smith MSJ research per Chubb (3 hrs); Jones Allstate emails to OC (0.5); ABC closing checklist (1.2)&#10;Tuesday: Smith MSJ drafting Chubb (4 hrs); ABC opinion letter review (0.8)&#10;&#10;- OR just freeform -&#10;&#10;Date, time, client, what you did, guideline name (optional). Even loose notes work. The generator parses it and lays it out clean - and any guideline you don't tag falls back to whatever's set above."></textarea>
           </div>
         </div>
@@ -9227,6 +9292,174 @@ Return your response as JSON only, no preamble or code fences:
   // Build a compact context block describing every Vault entry so the parser can
   // match attorney shorthand mentions ("Chubb", "Allstate gl", etc.) to a saved
   // guideline ID. Content is sliced to keep token usage reasonable.
+  // ============ QUICK CAPTURE: PHOTO -> TEXT TRANSCRIPTION ============
+  // Lets attorneys snap a photo of handwritten notepad entries and have Claude
+  // (with vision) transcribe them straight into the Quick Capture textarea, where
+  // the existing parser then handles ATVR generation + per-entry guideline matching.
+
+  // Decode + resize an image file to a JPEG that's safely under Anthropic's image
+  // size limits. Always outputs JPEG so we don't have to worry about media-type
+  // mismatches or HEIC files coming off iPhones.
+  async function prepareImageForUpload(file) {
+    const MAX_DIM = 2048;
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        let { width, height } = img;
+        if (width === 0 || height === 0) return reject(new Error('Image has no dimensions'));
+        if (width > MAX_DIM || height > MAX_DIM) {
+          const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => {
+          if (!blob) return reject(new Error('Could not encode image'));
+          const reader = new FileReader();
+          reader.onload = () => {
+            // dataURL is "data:image/jpeg;base64,XXXX..." — strip prefix
+            const dataUrl = String(reader.result || '');
+            const base64 = dataUrl.split(',')[1] || '';
+            if (!base64) return reject(new Error('Empty image data'));
+            resolve({ base64, mediaType: 'image/jpeg' });
+          };
+          reader.onerror = () => reject(new Error('Could not read image'));
+          reader.readAsDataURL(blob);
+        }, 'image/jpeg', 0.85);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Could not decode image. Try saving as JPEG or PNG and re-uploading.'));
+      };
+      img.src = objectUrl;
+    });
+  }
+
+  // Send the image to /api/generate with a vision-aware transcription prompt.
+  // Returns the raw text dump (one entry per line) ready to paste into the textarea.
+  async function transcribeNotepadPhoto(base64, mediaType) {
+    const prompt = `You are transcribing a photograph of an attorney's handwritten time entry notes (or printed/typed notes - either way the goal is the same).
+
+Your job: extract each time entry from the image and produce a clean text dump ready to paste into a billing tool. Match this format exactly:
+
+Output format (one entry per line):
+[date]  [matter or client]  [optional guideline name in brackets]  [time in hours]  [what they did]
+
+Examples:
+10/15  Smith v. Acme  [Chubb]  1.5  reviewed expert depo, pulled inconsistencies on preemption
+10/15  Jones - Allstate  0.4  call w/ client re settlement posture
+10/16  Smith v. Acme  2.5  drafted MSJ section on causation
+10/16  ABC closing  1.2  reviewed buyer's revisions to disclosure schedules
+
+Rules:
+- ONE entry per line
+- Preserve the attorney's shorthand and abbreviations - do NOT polish or expand
+- If you see a client billing guideline name (e.g., Chubb, Allstate, Liberty Mutual, Travelers), include it inline so the downstream parser can route it
+- For partially illegible words, give a best guess and mark uncertainty with [?] (e.g., "drafted MSJ [?] section")
+- Skip lines that are completely illegible
+- If date is missing on an entry, infer from surrounding context if possible; otherwise leave date blank
+- If NO time entries are visible (image is blank, unrelated, or completely unreadable), output exactly: NO_ENTRIES_FOUND
+- Output ONLY the transcribed entries (or NO_ENTRIES_FOUND). NO preamble, NO explanation, NO markdown fences, NO quotation marks around the output.`;
+
+    const r = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+    if (!r.ok) throw new Error(`Server returned ${r.status}`);
+    const json = await r.json();
+    const text = (json.content && json.content[0] && json.content[0].text) || json.text || '';
+    return String(text || '').trim();
+  }
+
+  // Orchestration: validate file -> resize -> transcribe -> append into textarea.
+  async function handleBulkPhotoUpload(file) {
+    const textarea = document.getElementById('bulk-entries');
+    const btn = document.querySelector('[data-bulk-photo-trigger]');
+    if (!textarea || !btn) return;
+    const labelEl = btn.querySelector('.bnc-bulk-photo-text');
+    const originalLabel = labelEl ? labelEl.textContent : 'Upload Photo of Notes';
+
+    try {
+      // Validate type and size up front
+      if (!file.type || !file.type.startsWith('image/')) {
+        toastWarn('Please upload an image file (JPEG, PNG, HEIC, etc.).');
+        return;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        toastWarn('That image is over 15MB. Try a slightly smaller photo.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.classList.add('transcribing');
+      if (labelEl) labelEl.textContent = 'Reading your notes…';
+
+      // Resize/convert to JPEG
+      const { base64, mediaType } = await prepareImageForUpload(file);
+
+      if (labelEl) labelEl.textContent = 'Transcribing handwriting…';
+
+      // Transcribe via Claude vision
+      const transcribed = await transcribeNotepadPhoto(base64, mediaType);
+
+      // Empty / no-entries handling
+      const trimmed = (transcribed || '').trim();
+      if (!trimmed || trimmed === 'NO_ENTRIES_FOUND' || trimmed.length < 5) {
+        toastWarn("Couldn't find any time entries in that image. Try a clearer or better-lit photo, or type your entries directly into the box.", "Hmm");
+        return;
+      }
+
+      // Always append (never destroys existing typed entries). If textarea is empty,
+      // append behaves like populate. If not, separate with a blank line.
+      const existing = textarea.value.trim();
+      textarea.value = existing ? (existing + '\n\n' + trimmed) : trimmed;
+      // Fire input event so any data-persist handlers save the new value
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      // Scroll the textarea to the bottom so the new content is visible
+      textarea.scrollTop = textarea.scrollHeight;
+
+      toastSuccess("Transcribed! Review the text below for accuracy, fix any [?] marks, then click Generate.", "Got it");
+    } catch (err) {
+      console.error('Photo transcription failed:', err);
+      toastWarn(err && err.message ? err.message : 'Could not transcribe the image. Try again, or type entries directly.');
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('transcribing');
+      if (labelEl) labelEl.textContent = originalLabel;
+    }
+  }
+
+  // Wire up the button + hidden file input on initial page load
+  (function wireBulkPhotoUpload() {
+    const trigger = document.querySelector('[data-bulk-photo-trigger]');
+    const input = document.querySelector('[data-bulk-photo-input]');
+    if (!trigger || !input) return;
+    trigger.addEventListener('click', () => input.click());
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      handleBulkPhotoUpload(file).finally(() => {
+        // Reset the input so re-uploading the SAME file still fires 'change'
+        input.value = '';
+      });
+    });
+  })();
+
   function buildVaultContextForBulk() {
     const lib = loadLibrary();
     const items = Array.isArray(lib.items) ? lib.items : [];
