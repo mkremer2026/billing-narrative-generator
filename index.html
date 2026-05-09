@@ -1082,6 +1082,118 @@
     color: var(--paper);
   }
 
+  /* ============ QUICK CAPTURE: PER-ENTRY GUIDELINE PICKER ============ */
+  /* Banner at top of bulk output when some entries have unmatched guideline mentions */
+  .bnc-bulk-unmatched-banner {
+    background: #fef6e4;
+    border: 1px solid #e6c98a;
+    border-left: 3px solid #c89a3c;
+    border-radius: 4px;
+    padding: 0.65rem 0.9rem;
+    margin: 0.5rem 0 1rem;
+    font-size: 0.82rem;
+    color: var(--navy);
+    font-family: 'Outfit', sans-serif;
+    line-height: 1.5;
+  }
+  /* Per-entry guideline row (one inline picker under each narrative card) */
+  .bnc-entry-guideline-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.65rem;
+    padding: 0.45rem 0.65rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    background: var(--paper);
+    border: 1px solid var(--border);
+  }
+  .bnc-entry-guideline-row.state-matched {
+    background: #f4f9f4;
+    border-color: #c4dec4;
+  }
+  .bnc-entry-guideline-row.state-unmatched {
+    background: #fef6e4;
+    border-color: #e6c98a;
+  }
+  .bnc-entry-guideline-row.state-none {
+    background: var(--cream);
+    border-color: var(--border);
+  }
+  .bnc-entry-guideline-label {
+    font-weight: 600;
+    color: var(--navy);
+    white-space: nowrap;
+  }
+  .bnc-entry-guideline-select {
+    padding: 0.3rem 0.55rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: white;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    color: var(--navy);
+    cursor: pointer;
+    max-width: 240px;
+  }
+  .bnc-entry-guideline-select:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+  .bnc-entry-guideline-hint {
+    font-size: 0.74rem;
+    color: var(--muted);
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+  }
+  .bnc-entry-guideline-hint em {
+    color: var(--navy);
+    font-weight: 500;
+  }
+  /* Per-entry codes attribution (compact pill under the guideline picker) */
+  .bnc-entry-codes-attribution {
+    margin-top: 0.4rem;
+  }
+  .bnc-code-source-pill {
+    display: inline-block;
+    padding: 0.25rem 0.55rem;
+    border-radius: 3px;
+    font-size: 0.73rem;
+    font-family: 'Outfit', sans-serif;
+    color: var(--muted);
+    background: var(--cream);
+    border: 1px solid var(--border);
+  }
+  .bnc-code-source-pill.matched {
+    background: #f4f9f4;
+    border-color: #c4dec4;
+    color: var(--navy);
+  }
+  .bnc-code-source-pill.inferred {
+    background: var(--gold-soft);
+    border-color: #e6d49a;
+  }
+  .bnc-code-source-pill strong {
+    color: var(--navy);
+    font-weight: 600;
+  }
+  /* Footer note about regenerating */
+  .bnc-bulk-picker-footer {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border);
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+    line-height: 1.5;
+  }
+  .bnc-bulk-picker-footer strong {
+    color: var(--navy);
+    font-style: normal;
+  }
+
   /* ============ PRO FORMA PRE-CHECK ============ */
   .bnc-pf-step {
     background: var(--paper);
@@ -3266,12 +3378,12 @@
       <!-- ===== BULK MODE: Quick Capture ===== -->
       <div class="bnc-mode-form" data-mode-form="bulk">
         <div class="bnc-multi-tip">
-          <strong>Capture time as you go - throughout the day, every day.</strong> Between calls, after a hearing, walking out of a deposition. Jot down the date, the time, the client, and what you did. No polished prose required. The generator reads your shorthand and returns clean ATVR narratives, grouped by date and matter. Capture it now, polish it never - the Generator handles that part.
+          <strong>Capture time as you go - throughout the day, every day.</strong> Between calls, after a hearing, walking out of a deposition. Jot down the date, the time, the client, what you did - and, optionally, the name of the client billing guidelines from your Vault that apply to <em>that</em> entry (e.g., <em>Chubb</em>, <em>Allstate</em>). The generator reads your shorthand, matches each guideline mention to your Vault, and returns clean ATVR narratives grouped by date and matter. Capture it now, polish it never - the Generator handles that part.
         </div>
         <div class="bnc-form-grid">
           <div class="bnc-field">
             <label>Jot down what you did <span class="bnc-hint">shorthand is fine - or paste a longer batch</span> <span class="bnc-help-icon" data-help-tip="bulk-format">?</span></label>
-            <textarea class="bnc-textarea" id="bulk-entries" data-persist style="min-height: 320px; font-family: 'Outfit', sans-serif; font-size: 0.9rem; line-height: 1.6;" placeholder="Capture as you go - shorthand is fine:&#10;&#10;10/15  Smith v. Acme   1.5   reviewed expert depo transcript, pulled inconsistencies on preemption&#10;10/15  Jones           0.4   call w/ client re settlement posture&#10;10/16  Smith v. Acme   2.5   drafted MSJ section on causation&#10;10/16  ABC closing     1.2   reviewed buyer's revisions to disclosure schedules&#10;&#10;- OR a longer batch -&#10;&#10;Monday: Smith MSJ research (3 hrs); Jones emails to OC (0.5); ABC closing checklist (1.2)&#10;Tuesday: Smith MSJ drafting (4 hrs); ABC opinion letter review (0.8)&#10;&#10;- OR just freeform -&#10;&#10;Date, time, client, what you did. Even loose notes work. The generator parses it and lays it out clean for you."></textarea>
+            <textarea class="bnc-textarea" id="bulk-entries" data-persist style="min-height: 320px; font-family: 'Outfit', sans-serif; font-size: 0.9rem; line-height: 1.6;" placeholder="Capture as you go - shorthand is fine. Drop the guideline name (Chubb, Allstate, etc.) anywhere in the entry and we'll match it to your Vault:&#10;&#10;10/15  Smith v. Acme  [Chubb]  1.5  reviewed expert depo transcript, pulled inconsistencies on preemption&#10;10/15  Jones - Allstate gl - 0.4  call w/ client re settlement posture&#10;10/16  Smith v. Acme  2.5  drafted MSJ section on causation (per Chubb)&#10;10/16  ABC closing  1.2  reviewed buyer's revisions to disclosure schedules&#10;&#10;- OR a longer batch -&#10;&#10;Monday: Smith MSJ research per Chubb (3 hrs); Jones Allstate emails to OC (0.5); ABC closing checklist (1.2)&#10;Tuesday: Smith MSJ drafting Chubb (4 hrs); ABC opinion letter review (0.8)&#10;&#10;- OR just freeform -&#10;&#10;Date, time, client, what you did, guideline name (optional). Even loose notes work. The generator parses it and lays it out clean - and any guideline you don't tag falls back to whatever's set above."></textarea>
           </div>
         </div>
       </div>
@@ -8885,12 +8997,64 @@ Return your response as JSON only, no preamble or code fences:
   }
 
   // ============ STANDARD: BULK (Quick Capture) ============
+  // Build a compact context block describing every Vault entry so the parser can
+  // match attorney shorthand mentions ("Chubb", "Allstate gl", etc.) to a saved
+  // guideline ID. Content is sliced to keep token usage reasonable.
+  function buildVaultContextForBulk() {
+    const lib = loadLibrary();
+    const items = Array.isArray(lib.items) ? lib.items : [];
+    if (items.length === 0) return { contextString: '', items: [] };
+    const VAULT_CONTENT_SLICE = 1500;
+    const parts = items.map(item => {
+      const label = (item.label || '').trim();
+      const id = item.id;
+      const content = (item.content || '').trim();
+      const slice = content.length > VAULT_CONTENT_SLICE
+        ? content.slice(0, VAULT_CONTENT_SLICE) + ' [...truncated...]'
+        : content;
+      const note = !content && item.pdf
+        ? '[PDF guidelines - content not extracted to text; rules will be applied generically by name match]'
+        : '';
+      return `--- VAULT ENTRY ---\nID: ${id}\nLABEL: ${label}\nCONTENT:\n${slice || note}\n`;
+    });
+    return {
+      contextString: parts.join('\n'),
+      items: items.map(i => ({ id: i.id, label: i.label }))
+    };
+  }
+
   async function handleStandardBulk(btn, mode) {
     const raw = document.getElementById('bulk-entries').value.trim();
     if (!raw) { toastWarn("Paste your time entries into the box first."); return; }
     if (raw.length < 20) { toastInfo("That looks short for a day/week/month export. Try One Task or Multiple Tasks mode instead.", "Hmm"); return; }
     const role = state.role.standard;
     const guidelines = getGuidelinesFor('standard');
+    const vault = buildVaultContextForBulk();
+    const hasVault = vault.items.length > 0;
+
+    const vaultBlock = hasVault ? `
+
+YOUR VAULT (saved client billing guidelines you may match against per-entry mentions):
+${vault.contextString}
+
+PER-ENTRY GUIDELINE MATCHING - CRITICAL:
+- For EACH parsed entry, scan the original blurb for any mention of a client/carrier guideline name (e.g., "Chubb", "Allstate", "per Allstate gl", "[Chubb]", "Liberty Mutual", or even an abbreviation/typo).
+- If you find a mention, match it to the MOST LIKELY Vault entry above. Match on the LABEL primarily; you may also use distinctive content cues (e.g., a carrier name in the label or first line of content).
+- Be tolerant of typos, casing, abbreviations, and shorthand ("chubb gl" → "Chubb Litigation Guidelines"). Pick the closest match.
+- If no guideline is mentioned in the entry, OR if a mention exists but no Vault entry plausibly matches, set guidelines_id to null and guidelines_label_raw to whatever raw text you saw (or null if no mention).
+- DO NOT invent a Vault ID. Only return IDs that appear verbatim in the Vault list above.
+- For EACH entry, generate codes and compliance using THAT entry's matched guideline content. Different entries may have different guidelines - apply Path A/B/C logic INDEPENDENTLY per entry.
+- If an entry has no per-entry match, fall back to the BATCH-LEVEL guidelines below (if any). If neither exists, use Path C (UTBMS default, no source).
+` : `
+
+(No Vault entries are saved, so per-entry guideline matching is not possible. Apply standard UTBMS codes per Path C unless batch-level guidelines are provided below.)
+`;
+
+    const batchBlock = (guidelines.text || guidelines.file) ? `
+
+BATCH-LEVEL CLIENT BILLING GUIDELINES (fallback - apply to any entry that has NO per-entry Vault match):
+${guidelines.text || "[See attached PDF]"}
+` : '';
 
     const prompt = `You are parsing a freeform paste of time entries (a day, week, or month) and generating a polished ATVR billing narrative for EVERY entry, using the ATVR Framework from The Billing Coach methodology.
 
@@ -8910,17 +9074,15 @@ PARSING INSTRUCTIONS:
 - Normalize dates to a clean format (e.g., "Oct 15, 2025" or "Monday" if no actual date is given).
 - Group entries by date in the output, then by matter within each date.
 - If the paste is so vague that you cannot identify any entries, return an empty entries array with an explanation in batch_compliance_summary.
-
-${guidelines.text || guidelines.file ? `CLIENT BILLING GUIDELINES (each generated narrative MUST comply):
-${guidelines.text || "[See attached PDF]"}` : ""}
-
+- IMPORTANT: when you identify a guideline mention inline, do NOT include that guideline name in the "original_blurb" or in the polished "narrative" - it's a routing tag, not part of the work description. Strip it cleanly.
+${vaultBlock}${batchBlock}
 OUTPUT REQUIREMENTS PER NARRATIVE: 20-25 words, present tense only, 2-3 action verbs strung together, specific TASK + VALUE + RESULT, attorney-level language.
 
 ${ATVR_BREAKDOWN_SPEC}
 
 ${CODES_SPEC}
 
-NOTE: Each entry gets its OWN codes object inferred from its specific work blurb (different tasks within the same day/week may have different codes).
+NOTE: Each entry gets its OWN codes object inferred from its specific work blurb AND its specific matched guideline (different tasks within the same day/week may have different codes AND different code sources). For each entry, set per-entry "codes_source" and "codes_inferred" reflecting THAT entry's matched guideline (not the batch).
 
 CRITICAL JSON FORMATTING RULES:
 - Inside any string value, escape every double quote as \\" (e.g., "narrative": "Review plaintiff's response to \\"the motion\\" for...")
@@ -8937,14 +9099,16 @@ Return your response as JSON only, no preamble or code fences:
       "date": "Oct 15, 2025",
       "matter": "Smith v. Acme",
       "time": "1.5",
-      "original_blurb": "the original text from the paste, verbatim or near-verbatim",
+      "original_blurb": "the original text from the paste, verbatim or near-verbatim, WITH any guideline-routing tag stripped out",
       "narrative": "the polished 20-25 word ATVR narrative",
       "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." },
-      "codes": { "phase_task": "...", "activity": "...", "phase_task_desc": null or "for custom codes only", "activity_desc": null or "for custom codes only" } or null
+      "codes": { "phase_task": "...", "activity": "...", "phase_task_desc": null or "for custom codes only", "activity_desc": null or "for custom codes only" } or null,
+      "guidelines_id": "id-from-vault" or null,
+      "guidelines_label_raw": "the exact shorthand the attorney typed, e.g. 'Chubb' or 'allstate gl'" or null,
+      "codes_source": "name of guideline that supplied codes for THIS entry" or null,
+      "codes_inferred": false (Path A) or true (Path B/C)
     }
   ],
-  "codes_source": "name of guidelines that supplied codes" or null,
-  "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "batch_compliance_summary": "one sentence on overall compliance with guidelines (or 'No client guidelines provided.')",
   "batch_coaching_tip": "one short sentence in a coaching-oriented tone about a pattern you noticed across these entries"
 }`;
@@ -8962,14 +9126,33 @@ Return your response as JSON only, no preamble or code fences:
     const matters = [...new Set(entries.map(e => (e.matter || '').trim()).filter(Boolean))];
     const dates = [...new Set(entries.map(e => (e.date || '').trim()).filter(Boolean))];
 
+    // Vault state for per-entry guideline picker dropdowns
+    const lib = loadLibrary();
+    const vaultItems = Array.isArray(lib.items) ? lib.items : [];
+    const vaultById = new Map(vaultItems.map(i => [i.id, i]));
+    const vaultOptionsHtml = vaultItems
+      .slice()
+      .sort((a, b) => (a.label || '').localeCompare(b.label || ''))
+      .map(i => `<option value="${escapeAttr(i.id)}">${escapeHtml(i.label || '(unnamed)')}</option>`)
+      .join('');
+
+    // Count how many entries got auto-matched, and how many had a raw mention but no match
+    const matchedCount = entries.filter(e => e.guidelines_id && vaultById.has(e.guidelines_id)).length;
+    const unmatchedMentionCount = entries.filter(e => !e.guidelines_id && (e.guidelines_label_raw || '').trim()).length;
+
     let html = `
       <div class="bnc-output-stats">
         <div class="bnc-output-stat"><strong>${entries.length}</strong><span>entries</span></div>
         ${totalTime > 0 ? `<div class="bnc-output-stat"><strong>${totalTime.toFixed(1)}</strong><span>total hours</span></div>` : ''}
         ${dates.length > 0 ? `<div class="bnc-output-stat"><strong>${dates.length}</strong><span>day${dates.length === 1 ? '' : 's'}</span></div>` : ''}
         ${matters.length > 0 ? `<div class="bnc-output-stat"><strong>${matters.length}</strong><span>matter${matters.length === 1 ? '' : 's'}</span></div>` : ''}
+        ${vaultItems.length > 0 ? `<div class="bnc-output-stat"><strong>${matchedCount}</strong><span>guideline match${matchedCount === 1 ? '' : 'es'}</span></div>` : ''}
       </div>
     `;
+
+    if (unmatchedMentionCount > 0) {
+      html += `<div class="bnc-bulk-unmatched-banner">Heads up - ${unmatchedMentionCount} entr${unmatchedMentionCount === 1 ? 'y has' : 'ies have'} a guideline mention I couldn't confidently match to your Vault. Pick one from the dropdown on each entry, or leave it on "(none)" to use the panel-level fallback.</div>`;
+    }
 
     // Group by date, then by matter within date
     const dateGroups = new Map();
@@ -9003,6 +9186,46 @@ Return your response as JSON only, no preamble or code fences:
           const wc = wordCount(text);
           const wcWarn = (wc < 18 || wc > 28) ? 'warn' : '';
           const time = e.time ? `<span class="bnc-narrative-time">${escapeHtml(e.time)} hrs</span>` : '';
+
+          // Per-entry guideline picker
+          const matchedId = e.guidelines_id && vaultById.has(e.guidelines_id) ? e.guidelines_id : '';
+          const rawMention = (e.guidelines_label_raw || '').trim();
+          let pickerStateClass = 'state-none';
+          let pickerHint = '';
+          if (matchedId) {
+            pickerStateClass = 'state-matched';
+            pickerHint = rawMention
+              ? `matched <em>"${escapeHtml(rawMention)}"</em> → ${escapeHtml(vaultById.get(matchedId).label)}`
+              : `applied: ${escapeHtml(vaultById.get(matchedId).label)}`;
+          } else if (rawMention) {
+            pickerStateClass = 'state-unmatched';
+            pickerHint = `you wrote <em>"${escapeHtml(rawMention)}"</em> - no Vault match. Pick one ↓`;
+          } else {
+            pickerStateClass = 'state-none';
+            pickerHint = vaultItems.length > 0 ? `no guideline tagged - using panel fallback` : ``;
+          }
+          const optionsWithSelected = `<option value="">(none - use panel fallback)</option>` +
+            vaultItems
+              .slice()
+              .sort((a, b) => (a.label || '').localeCompare(b.label || ''))
+              .map(i => `<option value="${escapeAttr(i.id)}"${i.id === matchedId ? ' selected' : ''}>${escapeHtml(i.label || '(unnamed)')}</option>`)
+              .join('');
+
+          const guidelinePicker = vaultItems.length > 0 ? `
+            <div class="bnc-entry-guideline-row ${pickerStateClass}">
+              <span class="bnc-entry-guideline-label">📋 Guideline:</span>
+              <select class="bnc-entry-guideline-select" data-entry-guideline-pos="${runningPos}">
+                ${optionsWithSelected}
+              </select>
+              ${pickerHint ? `<span class="bnc-entry-guideline-hint">${pickerHint}</span>` : ''}
+            </div>
+          ` : '';
+
+          // Per-entry codes attribution (compact, replaces the batch-level one)
+          const entryCodesAttribution = (e.codes_source || e.codes_inferred !== undefined) && e.codes
+            ? `<div class="bnc-entry-codes-attribution">${renderEntryCodesAttributionInline(e.codes_source, e.codes_inferred)}</div>`
+            : '';
+
           html += `
             <div class="bnc-narrative-entry multi-entry">
               ${renderCodeChip(e.codes)}
@@ -9016,6 +9239,8 @@ Return your response as JSON only, no preamble or code fences:
               </div>
               <div class="bnc-narrative-text">${escapeHtml(text)}</div>
               ${renderAtvrBreakdown(e.breakdown)}
+              ${guidelinePicker}
+              ${entryCodesAttribution}
               ${e.original_blurb ? `<div class="bnc-original-blurb"><strong>From your paste:</strong> ${escapeHtml(e.original_blurb)}</div>` : ''}
             </div>
           `;
@@ -9023,10 +9248,30 @@ Return your response as JSON only, no preamble or code fences:
       });
     });
 
-    html += renderCodesAttribution(data.codes_source, data.codes_inferred);
     if (data.batch_compliance_summary) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Batch Compliance:</strong> ${escapeHtml(data.batch_compliance_summary)}</div>`;
     if (data.batch_coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.batch_coaching_tip)}</div>`;
+
+    // Footer note about how to apply changed pickers
+    if (vaultItems.length > 0) {
+      html += `<div class="bnc-bulk-picker-footer">Changed a guideline match? Click <strong>Generate Narrative</strong> again to re-run with the updated mapping. Picker changes are visual only until you regenerate.</div>`;
+    }
     return html;
+  }
+
+  // Compact per-entry codes attribution line (smaller than the batch-level version
+  // since it appears under each individual narrative card)
+  function renderEntryCodesAttributionInline(codesSource, isInferred) {
+    const hasSource = codesSource && typeof codesSource === 'string' && codesSource.trim();
+    if (hasSource && !isInferred) {
+      return `<span class="bnc-code-source-pill matched">Codes per <strong>${escapeHtml(codesSource.trim())}</strong></span>`;
+    }
+    if (hasSource && isInferred) {
+      return `<span class="bnc-code-source-pill inferred">UTBMS default · <strong>${escapeHtml(codesSource.trim())}</strong> didn't list codes</span>`;
+    }
+    if (isInferred && !hasSource) {
+      return `<span class="bnc-code-source-pill inferred">UTBMS default · no guideline applied</span>`;
+    }
+    return '';
   }
 
   // ============ BOOKENDS ============
@@ -10171,7 +10416,7 @@ Return your response as JSON only, no preamble or code fences:
     'matter-context': "<strong>Optional but powerful.</strong> Two or three words about the case (e.g., \"employment discrimination, defending employer\") give the generator real context to write from. Without it, narratives stay generic.",
     'bookends-time': "<strong>Capture all three.</strong> Most attorneys forget that the strategic prep <em>before</em> a call/event and the substantive follow-up <em>after</em> are billable - and often more billable than the event itself. Cringe and count it.",
     'phase-split': "<strong>Auto-split is fine.</strong> Leave blank if you don't have specific phase times - the generator will distribute reasonably. If you want control, enter four numbers separated by dashes: e.g., <em>2-1.5-4-1</em> means 2 hrs review, 1.5 hrs outlining, 4 hrs drafting, 1 hr finalizing.",
-    'bulk-format': "<strong>Quick capture, no polished prose required.</strong> Just jot down the date, time, client, and what you did - shorthand is fine. Or paste a longer timesheet export, calendar dump, or freeform notes if you're catching up on a stretch. The generator parses it all and lays everything out cleanly grouped by date and matter."
+    'bulk-format': "<strong>Quick capture, no polished prose required.</strong> Just jot down the date, time, client, and what you did - shorthand is fine. <strong>Optional but powerful:</strong> drop a guideline name (Chubb, Allstate, etc.) anywhere in an entry and the generator will fuzzy-match it to your Vault and apply <em>that</em> entry's compliance and codes accordingly. Different entries can use different guidelines - the parser handles per-entry mapping. Anything you don't tag falls back to the guideline set in the panel above."
   };
 
   document.querySelectorAll('[data-help-tip]').forEach(icon => {
