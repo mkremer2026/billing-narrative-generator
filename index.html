@@ -856,6 +856,124 @@
     font-size: 0.78rem;
   }
 
+  /* ============ COMPLIANCE PILLS & BANNERS ============ */
+  /* Per-entry compliance pill - sits under each generated narrative card.
+     Three states: compliant (green), non-compliant (red), no-guideline (neutral). */
+  .bnc-compliance-pill {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.55rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    font-family: 'Outfit', sans-serif;
+    border: 1px solid;
+  }
+  .bnc-compliance-pill.compliant {
+    background: #eaf5ea;
+    border-color: #7fb37f;
+    color: #1e4a1e;
+  }
+  .bnc-compliance-pill.non-compliant {
+    background: #fbeceb;
+    border-color: #d77875;
+    color: #8a2a26;
+  }
+  .bnc-compliance-pill.no-guideline {
+    background: var(--cream);
+    border-color: var(--border);
+    color: var(--muted);
+    font-style: italic;
+  }
+  .bnc-compliance-pill-icon {
+    flex-shrink: 0;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: white;
+    margin-top: 1px;
+  }
+  .bnc-compliance-pill.compliant .bnc-compliance-pill-icon { background: #4d8c4d; }
+  .bnc-compliance-pill.non-compliant .bnc-compliance-pill-icon { background: #c0392b; }
+  .bnc-compliance-pill.no-guideline .bnc-compliance-pill-icon {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-style: normal;
+  }
+  .bnc-compliance-pill-body { flex: 1; }
+  .bnc-compliance-pill-title {
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+  }
+  .bnc-compliance-pill-note {
+    font-size: 0.78rem;
+    opacity: 0.92;
+  }
+  .bnc-compliance-pill em {
+    font-style: italic;
+    opacity: 0.85;
+  }
+
+  /* Batch compliance banner - the bigger callout at the bottom of multi/bulk output.
+     Uses the same color logic as per-entry pills but with more visual weight. */
+  .bnc-batch-compliance-banner {
+    margin-top: 1rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: 6px;
+    border-left: 4px solid;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .bnc-batch-compliance-banner.all-compliant {
+    background: #eaf5ea;
+    border-color: #4d8c4d;
+    color: #1e4a1e;
+  }
+  .bnc-batch-compliance-banner.issues-found {
+    background: #fbeceb;
+    border-color: #c0392b;
+    color: #8a2a26;
+  }
+  .bnc-batch-compliance-banner.no-guidelines {
+    background: var(--gold-soft);
+    border-color: var(--gold);
+    color: var(--navy);
+  }
+  .bnc-batch-compliance-banner-icon {
+    flex-shrink: 0;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: white;
+    margin-top: 1px;
+  }
+  .bnc-batch-compliance-banner.all-compliant .bnc-batch-compliance-banner-icon { background: #4d8c4d; }
+  .bnc-batch-compliance-banner.issues-found .bnc-batch-compliance-banner-icon { background: #c0392b; }
+  .bnc-batch-compliance-banner.no-guidelines .bnc-batch-compliance-banner-icon { background: var(--gold); color: var(--navy); }
+  .bnc-batch-compliance-banner-body { flex: 1; }
+  .bnc-batch-compliance-banner-title {
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+  }
+  .bnc-batch-compliance-banner strong {
+    font-weight: 600;
+  }
+
   .bnc-multi-add-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
   .bnc-multi-add-btn {
     padding: 0.7rem 1.2rem; background: var(--paper); color: var(--navy);
@@ -3471,7 +3589,7 @@
       <div class="bnc-mode-toggle" role="tablist" aria-label="Generation mode">
         <button class="bnc-mode-btn active" data-mode="single">One Task</button>
         <button class="bnc-mode-btn" data-mode="multi">Multiple Narratives <span class="bnc-mode-count" data-multi-count>1</span></button>
-        <button class="bnc-mode-btn" data-mode="bulk">Quick Capture</button>
+        <button class="bnc-mode-btn" data-mode="bulk">📷 Quick Capture</button>
       </div>
 
       <div class="bnc-section-label">Select Your Role <span class="bnc-help-icon" data-help-tip="role">?</span></div>
@@ -8867,7 +8985,15 @@ ${context ? `\nMATTER CONTEXT: ${context}` : ""}
 ${time ? `\nTIME: ${time} hours` : ""}
 
 ${guidelines.text || guidelines.file ? `CLIENT BILLING GUIDELINES (carrier-specific rules that the narrative MUST comply with):
-${guidelines.text || "[See attached PDF]"}` : ""}
+${guidelines.text || "[See attached PDF]"}
+
+COMPLIANCE EVALUATION - CRITICAL:
+Evaluate the generated narrative against the guidelines above on BOTH dimensions:
+1. NARRATIVE CONTENT - does the wording, level of detail, and structure conform to the rules? (e.g., no block billing, no prohibited phrases like "attention to" or "review of file", proper time increments, no clerical work descriptions, names/parties handled per rules)
+2. CODES - if the guidelines specify a code system, do the assigned codes come from that system?
+
+If the narrative passes BOTH dimensions, set compliance_status to "compliant".
+If EITHER dimension fails, set compliance_status to "non_compliant" and explain the issue concisely in compliance_note.` : `(No client billing guidelines provided - skip compliance evaluation; set compliance_status to "no_guideline".)`}
 
 OUTPUT REQUIREMENTS:
 ✓ 20-25 words total
@@ -8890,7 +9016,8 @@ Return your response as JSON only, no preamble or code fences:
   "codes": { "phase_task": "...", "activity": "...", "phase_task_desc": null or "custom code description", "activity_desc": null or "custom code description" } or null,
   "codes_source": "name of guidelines that supplied the codes" or null,
   "codes_inferred": false (Path A) or true (Path B - default UTBMS),
-  "compliance_note": "one short sentence on compliance status. If no guidelines, write 'No client guidelines provided.'",
+  "compliance_status": "compliant" | "non_compliant" | "no_guideline",
+  "compliance_note": "one short sentence: if compliant, briefly state what was checked; if non-compliant, name the rule violated; if no guideline, write 'No client guidelines provided.'",
   "coaching_tip": "one short sentence in a coaching-oriented tone about why this narrative reads as valuable"
 }`;
 
@@ -8903,6 +9030,8 @@ Return your response as JSON only, no preamble or code fences:
     const wc = wordCount(narrative);
     const wcWarn = (wc < 18 || wc > 28) ? 'warn' : '';
     const timeLabel = time ? `<span class="bnc-narrative-time">${escapeHtml(time)} hrs</span>` : "";
+    // The applied guideline label, if any, is on the "Applied" pill - reuse appliedGuidelines
+    const appliedLabel = (appliedGuidelines && appliedGuidelines.standard) || data.codes_source || '';
     return `
       <div class="bnc-narrative-entry">
         ${renderCodeChip(data.codes)}
@@ -8916,9 +9045,9 @@ Return your response as JSON only, no preamble or code fences:
         </div>
         <div class="bnc-narrative-text">${escapeHtml(narrative)}</div>
         ${renderAtvrBreakdown(data.breakdown)}
+        ${renderCompliancePill(data.compliance_status, data.compliance_note, appliedLabel)}
       </div>
       ${renderCodesAttribution(data.codes_source, data.codes_inferred)}
-      ${data.compliance_note ? `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.75rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Compliance:</strong> ${escapeHtml(data.compliance_note)}</div>` : ""}
       ${data.coaching_tip ? `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.coaching_tip)}</div>` : ""}
     `;
   }
@@ -9145,9 +9274,18 @@ PER-TASK GUIDELINE INSTRUCTIONS:
 - Per-task "codes_source" should reflect THAT task's matched guideline label (or null if "(none selected)").
 - If a task has "(none selected)", fall back to the BATCH-LEVEL guidelines below (if any). If neither exists, use Path C (UTBMS default, codes_source: null).
 - DO NOT invent Vault IDs or labels - only use what's listed above.
+
+PER-TASK COMPLIANCE EVALUATION - CRITICAL:
+For EACH task, evaluate the generated narrative against THAT task's applied guideline (the per-task selection, or the batch-level fallback if "(none selected)") on BOTH dimensions:
+1. NARRATIVE CONTENT - does the wording, level of detail, and structure conform to the rules? (e.g., no block billing, no prohibited phrases like "attention to" or "review of file", proper time increments, no clerical work descriptions, names/parties handled per rules, no disallowed activities)
+2. CODES - if the guideline specifies a code system, do the assigned codes come from that system?
+
+If the narrative passes BOTH dimensions, set per-task compliance_status to "compliant".
+If EITHER dimension fails, set compliance_status to "non_compliant" and explain the issue concisely in compliance_note (name the specific rule violated).
+If no guideline applied to that task at all (no per-task selection AND no batch-level guideline), set compliance_status to "no_guideline".
 ` : `
 
-(No Vault entries are saved, so per-task guideline matching is not available. Apply standard UTBMS codes per Path C unless batch-level guidelines are provided below.)
+(No Vault entries are saved, so per-task guideline matching is not available. Apply standard UTBMS codes per Path C unless batch-level guidelines are provided below. For tasks with no guideline at all, set compliance_status to "no_guideline".)
 `;
 
     const batchBlock = (guidelines.text || guidelines.file) ? `
@@ -9172,7 +9310,7 @@ ${ATVR_BREAKDOWN_SPEC}
 
 ${CODES_SPEC}
 
-CRITICAL: Return one narrative per input task, in the SAME ORDER as input. Each narrative gets its OWN codes object inferred from its specific work blurb AND its specific matched guideline (different tasks within the same batch may have different codes AND different code sources). For each narrative, set per-narrative "codes_source" and "codes_inferred" reflecting THAT task's matched guideline (not the batch).
+CRITICAL: Return one narrative per input task, in the SAME ORDER as input. Each narrative gets its OWN codes object inferred from its specific work blurb AND its specific matched guideline (different tasks within the same batch may have different codes AND different code sources). For each narrative, set per-narrative "codes_source" and "codes_inferred" reflecting THAT task's matched guideline (not the batch). Likewise, evaluate compliance INDEPENDENTLY per task using that task's specific applied guideline.
 
 Return your response as JSON only, no preamble or code fences:
 {
@@ -9182,13 +9320,14 @@ Return your response as JSON only, no preamble or code fences:
       "narrative": "...",
       "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." },
       "codes": { "phase_task": "...", "activity": "...", "phase_task_desc": null or "custom code description", "activity_desc": null or "custom code description" } or null,
-      "compliance_note": "compliance status or 'OK'",
+      "compliance_status": "compliant" | "non_compliant" | "no_guideline",
+      "compliance_note": "one short sentence: if compliant, briefly state what was checked (e.g., 'Narrative and codes conform to Chubb Litigation Guidelines'); if non-compliant, name the specific rule violated; if no guideline, write 'No client guidelines applied.'",
       "guidelines_id": "id-from-vault that was applied to this task" or null,
       "codes_source": "name of guideline that supplied codes for THIS task" or null,
       "codes_inferred": false (Path A) or true (Path B/C)
     }
   ],
-  "batch_compliance_summary": "one sentence on overall compliance",
+  "batch_compliance_summary": "one sentence summarizing the batch result. If all narratives that had a guideline applied are compliant, say so explicitly (e.g., 'All 5 narratives comply with their applied guidelines'). If any have issues, name the count and dominant issue type.",
   "batch_coaching_tip": "one short sentence in a coaching-oriented tone about a pattern you noticed"
 }`;
 
@@ -9221,6 +9360,9 @@ Return your response as JSON only, no preamble or code fences:
         ${vaultById.size > 0 && guidelineMatchCount > 0 ? `<div class="bnc-output-stat"><strong>${guidelineMatchCount}</strong><span>guideline${guidelineMatchCount === 1 ? '' : 's'} applied</span></div>` : ''}
       </div>
     `;
+
+    // Track per-entry compliance status across the loop so we can build the batch banner at the bottom
+    const perEntryStatuses = [];
 
     const groups = new Map();
     narratives.forEach((n, i) => {
@@ -9262,6 +9404,16 @@ Return your response as JSON only, no preamble or code fences:
           ? `<div class="bnc-entry-codes-attribution">${renderEntryCodesAttributionInline(n.codes_source, n.codes_inferred)}</div>`
           : '';
 
+        // Per-entry compliance pill (green/red/neutral)
+        const appliedGid2 = inputTask.guidelinesId && vaultById.has(inputTask.guidelinesId) ? inputTask.guidelinesId : '';
+        const guidelineLabelForPill = appliedGid2
+          ? (vaultById.get(appliedGid2).label || '')
+          : (n.codes_source || ''); // fallback: if a batch-level guideline was used, show its name
+        const compliancePill = renderCompliancePill(n.compliance_status, n.compliance_note, guidelineLabelForPill);
+        // Track normalized status for the batch banner
+        const entryNormalizedStatus = normalizeComplianceStatus(n.compliance_status, n.compliance_note);
+        perEntryStatuses.push(entryNormalizedStatus);
+
         html += `
           <div class="bnc-narrative-entry multi-entry">
             ${renderCodeChip(n.codes)}
@@ -9277,13 +9429,14 @@ Return your response as JSON only, no preamble or code fences:
             ${renderAtvrBreakdown(n.breakdown)}
             ${guidelinePill}
             ${entryCodesAttribution}
-            ${n.compliance_note && !['ok','compliant'].includes(n.compliance_note.toLowerCase().trim()) ? `<div style="font-size: 0.78rem; color: var(--muted); margin-top: 0.55rem; padding-top: 0.55rem; border-top: 1px dashed var(--border); font-style: italic;">${escapeHtml(n.compliance_note)}</div>` : ''}
+            ${compliancePill}
           </div>
         `;
       });
     });
 
-    if (data.batch_compliance_summary) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Batch Compliance:</strong> ${escapeHtml(data.batch_compliance_summary)}</div>`;
+    // Batch compliance banner - aggregate across all entries
+    html += renderBatchComplianceBanner(perEntryStatuses, data.batch_compliance_summary);
     if (data.batch_coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.batch_coaching_tip)}</div>`;
     return html;
   }
@@ -9505,9 +9658,18 @@ PER-ENTRY GUIDELINE MATCHING - CRITICAL:
 - DO NOT invent a Vault ID. Only return IDs that appear verbatim in the Vault list above.
 - For EACH entry, generate codes and compliance using THAT entry's matched guideline content. Different entries may have different guidelines - apply Path A/B/C logic INDEPENDENTLY per entry.
 - If an entry has no per-entry match, fall back to the BATCH-LEVEL guidelines below (if any). If neither exists, use Path C (UTBMS default, no source).
+
+PER-ENTRY COMPLIANCE EVALUATION - CRITICAL:
+For EACH entry, evaluate the generated narrative against THAT entry's applied guideline (the per-entry matched Vault entry, or the batch-level fallback if no per-entry match) on BOTH dimensions:
+1. NARRATIVE CONTENT - does the wording, level of detail, and structure conform to the rules? (e.g., no block billing, no prohibited phrases like "attention to" or "review of file", proper time increments, no clerical work descriptions, names/parties handled per rules, no disallowed activities)
+2. CODES - if the guideline specifies a code system, do the assigned codes come from that system?
+
+If the narrative passes BOTH dimensions, set per-entry compliance_status to "compliant".
+If EITHER dimension fails, set compliance_status to "non_compliant" and explain the issue concisely in compliance_note (name the specific rule violated).
+If no guideline applied to that entry at all (no per-entry match AND no batch-level guideline), set compliance_status to "no_guideline".
 ` : `
 
-(No Vault entries are saved, so per-entry guideline matching is not possible. Apply standard UTBMS codes per Path C unless batch-level guidelines are provided below.)
+(No Vault entries are saved, so per-entry guideline matching is not possible. Apply standard UTBMS codes per Path C unless batch-level guidelines are provided below. For entries with no guideline at all, set compliance_status to "no_guideline".)
 `;
 
     const batchBlock = (guidelines.text || guidelines.file) ? `
@@ -9566,10 +9728,12 @@ Return your response as JSON only, no preamble or code fences:
       "guidelines_id": "id-from-vault" or null,
       "guidelines_label_raw": "the exact shorthand the attorney typed, e.g. 'Chubb' or 'allstate gl'" or null,
       "codes_source": "name of guideline that supplied codes for THIS entry" or null,
-      "codes_inferred": false (Path A) or true (Path B/C)
+      "codes_inferred": false (Path A) or true (Path B/C),
+      "compliance_status": "compliant" | "non_compliant" | "no_guideline",
+      "compliance_note": "one short sentence: if compliant, briefly state what was checked (e.g., 'Narrative and codes conform to Chubb Litigation Guidelines'); if non-compliant, name the specific rule violated; if no guideline, write 'No client guidelines applied.'"
     }
   ],
-  "batch_compliance_summary": "one sentence on overall compliance with guidelines (or 'No client guidelines provided.')",
+  "batch_compliance_summary": "one sentence summarizing the batch result. If all entries that had a guideline applied are compliant, say so explicitly (e.g., 'All 7 entries comply with their applied guidelines'). If any have issues, name the count and dominant issue type.",
   "batch_coaching_tip": "one short sentence in a coaching-oriented tone about a pattern you noticed across these entries"
 }`;
 
@@ -9614,6 +9778,8 @@ Return your response as JSON only, no preamble or code fences:
       html += `<div class="bnc-bulk-unmatched-banner">Heads up - ${unmatchedMentionCount} entr${unmatchedMentionCount === 1 ? 'y has' : 'ies have'} a guideline mention I couldn't confidently match to your Vault. Pick one from the dropdown on each entry, or leave it on "(none)" to use the panel-level fallback.</div>`;
     }
 
+    // Track per-entry compliance status across the loop so we can build the batch banner at the bottom
+    const perEntryStatuses = [];
     // Group by date, then by matter within date
     const dateGroups = new Map();
     entries.forEach((e, i) => {
@@ -9686,6 +9852,13 @@ Return your response as JSON only, no preamble or code fences:
             ? `<div class="bnc-entry-codes-attribution">${renderEntryCodesAttributionInline(e.codes_source, e.codes_inferred)}</div>`
             : '';
 
+          // Per-entry compliance pill (green/red/neutral) - track status for batch banner
+          const guidelineLabelForPill = matchedId
+            ? (vaultById.get(matchedId).label || '')
+            : (e.codes_source || ''); // fallback to batch-level guideline name if used
+          const compliancePill = renderCompliancePill(e.compliance_status, e.compliance_note, guidelineLabelForPill);
+          perEntryStatuses.push(normalizeComplianceStatus(e.compliance_status, e.compliance_note));
+
           html += `
             <div class="bnc-narrative-entry multi-entry">
               ${renderCodeChip(e.codes)}
@@ -9701,6 +9874,7 @@ Return your response as JSON only, no preamble or code fences:
               ${renderAtvrBreakdown(e.breakdown)}
               ${guidelinePicker}
               ${entryCodesAttribution}
+              ${compliancePill}
               ${e.original_blurb ? `<div class="bnc-original-blurb"><strong>From your paste:</strong> ${escapeHtml(e.original_blurb)}</div>` : ''}
             </div>
           `;
@@ -9708,7 +9882,8 @@ Return your response as JSON only, no preamble or code fences:
       });
     });
 
-    if (data.batch_compliance_summary) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Batch Compliance:</strong> ${escapeHtml(data.batch_compliance_summary)}</div>`;
+    // Batch compliance banner - aggregate across all entries (green/red/neutral)
+    html += renderBatchComplianceBanner(perEntryStatuses, data.batch_compliance_summary);
     if (data.batch_coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.batch_coaching_tip)}</div>`;
 
     // Footer note about how to apply changed pickers
@@ -9732,6 +9907,113 @@ Return your response as JSON only, no preamble or code fences:
       return `<span class="bnc-code-source-pill inferred">UTBMS default · no guideline applied</span>`;
     }
     return '';
+  }
+
+  // ============ COMPLIANCE RENDERING ============
+  // Normalize free-form compliance status strings the model might return into one
+  // of three canonical states. Tolerates synonyms ("ok", "compliant", "passes",
+  // "no issues" -> compliant; "violation", "non-compliant", "issue" -> non-compliant).
+  function normalizeComplianceStatus(rawStatus, rawNote) {
+    const s = String(rawStatus || '').toLowerCase().trim();
+    if (s === 'compliant' || s === 'compliant_with_guidelines' || s === 'passes' || s === 'ok' || s === 'pass') return 'compliant';
+    if (s === 'non_compliant' || s === 'non-compliant' || s === 'noncompliant' || s === 'issues' || s === 'violation' || s === 'fail' || s === 'issue') return 'non_compliant';
+    if (s === 'no_guideline' || s === 'no_guidelines' || s === 'none' || s === 'n/a' || s === 'na') return 'no_guideline';
+    // Fallback: infer from the note text if status missing/unrecognized
+    const note = String(rawNote || '').toLowerCase().trim();
+    if (!note) return 'no_guideline';
+    if (note.includes('no client guidelines') || note.includes('no guideline') || note.includes('not provided')) return 'no_guideline';
+    if (/\b(violation|non[- ]?compliant|fails|issue|conflict|prohibit|disallow|exceed)/i.test(note)) return 'non_compliant';
+    if (/\b(complies|compliant|passes|consistent|conform|aligned|ok|no issues)/i.test(note)) return 'compliant';
+    return 'no_guideline';
+  }
+
+  // Per-entry compliance pill - sits under each generated narrative card.
+  // status: 'compliant' | 'non_compliant' | 'no_guideline'
+  // note:   one-line explanation from the model
+  // guidelineLabel: optional, the matched guideline name (so the pill can read
+  //                 "Complies with Chubb Litigation Guidelines")
+  function renderCompliancePill(status, note, guidelineLabel) {
+    const normalized = normalizeComplianceStatus(status, note);
+    const label = (guidelineLabel || '').trim();
+    let cls, icon, title;
+    if (normalized === 'compliant') {
+      cls = 'compliant';
+      icon = '✓';
+      title = label
+        ? `Complies with <em>${escapeHtml(label)}</em>`
+        : `Complies with applied billing guidelines`;
+    } else if (normalized === 'non_compliant') {
+      cls = 'non-compliant';
+      icon = '✗';
+      title = label
+        ? `Issue under <em>${escapeHtml(label)}</em>`
+        : `Compliance issue flagged`;
+    } else {
+      cls = 'no-guideline';
+      icon = '–';
+      title = `No client billing guideline applied to this entry`;
+    }
+    const noteHtml = note && note.trim() && normalized !== 'no_guideline'
+      ? `<div class="bnc-compliance-pill-note">${escapeHtml(note.trim())}</div>`
+      : '';
+    return `<div class="bnc-compliance-pill ${cls}">
+      <span class="bnc-compliance-pill-icon">${icon}</span>
+      <div class="bnc-compliance-pill-body">
+        <div class="bnc-compliance-pill-title">${title}</div>
+        ${noteHtml}
+      </div>
+    </div>`;
+  }
+
+  // Batch compliance banner - the prominent callout at the bottom of multi/bulk output.
+  // Aggregates per-entry results into one of three batch states:
+  //   all_compliant  -> green: every entry that had a guideline passed
+  //   issues_found   -> red:   one or more entries had a compliance issue
+  //   no_guidelines  -> neutral gold: no guidelines applied to any entry
+  function computeBatchComplianceState(perEntryStatuses) {
+    let compliantCount = 0;
+    let nonCompliantCount = 0;
+    let noGuidelineCount = 0;
+    perEntryStatuses.forEach(s => {
+      if (s === 'compliant') compliantCount++;
+      else if (s === 'non_compliant') nonCompliantCount++;
+      else noGuidelineCount++;
+    });
+    if (nonCompliantCount > 0) return { state: 'issues_found', compliantCount, nonCompliantCount, noGuidelineCount };
+    if (compliantCount > 0) return { state: 'all_compliant', compliantCount, nonCompliantCount, noGuidelineCount };
+    return { state: 'no_guidelines', compliantCount, nonCompliantCount, noGuidelineCount };
+  }
+
+  function renderBatchComplianceBanner(perEntryStatuses, summaryNote) {
+    const { state, compliantCount, nonCompliantCount, noGuidelineCount } = computeBatchComplianceState(perEntryStatuses);
+    const total = perEntryStatuses.length;
+    let cls, icon, title;
+    if (state === 'all_compliant') {
+      cls = 'all-compliant';
+      icon = '✓';
+      const breakdown = noGuidelineCount > 0
+        ? ` <em>(${compliantCount} of ${total} had a guideline applied; ${noGuidelineCount} had none)</em>`
+        : '';
+      title = `<strong>All narratives comply with the applied client billing guidelines.</strong>${breakdown}`;
+    } else if (state === 'issues_found') {
+      cls = 'issues-found';
+      icon = '✗';
+      title = `<strong>${nonCompliantCount} of ${total} narrative${total === 1 ? '' : 's'} flagged for compliance issues</strong> under the applied client billing guidelines. Review the red-pill entries above.`;
+    } else {
+      cls = 'no-guidelines';
+      icon = 'i';
+      title = `<strong>No client billing guidelines were applied to this batch.</strong> Narratives use standard ATVR formatting and UTBMS-default codes.`;
+    }
+    const summaryHtml = summaryNote && summaryNote.trim() && state !== 'no_guidelines'
+      ? `<div style="margin-top: 0.3rem; font-size: 0.82rem; opacity: 0.9;">${escapeHtml(summaryNote.trim())}</div>`
+      : '';
+    return `<div class="bnc-batch-compliance-banner ${cls}">
+      <span class="bnc-batch-compliance-banner-icon">${icon}</span>
+      <div class="bnc-batch-compliance-banner-body">
+        <div class="bnc-batch-compliance-banner-title">${title}</div>
+        ${summaryHtml}
+      </div>
+    </div>`;
   }
 
   // ============ BOOKENDS ============
