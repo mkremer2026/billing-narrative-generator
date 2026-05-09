@@ -716,6 +716,42 @@
     border: 1px solid rgba(203,161,53,0.25);
   }
   .bnc-framework-badge .bnc-dot { width: 6px; height: 6px; background: var(--gold); border-radius: 50%; }
+  /* Clickable variant — used for the ATVR explainer badge at the top of the
+     Generate Narratives tab. Cursor + hover cue tell the user it's interactive. */
+  .bnc-framework-badge-clickable {
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    user-select: none;
+  }
+  .bnc-framework-badge-clickable:hover,
+  .bnc-framework-badge-clickable:focus-visible {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--navy-deep, var(--navy));
+    transform: translateY(-1px);
+    outline: none;
+  }
+  .bnc-framework-badge-clickable.active {
+    background: var(--navy);
+    color: var(--paper);
+    border-color: var(--gold);
+  }
+  .bnc-framework-badge-clickable.active .bnc-dot { background: var(--gold); }
+  .bnc-framework-badge-info {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px;
+    margin-left: 0.15rem;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.08);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    line-height: 1;
+  }
+  .bnc-framework-badge-clickable.active .bnc-framework-badge-info {
+    background: rgba(255,255,255,0.18);
+  }
 
   /* Mode toggle: Single / Multiple / Bulk */
   .bnc-mode-toggle {
@@ -3286,7 +3322,7 @@
   <nav class="bnc-main-tabs" role="tablist">
     <button class="bnc-main-tab active" data-panel="standard" role="tab">
       <span class="bnc-tab-num">i.</span>
-      Standard Narrative
+      Generate Narratives
     </button>
     <button class="bnc-main-tab" data-panel="bookends" role="tab">
       <span class="bnc-tab-num">ii.</span>
@@ -3306,7 +3342,7 @@
     </button>
     <button class="bnc-main-tab" data-panel="library" role="tab">
       <span class="bnc-tab-num">vi.</span>
-      Guidelines Vault
+      Client Billing Guidelines
     </button>
   </nav>
 
@@ -3315,7 +3351,7 @@
     <!-- ============ PANEL 1: STANDARD ============ -->
     <section class="bnc-panel active" data-panel="standard">
       <div class="bnc-panel-intro">
-        <span class="bnc-framework-badge"><span class="bnc-dot"></span>ATVR Framework · Action · Task · Value · Result</span>
+        <span class="bnc-tooltip-anchor"><span class="bnc-framework-badge bnc-framework-badge-clickable" data-help-tip="atvr-framework" role="button" tabindex="0" aria-label="What is the ATVR Framework? Click to learn more"><span class="bnc-dot"></span>ATVR Narrative Framework · Action · Task · Value · Result <span class="bnc-framework-badge-info">ⓘ</span></span></span>
         <h2 data-std-title>Single Narrative</h2>
         <p data-std-description>Paste a blurb about a billable task you just completed. The generator will return a polished 20-25 word narrative using the full ATVR framework calibrated to your role.</p>
       </div>
@@ -3786,8 +3822,8 @@
     <!-- ============ PANEL 6: LIBRARY ============ -->
     <section class="bnc-panel" data-panel="library">
       <div class="bnc-panel-intro">
-        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Your Personal Guidelines Vault · Stored on This Device Only</span>
-        <h2>Guidelines Vault</h2>
+        <span class="bnc-framework-badge"><span class="bnc-dot"></span>Your Personal Vault · Stored on This Device Only</span>
+        <h2>Client Billing Guidelines</h2>
         <p>Save carrier billing guidelines, client-specific rules, or matter-level instructions for instant reuse on any tab. <strong>Your guidelines stay on your device only</strong> - they never touch The Billing Coach's servers. Use Export to back up or move them between devices.</p>
       </div>
 
@@ -3799,17 +3835,17 @@
         <div class="bnc-quickstart-body">
           <p><strong>The 30-second version.</strong> Type or paste what you actually did. Hit generate. Get a polished ATVR narrative. Copy into your billing software. Move on with your day.</p>
 
-          <p><strong>1. Standard Narrative <em>- One Task</em>.</strong> Your default. One task, one entry. Paste a plain-English description of what you just finished, hit generate, get a polished 20-25 word ATVR narrative back. This is the move you'll use most days.</p>
+          <p><strong>1. Generate Narratives <em>- One Task</em>.</strong> Your default. One task, one entry. Paste a plain-English description of what you just finished, hit generate, get a polished 20-25 word ATVR narrative back. This is the move you'll use most days.</p>
 
-          <p><strong>2. Standard Narrative <em>- Multiple Tasks</em>.</strong> Got several tasks queued up? Switch to this mode (button at the top of the Standard Narrative tab). Add a row for each task - up to 20 - and the generator returns clean narratives for the entire batch in a single shot. Output stays grouped by matter so it's easy to copy into the right place.</p>
+          <p><strong>2. Generate Narratives <em>- Multiple Tasks</em>.</strong> Got several tasks queued up? Switch to this mode (button at the top of the Generate Narratives tab). Add a row for each task - up to 20 - and the generator returns clean narratives for the entire batch in a single shot. Output stays grouped by matter so it's easy to copy into the right place.</p>
 
-          <p><strong>3. Standard Narrative <em>- Quick Capture</em>.</strong> Real-time capture power tool. Throughout the day - between calls, after a hearing, walking out of a deposition - jot down the date, time, client, and what you did. The generator reads your shorthand and returns polished ATVR narratives grouped by date and matter. <em>Capture it now, polish it never - the Generator handles that part.</em></p>
+          <p><strong>3. Generate Narratives <em>- Quick Capture</em>.</strong> Real-time capture power tool. Throughout the day - between calls, after a hearing, walking out of a deposition - jot down the date, time, client, and what you did. The generator reads your shorthand and returns polished ATVR narratives grouped by date and matter. <em>Capture it now, polish it never - the Generator handles that part.</em></p>
 
           <p><strong>4. Billing Bookends.</strong> Capture the full work cycle: the strategic prep <em>before</em> a task, the event itself, and the substantive follow-up <em>after</em>. Three narratives, one shot. This is where the time most attorneys leave on the table - the thinking and prep around an event - finally gets captured.</p>
 
           <p><strong>5. Break It Up.</strong> For big projects you'd otherwise block bill - MSJ, purchase agreement, trial prep. The generator splits one block of work into four phase narratives: review/analyze, outlining/strategy, drafting, finalizing. Each phase stands alone. Each gets paid.</p>
 
-          <p><strong>6. Guidelines Vault.</strong> Save carrier and client billing guidelines once, apply them with a dropdown click on any of the three generator tabs. Each generated narrative will then be written to comply with whatever you've loaded. <em>Your saved guidelines stay on your device only - never on a server.</em> Use Export to back up or move to another device.</p>
+          <p><strong>6. Client Billing Guidelines.</strong> Save carrier and client billing guidelines once, apply them with a dropdown click on any of the three generator tabs. Each generated narrative will then be written to comply with whatever you've loaded. <em>Your saved guidelines stay on your device only - never on a server.</em> Use Export to back up or move to another device.</p>
 
           <p><strong>7. Ask The Billing Coach.</strong> The gold button in the bottom-right corner of every tab. Drop in any billing question - mindset, resistance, "is this billable?", how to think about a tough billing day - and get a coaching response on the spot. Short memory carries across follow-ups in the same session, then forgets when you close.</p>
 
@@ -3864,7 +3900,7 @@
       <h3>The four tabs</h3>
 
       <div class="bnc-help-tab-card">
-        <div><span class="bnc-help-tab-num">i.</span><strong>Standard Narrative</strong></div>
+        <div><span class="bnc-help-tab-num">i.</span><strong>Generate Narratives</strong></div>
         <p>One task, one entry. Use this when you finished a discrete piece of work and want to bill it cleanly. Paste the messy blurb you'd type into your timekeeper, hit generate, get the polished version. 20-25 words, full ATVR.</p>
         <p style="margin-top: 0.45rem;"><em>Three modes inside this tab:</em> <strong>One Task</strong> (single narrative), <strong>Multiple Tasks</strong> (up to 20 structured rows), and <strong>Quick Capture</strong> (real-time capture as you go - jot down date, time, client, and what you did, and the generator returns polished narratives grouped by date and matter).</p>
       </div>
@@ -3880,7 +3916,7 @@
       </div>
 
       <div class="bnc-help-tab-card">
-        <div><span class="bnc-help-tab-num">iv.</span><strong>Guidelines Vault</strong></div>
+        <div><span class="bnc-help-tab-num">iv.</span><strong>Client Billing Guidelines</strong></div>
         <p>Save carrier and client guidelines once, apply them with a click thereafter. Your saved data stays on your device - never on my server. Export to back up or move to another device.</p>
       </div>
 
@@ -10416,7 +10452,8 @@ Return your response as JSON only, no preamble or code fences:
     'matter-context': "<strong>Optional but powerful.</strong> Two or three words about the case (e.g., \"employment discrimination, defending employer\") give the generator real context to write from. Without it, narratives stay generic.",
     'bookends-time': "<strong>Capture all three.</strong> Most attorneys forget that the strategic prep <em>before</em> a call/event and the substantive follow-up <em>after</em> are billable - and often more billable than the event itself. Cringe and count it.",
     'phase-split': "<strong>Auto-split is fine.</strong> Leave blank if you don't have specific phase times - the generator will distribute reasonably. If you want control, enter four numbers separated by dashes: e.g., <em>2-1.5-4-1</em> means 2 hrs review, 1.5 hrs outlining, 4 hrs drafting, 1 hr finalizing.",
-    'bulk-format': "<strong>Quick capture, no polished prose required.</strong> Just jot down the date, time, client, and what you did - shorthand is fine. <strong>Optional but powerful:</strong> drop a guideline name (Chubb, Allstate, etc.) anywhere in an entry and the generator will fuzzy-match it to your Vault and apply <em>that</em> entry's compliance and codes accordingly. Different entries can use different guidelines - the parser handles per-entry mapping. Anything you don't tag falls back to the guideline set in the panel above."
+    'bulk-format': "<strong>Quick capture, no polished prose required.</strong> Just jot down the date, time, client, and what you did - shorthand is fine. <strong>Optional but powerful:</strong> drop a guideline name (Chubb, Allstate, etc.) anywhere in an entry and the generator will fuzzy-match it to your Vault and apply <em>that</em> entry's compliance and codes accordingly. Different entries can use different guidelines - the parser handles per-entry mapping. Anything you don't tag falls back to the guideline set in the panel above.",
+    'atvr-framework': "<strong>The ATVR Narrative Framework.</strong> <strong>ACTION</strong> (the verbs) + <strong>TASK</strong> (the named work product) + <strong>VALUE</strong> (why it matters) + <strong>RESULT</strong> (where it's headed). Every solid billing entry has all four. Most attorneys nail Action and Task. Where they lose money - every single day - is in <em>Value</em> and <em>Result</em>. This generator builds all four into every narrative."
   };
 
   document.querySelectorAll('[data-help-tip]').forEach(icon => {
@@ -10434,6 +10471,17 @@ Return your response as JSON only, no preamble or code fences:
       icon.parentElement.appendChild(tip);
       icon.classList.add('active');
     });
+    // Keyboard support for elements that opt into tabbable behavior (role="button" / tabindex).
+    // Allows the ATVR Framework badge (and any future clickable badges) to open the tooltip
+    // via Enter or Space, matching native button behavior.
+    if (icon.hasAttribute('tabindex') || icon.getAttribute('role') === 'button') {
+      icon.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          icon.click();
+        }
+      });
+    }
   });
   document.addEventListener('click', e => {
     if (!e.target.closest('[data-help-tip]') && !e.target.closest('.bnc-tooltip')) {
@@ -10467,13 +10515,13 @@ Return your response as JSON only, no preamble or code fences:
   // ============ FIRST-TIME TOUR ============
   const TOUR_KEY = 'bnc_tour_completed_v1';
   const tourSteps = [
-    { title: 'Standard Narrative <em>- One Task</em>', body: '<p>Welcome to your billing toolkit. The most common move starts here: paste a single task you just completed, hit <strong>Generate</strong>, get a polished ATVR narrative back in seconds.</p><p>Most days, this is the only mode you\'ll need.</p>' },
-    { title: 'Standard Narrative <em>- Multiple Tasks</em>', body: '<p>Got several tasks queued up at once? Click <strong>Multiple Tasks</strong> at the top of the Standard Narrative tab.</p><p>Add a row for each task - up to 20 - and the generator returns clean ATVR narratives for the entire batch in a single shot.</p>' },
-    { title: 'Standard Narrative <em>- Quick Capture</em>', body: '<p>Real-time capture for busy attorneys. Click <strong>Quick Capture</strong> at the top of the Standard Narrative tab.</p><p>Throughout the day - between calls, after a hearing, walking out of a deposition - jot down the date, time, client, and what you did. The generator reads your shorthand and returns polished ATVR narratives grouped by date and matter.</p>' },
+    { title: 'Generate Narratives <em>- One Task</em>', body: '<p>Welcome to your billing toolkit. The most common move starts here: paste a single task you just completed, hit <strong>Generate</strong>, get a polished ATVR narrative back in seconds.</p><p>Most days, this is the only mode you\'ll need.</p>' },
+    { title: 'Generate Narratives <em>- Multiple Tasks</em>', body: '<p>Got several tasks queued up at once? Click <strong>Multiple Tasks</strong> at the top of the Generate Narratives tab.</p><p>Add a row for each task - up to 20 - and the generator returns clean ATVR narratives for the entire batch in a single shot.</p>' },
+    { title: 'Generate Narratives <em>- Quick Capture</em>', body: '<p>Real-time capture for busy attorneys. Click <strong>Quick Capture</strong> at the top of the Generate Narratives tab.</p><p>Throughout the day - between calls, after a hearing, walking out of a deposition - jot down the date, time, client, and what you did. The generator reads your shorthand and returns polished ATVR narratives grouped by date and matter.</p>' },
     { title: 'Billing Bookends', body: '<p>Capture the full work cycle. The strategic prep <strong>before</strong> a task. The event itself. The substantive follow-up <strong>after</strong>.</p><p>Three narratives, one shot. This is where the time most attorneys leave on the table - the thinking and prep around an event - finally gets billed.</p>' },
     { title: 'Break It Up', body: '<p>Big project? MSJ, purchase agreement, trial prep, complex motion?</p><p>This tab splits one block of work into four phase narratives - <strong>review</strong>, <strong>outlining</strong>, <strong>drafting</strong>, <strong>finalizing</strong> - so nothing reads as block billing. Each phase stands alone, each gets paid.</p>' },
     { title: 'Pro Forma Pre-Check', body: '<p>Hate reviewing month-end pro formas? Upload the PDF and the Pre-Check flags ATVR weaknesses, block billing, duplicate entries, code mismatches, and guideline compliance issues. You get a structured report (with suggested rewrites for each finding) so partner review takes minutes instead of hours.</p>' },
-    { title: 'Guidelines Vault', body: '<p>Save carrier and client guidelines once - Allstate, Chubb, Liberty Mutual, your firm\'s biggest client - then apply them with a dropdown click on any of the three generator tabs.</p><p><em>Your saved guidelines stay on your device only.</em> Nothing on a server.</p>' },
+    { title: 'Client Billing Guidelines', body: '<p>Save carrier and client guidelines once - Allstate, Chubb, Liberty Mutual, your firm\'s biggest client - then apply them with a dropdown click on any of the three generator tabs.</p><p><em>Your saved guidelines stay on your device only.</em> Nothing on a server.</p>' },
     { title: 'Ask The Billing Coach', body: '<p>See the <em>gold button in the bottom-right corner</em>? That\'s the chat coach. Available on every tab.</p><p>Drop in any billing question - mindset, "is this billable?", whatever\'s on your mind - and get a coaching response on the spot.</p><p style="margin-top:1rem; font-family:\'Playfair Display\',serif; font-style:italic; color:var(--gold-dark, #a38527);">Now go bill some time. It\'s YOUR time. Make it count.</p>' }
   ];
   let currentTourStep = 0;
@@ -10567,7 +10615,7 @@ WHAT THE BILLING COACH DOES NOT DO:
 - Does NOT pretend backslides won't happen - calls them "inevitable, where the gold is."
 - Does NOT make decisions about what to bill the client - that is "above your pay grade." The attorney's job is to record accurately. The partner's job is to decide what to bill.
 - Does NOT give legal or ethics advice for specific situations. Refers to the firm or bar association.
-- Does NOT compete with the ATVR generator the user is sitting in. If a user asks for a polished narrative drafted, redirect: "That's exactly what the generator on this page does for you - paste your task blurb into the Standard Narrative tab, hit generate, and you'll have a clean ATVR narrative in seconds." DO offer mindset and framework coaching alongside that redirect.
+- Does NOT compete with the ATVR generator the user is sitting in. If a user asks for a polished narrative drafted, redirect: "That's exactly what the generator on this page does for you - paste your task blurb into the Generate Narratives tab, hit generate, and you'll have a clean ATVR narrative in seconds." DO offer mindset and framework coaching alongside that redirect.
 
 YOUR SCOPE in this chat:
 - Mindset and resistance work (backslides, dread, underbilling shame, perfectionism, procrastination).
