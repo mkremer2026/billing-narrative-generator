@@ -800,6 +800,61 @@
   .bnc-task-row-fields { display: grid; grid-template-columns: 90px 1fr; gap: 0.55rem; margin-bottom: 0.55rem; }
   .bnc-task-row-fields .bnc-input { padding: 0.5rem 0.7rem; font-size: 0.88rem; background: var(--paper); }
   .bnc-task-card .bnc-textarea { min-height: 65px; padding: 0.6rem 0.8rem; font-size: 0.92rem; background: var(--paper); }
+  /* Per-task client billing guideline picker (sits between matter row and blurb) */
+  .bnc-task-guideline-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+    padding: 0.45rem 0.65rem;
+    background: var(--gold-soft);
+    border: 1px solid rgba(203,161,53,0.25);
+    border-radius: 4px;
+    font-size: 0.78rem;
+  }
+  .bnc-task-guideline-label {
+    font-weight: 600;
+    color: var(--navy);
+    white-space: nowrap;
+    font-family: 'Outfit', sans-serif;
+  }
+  .bnc-task-guideline-select {
+    flex: 1;
+    min-width: 180px;
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: white;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.82rem;
+    color: var(--navy);
+    cursor: pointer;
+  }
+  .bnc-task-guideline-select:focus { outline: none; border-color: var(--gold); }
+  .bnc-task-guideline-empty {
+    flex: 1;
+    color: var(--muted);
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.78rem;
+  }
+  .bnc-task-guideline-empty strong {
+    color: var(--navy);
+    font-style: normal;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+  }
+  /* Read-only guideline pill on output cards (same shape as task row picker, but no <select>) */
+  .bnc-entry-guideline-readonly {
+    font-weight: 500;
+    color: var(--navy);
+    background: white;
+    padding: 0.25rem 0.55rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
 
   .bnc-multi-add-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
   .bnc-multi-add-btn {
@@ -3358,7 +3413,7 @@
 
       <div class="bnc-mode-toggle" role="tablist" aria-label="Generation mode">
         <button class="bnc-mode-btn active" data-mode="single">One Task</button>
-        <button class="bnc-mode-btn" data-mode="multi">Multiple Tasks <span class="bnc-mode-count" data-multi-count>1</span></button>
+        <button class="bnc-mode-btn" data-mode="multi">Multiple Narratives <span class="bnc-mode-count" data-multi-count>1</span></button>
         <button class="bnc-mode-btn" data-mode="bulk">Quick Capture</button>
       </div>
 
@@ -3837,7 +3892,7 @@
 
           <p><strong>1. Generate Narratives <em>- One Task</em>.</strong> Your default. One task, one entry. Paste a plain-English description of what you just finished, hit generate, get a polished 20-25 word ATVR narrative back. This is the move you'll use most days.</p>
 
-          <p><strong>2. Generate Narratives <em>- Multiple Tasks</em>.</strong> Got several tasks queued up? Switch to this mode (button at the top of the Generate Narratives tab). Add a row for each task - up to 20 - and the generator returns clean narratives for the entire batch in a single shot. Output stays grouped by matter so it's easy to copy into the right place.</p>
+          <p><strong>2. Generate Narratives <em>- Multiple Narratives</em>.</strong> Got several tasks queued up? Switch to this mode (button at the top of the Generate Narratives tab). Add a row for each task - up to 20 - and the generator returns clean narratives for the entire batch in a single shot. Output stays grouped by matter so it's easy to copy into the right place.</p>
 
           <p><strong>3. Generate Narratives <em>- Quick Capture</em>.</strong> Real-time capture power tool. Throughout the day - between calls, after a hearing, walking out of a deposition - jot down the date, time, client, and what you did. The generator reads your shorthand and returns polished ATVR narratives grouped by date and matter. <em>Capture it now, polish it never - the Generator handles that part.</em></p>
 
@@ -3902,7 +3957,7 @@
       <div class="bnc-help-tab-card">
         <div><span class="bnc-help-tab-num">i.</span><strong>Generate Narratives</strong></div>
         <p>One task, one entry. Use this when you finished a discrete piece of work and want to bill it cleanly. Paste the messy blurb you'd type into your timekeeper, hit generate, get the polished version. 20-25 words, full ATVR.</p>
-        <p style="margin-top: 0.45rem;"><em>Three modes inside this tab:</em> <strong>One Task</strong> (single narrative), <strong>Multiple Tasks</strong> (up to 20 structured rows), and <strong>Quick Capture</strong> (real-time capture as you go - jot down date, time, client, and what you did, and the generator returns polished narratives grouped by date and matter).</p>
+        <p style="margin-top: 0.45rem;"><em>Three modes inside this tab:</em> <strong>One Task</strong> (single narrative), <strong>Multiple Narratives</strong> (up to 20 structured rows), and <strong>Quick Capture</strong> (real-time capture as you go - jot down date, time, client, and what you did, and the generator returns polished narratives grouped by date and matter).</p>
       </div>
 
       <div class="bnc-help-tab-card">
@@ -7939,6 +7994,11 @@ JSON FORMATTING (non-negotiable):
     localStorage.setItem(LIBRARY_KEY, JSON.stringify(lib));
     refreshLibraryDropdowns();
     refreshLibraryList();
+    // Keep per-task guideline dropdowns on the Multiple Narratives tab in sync
+    // (defined later in the file, so guard with typeof for early-call safety).
+    if (typeof refreshMultiTaskGuidelineDropdowns === 'function') {
+      refreshMultiTaskGuidelineDropdowns();
+    }
   }
 
   // ============ TAB SWITCHING ============
@@ -8811,11 +8871,19 @@ Return your response as JSON only, no preamble or code fences:
       if (!raw) return [createBlankTask()];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed) || parsed.length === 0) return [createBlankTask()];
-      return parsed.map(t => ({ id: t.id || genTaskId(), time: t.time || '', matter: t.matter || '', blurb: t.blurb || '' }));
+      // Migrate older saved tasks (which may not have guidelinesId) by defaulting
+      // to '' (= use panel-level fallback).
+      return parsed.map(t => ({
+        id: t.id || genTaskId(),
+        time: t.time || '',
+        matter: t.matter || '',
+        blurb: t.blurb || '',
+        guidelinesId: t.guidelinesId || ''
+      }));
     } catch { return [createBlankTask()]; }
   }
   function saveMultiTasks() { try { localStorage.setItem(MULTI_TASKS_KEY, JSON.stringify(multiTasks)); } catch {} }
-  function createBlankTask() { return { id: genTaskId(), time: '', matter: '', blurb: '' }; }
+  function createBlankTask() { return { id: genTaskId(), time: '', matter: '', blurb: '', guidelinesId: '' }; }
   function genTaskId() { return 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
 
   function setStandardMode(mode) {
@@ -8844,6 +8912,21 @@ Return your response as JSON only, no preamble or code fences:
   function renderMultiTaskList() {
     const list = document.querySelector('[data-multi-list]');
     if (!list) return;
+
+    // Build the Vault dropdown options once, reusing per task. Each task's selected
+    // value is stamped in below via a data-task-guideline attribute on the <select>.
+    const lib = loadLibrary();
+    const vaultItems = Array.isArray(lib.items) ? lib.items.slice().sort((a, b) => (a.label || '').localeCompare(b.label || '')) : [];
+    const buildGuidelineSelect = (task) => {
+      // No Vault entries saved at all -> show a tiny prompt instead of an empty dropdown
+      if (vaultItems.length === 0) {
+        return `<span class="bnc-task-guideline-empty">No saved guidelines yet. Add one in the <strong>Client Billing Guidelines</strong> tab to enable per-task selection.</span>`;
+      }
+      const options = `<option value="">- Use panel guideline (below) -</option>` +
+        vaultItems.map(i => `<option value="${escapeAttr(i.id)}"${i.id === task.guidelinesId ? ' selected' : ''}>${escapeHtml(i.label || '(unnamed)')}</option>`).join('');
+      return `<select class="bnc-task-guideline-select" data-task-field="guidelinesId" data-task-id="${task.id}">${options}</select>`;
+    };
+
     list.innerHTML = multiTasks.map((t, i) => `
       <div class="bnc-task-card" data-task-id="${t.id}">
         <div class="bnc-task-card-head">
@@ -8854,14 +8937,21 @@ Return your response as JSON only, no preamble or code fences:
           <input class="bnc-input" data-task-field="time" data-task-id="${t.id}" placeholder="Time" value="${escapeAttr(t.time)}">
           <input class="bnc-input" data-task-field="matter" data-task-id="${t.id}" placeholder="Matter / Client (optional)" value="${escapeAttr(t.matter)}">
         </div>
+        <div class="bnc-task-guideline-row">
+          <label class="bnc-task-guideline-label">📋 Client Billing Guideline:</label>
+          ${buildGuidelineSelect(t)}
+        </div>
         <textarea class="bnc-textarea" data-task-field="blurb" data-task-id="${t.id}" placeholder="What did you do? A plain-English blurb is fine.">${escapeHtml(t.blurb)}</textarea>
       </div>
     `).join('');
 
-    list.querySelectorAll('[data-task-field]').forEach(input => {
-      input.addEventListener('input', () => {
-        const t = multiTasks.find(x => x.id === input.dataset.taskId);
-        if (t) { t[input.dataset.taskField] = input.value; saveMultiTasks(); }
+    // Wire up text inputs AND the new guideline <select> through the same handler.
+    // Both <input> and <select> have a 'value' property and emit 'input'/'change' events.
+    list.querySelectorAll('[data-task-field]').forEach(field => {
+      const eventName = field.tagName === 'SELECT' ? 'change' : 'input';
+      field.addEventListener(eventName, () => {
+        const t = multiTasks.find(x => x.id === field.dataset.taskId);
+        if (t) { t[field.dataset.taskField] = field.value; saveMultiTasks(); }
       });
     });
     list.querySelectorAll('[data-task-remove]').forEach(btn => {
@@ -8873,6 +8963,41 @@ Return your response as JSON only, no preamble or code fences:
       });
     });
     updateMultiCounters();
+  }
+
+  // Refresh ONLY the per-task guideline <select> options when the Vault changes,
+  // preserving any in-progress typing in the time/matter/blurb fields. Called from
+  // saveLibrary() so adding/editing a Vault entry shows up immediately on the multi
+  // task cards without forcing a full re-render.
+  function refreshMultiTaskGuidelineDropdowns() {
+    const list = document.querySelector('[data-multi-list]');
+    if (!list) return;
+    const lib = loadLibrary();
+    const vaultItems = Array.isArray(lib.items) ? lib.items.slice().sort((a, b) => (a.label || '').localeCompare(b.label || '')) : [];
+    list.querySelectorAll('.bnc-task-guideline-row').forEach(row => {
+      const card = row.closest('.bnc-task-card');
+      if (!card) return;
+      const taskId = card.dataset.taskId;
+      const task = multiTasks.find(t => t.id === taskId);
+      if (!task) return;
+      const labelHtml = `<label class="bnc-task-guideline-label">📋 Client Billing Guideline:</label>`;
+      let selectHtml;
+      if (vaultItems.length === 0) {
+        selectHtml = `<span class="bnc-task-guideline-empty">No saved guidelines yet. Add one in the <strong>Client Billing Guidelines</strong> tab to enable per-task selection.</span>`;
+      } else {
+        const options = `<option value="">- Use panel guideline (below) -</option>` +
+          vaultItems.map(i => `<option value="${escapeAttr(i.id)}"${i.id === task.guidelinesId ? ' selected' : ''}>${escapeHtml(i.label || '(unnamed)')}</option>`).join('');
+        selectHtml = `<select class="bnc-task-guideline-select" data-task-field="guidelinesId" data-task-id="${task.id}">${options}</select>`;
+      }
+      row.innerHTML = labelHtml + selectHtml;
+      const sel = row.querySelector('select[data-task-field="guidelinesId"]');
+      if (sel) {
+        sel.addEventListener('change', () => {
+          const t = multiTasks.find(x => x.id === sel.dataset.taskId);
+          if (t) { t.guidelinesId = sel.value; saveMultiTasks(); }
+        });
+      }
+    });
   }
 
   function updateMultiCounters() {
@@ -8921,14 +9046,50 @@ Return your response as JSON only, no preamble or code fences:
     }
     const role = state.role.standard;
     const guidelines = getGuidelinesFor('standard');
+    // Reuse the same vault context builder used by Quick Capture - same shape, same purpose.
+    const vault = buildVaultContextForBulk();
+    const hasVault = vault.items.length > 0;
+    // Build a quick lookup of selected guideline label per task, for the prompt
+    const lib = loadLibrary();
+    const vaultById = new Map((Array.isArray(lib.items) ? lib.items : []).map(i => [i.id, i]));
 
     const taskListText = validTasks.map((t, i) => {
       let line = `TASK ${i + 1}:\n`;
       if (t.time && t.time.trim()) line += `  Time: ${t.time.trim()} hours\n`;
       if (t.matter && t.matter.trim()) line += `  Matter: ${t.matter.trim()}\n`;
+      // Per-task guideline routing tag. The Vault content is already provided in the
+      // vault block above; here we just tell Claude WHICH vault entry applies to THIS task.
+      if (t.guidelinesId && vaultById.has(t.guidelinesId)) {
+        const g = vaultById.get(t.guidelinesId);
+        line += `  Apply guideline: ID="${g.id}" LABEL="${(g.label || '').trim()}"\n`;
+      } else {
+        line += `  Apply guideline: (none selected - use batch-level fallback if any, otherwise Path C / UTBMS default)\n`;
+      }
       line += `  Work blurb: "${t.blurb.trim()}"`;
       return line;
     }).join('\n\n');
+
+    const vaultBlock = hasVault ? `
+
+YOUR VAULT (saved client billing guidelines - referenced by the per-task "Apply guideline" tags below):
+${vault.contextString}
+
+PER-TASK GUIDELINE INSTRUCTIONS:
+- Each TASK above carries an "Apply guideline" line telling you which Vault entry applies to that specific task.
+- For each task, generate codes and compliance using THAT TASK'S matched guideline content from the Vault. Different tasks may have different guidelines - apply Path A/B/C logic INDEPENDENTLY per task.
+- Per-task "codes_source" should reflect THAT task's matched guideline label (or null if "(none selected)").
+- If a task has "(none selected)", fall back to the BATCH-LEVEL guidelines below (if any). If neither exists, use Path C (UTBMS default, codes_source: null).
+- DO NOT invent Vault IDs or labels - only use what's listed above.
+` : `
+
+(No Vault entries are saved, so per-task guideline matching is not available. Apply standard UTBMS codes per Path C unless batch-level guidelines are provided below.)
+`;
+
+    const batchBlock = (guidelines.text || guidelines.file) ? `
+
+BATCH-LEVEL CLIENT BILLING GUIDELINES (fallback - apply to any task that has "(none selected)" above):
+${guidelines.text || "[See attached PDF]"}
+` : '';
 
     const prompt = `You are generating MULTIPLE billing narratives in a single batch using the proprietary ATVR Framework from The Billing Coach methodology.
 
@@ -8939,17 +9100,14 @@ THE ATVR FRAMEWORK - every narrative has all 4 parts: ACTION, TASK, VALUE, RESUL
 THE ATTORNEY'S TASKS (${validTasks.length} total):
 
 ${taskListText}
-
-${guidelines.text || guidelines.file ? `CLIENT BILLING GUIDELINES (each narrative MUST comply):
-${guidelines.text || "[See attached PDF]"}` : ""}
-
+${vaultBlock}${batchBlock}
 OUTPUT REQUIREMENTS PER NARRATIVE: 20-25 words, present tense only, 2-3 action verbs strung together, specific TASK + VALUE + RESULT, attorney-level language.
 
 ${ATVR_BREAKDOWN_SPEC}
 
 ${CODES_SPEC}
 
-CRITICAL: Return one narrative per input task, in the SAME ORDER as input. Each narrative gets its OWN codes object inferred from its specific work blurb (different tasks within the same batch may have different codes).
+CRITICAL: Return one narrative per input task, in the SAME ORDER as input. Each narrative gets its OWN codes object inferred from its specific work blurb AND its specific matched guideline (different tasks within the same batch may have different codes AND different code sources). For each narrative, set per-narrative "codes_source" and "codes_inferred" reflecting THAT task's matched guideline (not the batch).
 
 Return your response as JSON only, no preamble or code fences:
 {
@@ -8959,11 +9117,12 @@ Return your response as JSON only, no preamble or code fences:
       "narrative": "...",
       "breakdown": { "action": "...", "task": "...", "value": "...", "result": "..." },
       "codes": { "phase_task": "...", "activity": "...", "phase_task_desc": null or "custom code description", "activity_desc": null or "custom code description" } or null,
-      "compliance_note": "compliance status or 'OK'"
+      "compliance_note": "compliance status or 'OK'",
+      "guidelines_id": "id-from-vault that was applied to this task" or null,
+      "codes_source": "name of guideline that supplied codes for THIS task" or null,
+      "codes_inferred": false (Path A) or true (Path B/C)
     }
   ],
-  "codes_source": "name of guidelines that supplied codes" or null,
-  "codes_inferred": false (Path A) or true (Path B - default UTBMS),
   "batch_compliance_summary": "one sentence on overall compliance",
   "batch_coaching_tip": "one short sentence in a coaching-oriented tone about a pattern you noticed"
 }`;
@@ -8980,11 +9139,21 @@ Return your response as JSON only, no preamble or code fences:
     const totalTime = inputTasks.reduce((sum, t) => { const n = parseFloat(t.time); return isNaN(n) ? sum : sum + n; }, 0);
     const matters = [...new Set(inputTasks.map(t => (t.matter || '').trim()).filter(Boolean))];
 
+    // Vault lookup for displaying matched guideline labels per entry
+    const lib = loadLibrary();
+    const vaultById = new Map((Array.isArray(lib.items) ? lib.items : []).map(i => [i.id, i]));
+    const guidelineMatchCount = narratives.reduce((sum, n, i) => {
+      const taskIdx = (n.task_index && n.task_index >= 1 && n.task_index <= inputTasks.length) ? n.task_index - 1 : i;
+      const inputTask = inputTasks[taskIdx] || inputTasks[i] || {};
+      return sum + (inputTask.guidelinesId && vaultById.has(inputTask.guidelinesId) ? 1 : 0);
+    }, 0);
+
     let html = `
       <div class="bnc-output-stats">
         <div class="bnc-output-stat"><strong>${narratives.length}</strong><span>narrative${narratives.length === 1 ? '' : 's'}</span></div>
         ${totalTime > 0 ? `<div class="bnc-output-stat"><strong>${totalTime.toFixed(1)}</strong><span>total hours</span></div>` : ''}
         ${matters.length > 0 ? `<div class="bnc-output-stat"><strong>${matters.length}</strong><span>matter${matters.length === 1 ? '' : 's'}</span></div>` : ''}
+        ${vaultById.size > 0 && guidelineMatchCount > 0 ? `<div class="bnc-output-stat"><strong>${guidelineMatchCount}</strong><span>guideline${guidelineMatchCount === 1 ? '' : 's'} applied</span></div>` : ''}
       </div>
     `;
 
@@ -9007,6 +9176,27 @@ Return your response as JSON only, no preamble or code fences:
         const wc = wordCount(text);
         const wcWarn = (wc < 18 || wc > 28) ? 'warn' : '';
         const time = inputTask.time ? `<span class="bnc-narrative-time">${escapeHtml(inputTask.time)} hrs</span>` : '';
+
+        // Per-entry guideline pill (read-only - the user explicitly picked it via the dropdown)
+        const appliedGid = inputTask.guidelinesId && vaultById.has(inputTask.guidelinesId) ? inputTask.guidelinesId : '';
+        let guidelinePill = '';
+        if (appliedGid) {
+          guidelinePill = `<div class="bnc-entry-guideline-row state-matched" style="margin-top: 0.65rem;">
+            <span class="bnc-entry-guideline-label">📋 Applied guideline:</span>
+            <span class="bnc-entry-guideline-readonly">${escapeHtml(vaultById.get(appliedGid).label || '')}</span>
+          </div>`;
+        } else if (vaultById.size > 0) {
+          guidelinePill = `<div class="bnc-entry-guideline-row state-none" style="margin-top: 0.65rem;">
+            <span class="bnc-entry-guideline-label">📋 Applied guideline:</span>
+            <span class="bnc-entry-guideline-hint">no per-task guideline selected - panel-level fallback used</span>
+          </div>`;
+        }
+
+        // Per-entry codes attribution (compact pill, like Quick Capture does)
+        const entryCodesAttribution = (n.codes_source || n.codes_inferred !== undefined) && n.codes
+          ? `<div class="bnc-entry-codes-attribution">${renderEntryCodesAttributionInline(n.codes_source, n.codes_inferred)}</div>`
+          : '';
+
         html += `
           <div class="bnc-narrative-entry multi-entry">
             ${renderCodeChip(n.codes)}
@@ -9020,13 +9210,14 @@ Return your response as JSON only, no preamble or code fences:
             </div>
             <div class="bnc-narrative-text">${escapeHtml(text)}</div>
             ${renderAtvrBreakdown(n.breakdown)}
+            ${guidelinePill}
+            ${entryCodesAttribution}
             ${n.compliance_note && !['ok','compliant'].includes(n.compliance_note.toLowerCase().trim()) ? `<div style="font-size: 0.78rem; color: var(--muted); margin-top: 0.55rem; padding-top: 0.55rem; border-top: 1px dashed var(--border); font-style: italic;">${escapeHtml(n.compliance_note)}</div>` : ''}
           </div>
         `;
       });
     });
 
-    html += renderCodesAttribution(data.codes_source, data.codes_inferred);
     if (data.batch_compliance_summary) html += `<div style="font-size: 0.82rem; color: var(--muted); margin-top: 0.85rem; padding: 0.6rem 0.85rem; background: var(--gold-soft); border-radius: 4px;"><strong style="color: var(--navy);">Batch Compliance:</strong> ${escapeHtml(data.batch_compliance_summary)}</div>`;
     if (data.batch_coaching_tip) html += `<div style="font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 0.92rem; color: var(--navy); margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">- ${escapeHtml(data.batch_coaching_tip)}</div>`;
     return html;
@@ -9062,7 +9253,7 @@ Return your response as JSON only, no preamble or code fences:
   async function handleStandardBulk(btn, mode) {
     const raw = document.getElementById('bulk-entries').value.trim();
     if (!raw) { toastWarn("Paste your time entries into the box first."); return; }
-    if (raw.length < 20) { toastInfo("That looks short for a day/week/month export. Try One Task or Multiple Tasks mode instead.", "Hmm"); return; }
+    if (raw.length < 20) { toastInfo("That looks short for a day/week/month export. Try One Task or Multiple Narratives mode instead.", "Hmm"); return; }
     const role = state.role.standard;
     const guidelines = getGuidelinesFor('standard');
     const vault = buildVaultContextForBulk();
@@ -9156,7 +9347,7 @@ Return your response as JSON only, no preamble or code fences:
   function renderStandardBulk(data) {
     const entries = Array.isArray(data.entries) ? data.entries : [];
     if (entries.length === 0) {
-      return `<div class="bnc-error">${escapeHtml(data.batch_compliance_summary || "Could not parse any entries from the pasted text. Try adding clearer date/matter/time markers, or use One Task / Multiple Tasks mode instead.")}</div>`;
+      return `<div class="bnc-error">${escapeHtml(data.batch_compliance_summary || "Could not parse any entries from the pasted text. Try adding clearer date/matter/time markers, or use One Task / Multiple Narratives mode instead.")}</div>`;
     }
     const totalTime = entries.reduce((sum, e) => { const n = parseFloat(e.time); return isNaN(n) ? sum : sum + n; }, 0);
     const matters = [...new Set(entries.map(e => (e.matter || '').trim()).filter(Boolean))];
@@ -10305,7 +10496,7 @@ Return your response as JSON only, no preamble or code fences:
         if (panel === 'standard' && currentStandardMode === 'multi') {
           const narratives = Array.isArray(data.narratives) ? data.narratives : [];
           snippet = narratives[0] && narratives[0].narrative ? narratives[0].narrative : '';
-          label = `Multiple Tasks · ${narratives.length} narratives`;
+          label = `Multiple Narratives · ${narratives.length} narratives`;
         } else if (panel === 'standard' && currentStandardMode === 'bulk') {
           const entries = Array.isArray(data.entries) ? data.entries : [];
           snippet = entries[0] && entries[0].narrative ? entries[0].narrative : '';
@@ -10516,7 +10707,7 @@ Return your response as JSON only, no preamble or code fences:
   const TOUR_KEY = 'bnc_tour_completed_v1';
   const tourSteps = [
     { title: 'Generate Narratives <em>- One Task</em>', body: '<p>Welcome to your billing toolkit. The most common move starts here: paste a single task you just completed, hit <strong>Generate</strong>, get a polished ATVR narrative back in seconds.</p><p>Most days, this is the only mode you\'ll need.</p>' },
-    { title: 'Generate Narratives <em>- Multiple Tasks</em>', body: '<p>Got several tasks queued up at once? Click <strong>Multiple Tasks</strong> at the top of the Generate Narratives tab.</p><p>Add a row for each task - up to 20 - and the generator returns clean ATVR narratives for the entire batch in a single shot.</p>' },
+    { title: 'Generate Narratives <em>- Multiple Narratives</em>', body: '<p>Got several tasks queued up at once? Click <strong>Multiple Narratives</strong> at the top of the Generate Narratives tab.</p><p>Add a row for each task - up to 20 - and the generator returns clean ATVR narratives for the entire batch in a single shot.</p>' },
     { title: 'Generate Narratives <em>- Quick Capture</em>', body: '<p>Real-time capture for busy attorneys. Click <strong>Quick Capture</strong> at the top of the Generate Narratives tab.</p><p>Throughout the day - between calls, after a hearing, walking out of a deposition - jot down the date, time, client, and what you did. The generator reads your shorthand and returns polished ATVR narratives grouped by date and matter.</p>' },
     { title: 'Billing Bookends', body: '<p>Capture the full work cycle. The strategic prep <strong>before</strong> a task. The event itself. The substantive follow-up <strong>after</strong>.</p><p>Three narratives, one shot. This is where the time most attorneys leave on the table - the thinking and prep around an event - finally gets billed.</p>' },
     { title: 'Break It Up', body: '<p>Big project? MSJ, purchase agreement, trial prep, complex motion?</p><p>This tab splits one block of work into four phase narratives - <strong>review</strong>, <strong>outlining</strong>, <strong>drafting</strong>, <strong>finalizing</strong> - so nothing reads as block billing. Each phase stands alone, each gets paid.</p>' },
